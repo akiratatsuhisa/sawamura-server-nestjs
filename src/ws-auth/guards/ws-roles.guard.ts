@@ -4,6 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/auth/decorators/roles.decorator';
 
 import { SocketWithAuth } from '../ws-auth.type';
+import { AppError } from 'src/helpers/errors.helper';
 
 @Injectable()
 export class WsRolesGuard implements CanActivate {
@@ -20,6 +21,11 @@ export class WsRolesGuard implements CanActivate {
     }
 
     const { user }: SocketWithAuth = context.switchToWs().getClient();
-    return requiredRoles.some((role) => user.roles?.includes(role));
+
+    if (requiredRoles.some((role) => user.roles?.includes(role))) {
+      return true;
+    }
+
+    throw new AppError.Unauthorized();
   }
 }

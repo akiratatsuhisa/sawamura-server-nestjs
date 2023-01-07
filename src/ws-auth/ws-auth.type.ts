@@ -6,6 +6,8 @@ export interface AuthOptions {
 }
 
 export class SocketWithAuth extends Socket {
+  isAuthenticating: boolean;
+
   expires?: number;
   isExpires: (seconds?: number) => boolean;
 

@@ -1,35 +1,21 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 
+import { AppError } from 'src/helpers/errors.helper';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
-import { WsAuthService } from '../ws-auth.service';
-import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
 
 @Injectable()
 export class WsJwtAuthGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private wsAuthService: WsAuthService,
-  ) {}
-
   canActivate(context: ExecutionContext) {
     const client: SocketWithAuth = context.switchToWs().getClient();
 
     if (client.isExpires()) {
-      this.wsAuthService.leave(client);
-      this.wsAuthService.clearAuth(client);
+      client.disconnect();
     }
 
-    const isPublic =
-      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]) ?? false;
-
-    if (isPublic) {
+    if (client.principal.isAuthenticated) {
       return true;
     }
 
-    return client.principal.isAuthenticated;
+    throw new AppError.Unauthenticated();
   }
 }

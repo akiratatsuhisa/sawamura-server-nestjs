@@ -6,37 +6,31 @@ import * as moment from 'moment';
 
 import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
 import { AuthOptions, SocketWithAuth } from './ws-auth.type';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class WsAuthService {
   private secret: string;
-  constructor(private config: ConfigService) {
+
+  constructor(
+    private config: ConfigService,
+    private redisService: RedisService,
+  ) {
     this.secret = this.config.get<string>('SECRET');
   }
 
   init(socket: SocketWithAuth) {
     socket.principal = new IdentityPrincipal();
 
-    socket.isExpires = (seconds?: number) => {
+    socket.isExpires = (milliseconds?: number) => {
       if (_.isNil(socket.expires)) {
         return true;
       }
 
-      return moment(socket.expires).subtract(seconds, 'seconds').isBefore();
+      return moment(socket.expires)
+        .subtract(milliseconds, 'milliseconds')
+        .isBefore();
     };
-  }
-
-  /**
-   * ClearAuth
-   * Delete user info
-   * Delete expires token
-   * @param socket socket.io client
-   */
-  clearAuth(socket: SocketWithAuth) {
-    socket.user = undefined;
-    socket.expires = undefined;
-
-    socket.principal.user = socket.user;
   }
 
   /**
@@ -61,6 +55,8 @@ export class WsAuthService {
       socket.expires = _.isNumber(payload.exp)
         ? Number(payload.exp) * 1000
         : undefined;
+
+      socket.join(socket.user.id);
     } catch (error) {
       socket.user = undefined;
       socket.expires = undefined;
@@ -69,18 +65,34 @@ export class WsAuthService {
     socket.principal.user = socket.user;
   }
 
-  join(socket: SocketWithAuth) {
-    if (
-      !_.isNil(socket.principal.user?.id) &&
-      socket.principal.isAuthenticated
-    ) {
-      socket.join(socket.user.id);
-    }
+  async zAddAuth(socket: SocketWithAuth, milliseconds?: number): Promise<void> {
+    await this.redisService.db.zAdd(`auth:${socket.nsp.name}`, {
+      value: socket.id,
+      score: moment(socket.expires)
+        .subtract(milliseconds, 'milliseconds')
+        .valueOf(),
+    });
   }
 
-  leave(socket: SocketWithAuth) {
-    if (!_.isNil(socket.principal.user?.id)) {
-      socket.leave(socket.user.id);
-    }
+  async zRemAuth(socket: SocketWithAuth): Promise<void> {
+    await this.redisService.db.zRem(`auth:${socket.nsp.name}`, socket.id);
+  }
+
+  async zGetAndRemByExpires(namespaceName: string, milliseconds?: number) {
+    const score = moment().subtract(milliseconds, 'milliseconds').valueOf();
+
+    const data = await this.redisService.db.zRangeByScore(
+      `auth:${namespaceName}`,
+      '-inf',
+      `(${score}`,
+    );
+
+    await this.redisService.db.zRemRangeByScore(
+      `auth:${namespaceName}`,
+      '-inf',
+      `(${score}`,
+    );
+
+    return data;
   }
 }

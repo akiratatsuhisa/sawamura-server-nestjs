@@ -10,6 +10,8 @@ import {
   DeleteTodoDto,
   SortTodoDto,
 } from './dtos';
+import { AppError } from 'src/helpers/errors.helper';
+import { messages } from 'src/helpers/messages.helper';
 
 @Injectable()
 export class TodosService {
@@ -37,7 +39,7 @@ export class TodosService {
           data: {
             title: dto.title,
             description: dto.description,
-            sort: maxSort !== null ? maxSort + 1 : 0,
+            sort: maxSort !== null ? maxSort + 1 : 1,
             userId: user.id,
           },
           include: { user: true },
@@ -64,16 +66,24 @@ export class TodosService {
       async (tx) => {
         const maxSort = await this.maxSort(tx);
         if (dto.sort > maxSort) {
-          throw new Error('Sort is greater than max sort');
+          throw new AppError.Argument('Sort is greater than max sort')
+            .setErrors([`Max sort is ${maxSort}, current sort is ${dto.sort}`])
+            .setData([{ sort: dto.sort }, { maxSort }]);
         }
 
         const newsort = dto.sort;
-        const oldSort = (
-          await tx.todo.findUnique({
-            select: { sort: true },
-            where: { id: dto.id },
-          })
-        ).sort;
+        const todo = await tx.todo.findUnique({
+          select: { sort: true },
+          where: { id: dto.id },
+        });
+
+        if (!todo) {
+          throw new AppError.NotFound(
+            messages.NotFoundEntityError('todo', dto.id),
+          );
+        }
+
+        const oldSort = todo.sort;
 
         if (oldSort < newsort) {
           await tx.todo.updateMany({
@@ -86,7 +96,7 @@ export class TodosService {
             where: { sort: { gte: newsort, lt: oldSort } },
           });
         } else {
-          throw new Error('No Change');
+          throw new AppError.Argument('No Change');
         }
 
         return tx.todo.update({
