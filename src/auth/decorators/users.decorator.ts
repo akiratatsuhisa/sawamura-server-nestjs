@@ -1,7 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { IdentityUser, IdentityPrincipal } from '../identity.class';
 
-export { IdentityUser, IdentityPrincipal };
+import { IdentityPrincipal, IdentityUser } from '../identity.class';
+
+export { IdentityPrincipal, IdentityUser };
 
 export const User = createParamDecorator(
   (data: string, ctx: ExecutionContext) => {

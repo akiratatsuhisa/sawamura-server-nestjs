@@ -1,14 +1,15 @@
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { Observable } from 'rxjs';
-import { PARAMS_AS_BODY, TransformType } from './params-as-body.decorator';
 import * as _ from 'lodash';
+import { Observable } from 'rxjs';
+
+import { PARAMS_AS_BODY, TransformType } from './params-as-body.decorator';
 
 @Injectable()
 export class ParamsAsBodyInterceptor implements NestInterceptor {

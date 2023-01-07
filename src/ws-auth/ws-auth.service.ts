@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
+import * as _ from 'lodash';
 import * as moment from 'moment';
-
 import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
-import { AuthOptions, SocketWithAuth } from './ws-auth.type';
 import { RedisService } from 'src/redis/redis.service';
+
+import { AuthOptions, SocketWithAuth } from './ws-auth.type';
 
 @Injectable()
 export class WsAuthService {

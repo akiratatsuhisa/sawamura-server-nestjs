@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-
 import { AppError } from 'src/helpers/errors.helper';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 

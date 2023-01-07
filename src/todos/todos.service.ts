@@ -1,17 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Todo } from '@prisma/client';
-
-import { PrismaService } from 'src/prisma/prisma.service';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
+import { AppError } from 'src/helpers/errors.helper';
+import { messages } from 'src/helpers/messages.helper';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 import {
   CreateTodoDto,
-  UpdateTodoDto,
   DeleteTodoDto,
   SortTodoDto,
+  UpdateTodoDto,
 } from './dtos';
-import { AppError } from 'src/helpers/errors.helper';
-import { messages } from 'src/helpers/messages.helper';
 
 @Injectable()
 export class TodosService {

@@ -1,10 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
 import { ROLES_KEY } from 'src/auth/decorators/roles.decorator';
+import { AppError } from 'src/helpers/errors.helper';
 
 import { SocketWithAuth } from '../ws-auth.type';
-import { AppError } from 'src/helpers/errors.helper';
 
 @Injectable()
 export class WsRolesGuard implements CanActivate {

@@ -1,7 +1,6 @@
-import { Catch, ArgumentsHost } from '@nestjs/common';
+import { ArgumentsHost, Catch } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
-
 import { AppError } from 'src/helpers/errors.helper';
 import { catchPrismaException } from 'src/prisma/catch-prisma-exception.factory';
 

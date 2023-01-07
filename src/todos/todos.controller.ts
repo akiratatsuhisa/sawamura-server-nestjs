@@ -1,23 +1,22 @@
 import {
   Body,
   Controller,
-  Post,
-  Put,
   Delete,
   Get,
   Patch,
+  Post,
+  Put,
 } from '@nestjs/common';
-
-import { ParamsAsBody } from 'src/validations/params-as-body.decorator';
 import { IdentityUser, User } from 'src/auth/decorators/users.decorator';
-import { TodosService } from './todos.service';
+import { ParamsAsBody } from 'src/validations/params-as-body.decorator';
 
 import {
   CreateTodoDto,
-  UpdateTodoDto,
   DeleteTodoDto,
   SortTodoDto,
+  UpdateTodoDto,
 } from './dtos';
+import { TodosService } from './todos.service';
 
 @ParamsAsBody()
 @Controller('todos')

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import { REDIS, RedisClientType } from './redis.provider';
 import { BucketType } from './redis.type';
 

@@ -1,6 +1,6 @@
-import { messages } from './messages.helper';
-
 import { HttpStatus } from '@nestjs/common';
+
+import { messages } from './messages.helper';
 
 export namespace AppError {
   export abstract class BasicError {

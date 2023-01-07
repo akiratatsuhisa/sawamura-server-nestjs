@@ -1,18 +1,17 @@
 import {
-  Injectable,
   BadRequestException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { genSalt, compare, hash } from 'bcrypt';
+import { compare, genSalt, hash } from 'bcrypt';
 import * as moment from 'moment';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserWithRoles } from 'src/users/types/UserWithRoles.type';
+import { UsersService } from 'src/users/users.service';
 
 import { RegisterDto } from './dtos/register.dto';
-
-import { PrismaService } from 'src/prisma/prisma.service';
-import { UsersService } from 'src/users/users.service';
-import { UserWithRoles } from 'src/users/types/UserWithRoles.type';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {

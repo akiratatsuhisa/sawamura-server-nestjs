@@ -5,17 +5,16 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
-  WsResponse,
   WebSocketServer,
+  WsResponse,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
+import { WsAuthService } from 'src/ws-auth/ws-auth.service';
+import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 
 import { SortTodoDto } from './dtos';
 import { TodosService } from './todos.service';
-import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 
 @Injectable()
 @WebSocketGateway({ namespace: 'todos' })

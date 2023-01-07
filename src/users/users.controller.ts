@@ -1,8 +1,7 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { FindOneParams } from 'src/validations/find-one.validation';
 
 import { UsersService } from './users.service';
-
-import { FindOneParams } from 'src/validations/find-one.validation';
 
 @Controller('users')
 export class UsersController {

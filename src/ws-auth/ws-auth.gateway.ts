@@ -7,6 +7,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import {
   ConnectedSocket,
   MessageBody,
@@ -18,10 +19,8 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Server, Namespace } from 'socket.io';
-import { Cron } from '@nestjs/schedule';
 import * as _ from 'lodash';
-
+import { Namespace, Server } from 'socket.io';
 import { GlobalWsExceptionsFilter } from 'src/validations/global-ws-exceptions.filter';
 import { exceptionFactory } from 'src/validations/validation.factory';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';

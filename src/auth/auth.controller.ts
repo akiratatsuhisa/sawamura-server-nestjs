@@ -1,23 +1,23 @@
 import {
-  Post,
-  Controller,
-  UseGuards,
-  Request,
+  BadRequestException,
   Body,
-  Ip,
+  Controller,
   Headers,
-  Patch,
   HttpCode,
   HttpStatus,
-  BadRequestException,
+  Ip,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 
+import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { User } from './decorators/users.decorator';
-import { LocalAuthGuard } from './guards/local-auth.guard';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dtos/register.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
+import { RegisterDto } from './dtos/register.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {

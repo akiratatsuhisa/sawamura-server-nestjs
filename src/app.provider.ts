@@ -3,8 +3,8 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
-import { ParamsAsBodyInterceptor } from './validations/params-as-body.interceptor';
 import { GlobalExceptionsFilter } from './validations/global-exceptions.filter';
+import { ParamsAsBodyInterceptor } from './validations/params-as-body.interceptor';
 
 export const appProviders: Array<Provider> = [
   {
