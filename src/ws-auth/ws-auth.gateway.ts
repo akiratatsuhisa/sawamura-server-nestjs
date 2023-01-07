@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -7,23 +7,26 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import * as _ from 'lodash';
 
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 
-import { WsJwtAuthGuard } from './ws-jwt-auth.guard';
+import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
+import { WsRolesGuard } from './guards/ws-roles.guard';
 import { WsAuthService } from './ws-auth.service';
-import * as _ from 'lodash';
 
-@UseGuards(WsJwtAuthGuard)
+@UseGuards(WsJwtAuthGuard, WsRolesGuard)
 @WebSocketGateway()
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
+  private logger = new Logger(WsAuthGateway.name);
+
   @WebSocketServer() server: Server;
 
   constructor(private wsAuthService: WsAuthService) {}
 
-  afterInit(server: Server): void {
+  afterInit(_server: Server): void {
     //
   }
 
@@ -31,9 +34,17 @@ export class WsAuthGateway
     this.wsAuthService.init(client);
     this.wsAuthService.authenticate(client);
     this.wsAuthService.join(client);
+
+    const message =
+      `ClientId(${client.id}) joinned` +
+      (client.user ? ` as UserId(${client.user.id})` : '');
+    this.logger.log(message);
   }
 
   handleDisconnect(client: SocketWithAuth): void {
-    //
+    const message =
+      `ClientId(${client.id}) left` +
+      (client.user ? ` as UserId(${client.user.id})` : '');
+    this.logger.log(message);
   }
 }

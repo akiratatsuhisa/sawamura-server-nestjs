@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
-import { WsAuthService } from './ws-auth.service';
+import { WsAuthService } from '../ws-auth.service';
 import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
 
 @Injectable()
