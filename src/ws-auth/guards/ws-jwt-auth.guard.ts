@@ -6,7 +6,6 @@ import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 export class WsJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext) {
     const client: SocketWithAuth = context.switchToWs().getClient();
-
     if (client.isExpires()) {
       client.disconnect();
     }

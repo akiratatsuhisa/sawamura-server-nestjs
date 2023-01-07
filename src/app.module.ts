@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { RolesModule } from './roles/roles.module';
+import { RoomsModule } from './rooms/rooms.module';
 import { TodosModule } from './todos/todos.module';
 import { UsersModule } from './users/users.module';
 import { WsAuthModule } from './ws-auth/ws-auth.module';
@@ -24,6 +25,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     UsersModule,
     RolesModule,
     TodosModule,
+    RoomsModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService],

@@ -1,10 +1,12 @@
 import { Provider } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common/pipes';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { DtoParseInterceptor } from './validations/dto-parse.interceptor';
 import { GlobalExceptionsFilter } from './validations/global-exceptions.filter';
-import { ParamsAsBodyInterceptor } from './validations/params-as-body.interceptor';
+import { exceptionFactory } from './validations/validation.factory';
 
 export const appProviders: Array<Provider> = [
   {
@@ -16,8 +18,16 @@ export const appProviders: Array<Provider> = [
     useClass: RolesGuard,
   },
   {
+    provide: APP_PIPE,
+    useFactory: () =>
+      new ValidationPipe({
+        transform: true,
+        exceptionFactory,
+      }),
+  },
+  {
     provide: APP_INTERCEPTOR,
-    useClass: ParamsAsBodyInterceptor,
+    useClass: DtoParseInterceptor,
   },
   {
     provide: APP_FILTER,

@@ -1,6 +1,5 @@
 import { ArgumentsHost, Catch } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
-import { Response } from 'express';
 import { AppError } from 'src/helpers/errors.helper';
 import { catchPrismaException } from 'src/prisma/catch-prisma-exception.factory';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
@@ -15,7 +14,7 @@ export class GlobalWsExceptionsFilter extends BaseWsExceptionFilter {
     exception = catchPrismaException(exception);
 
     if (exception instanceof AppError.BasicError) {
-      client.emit('error', exception.getResponseBody());
+      client.emit(exception.getEvent(), exception.getResponseBody());
       return;
     }
 

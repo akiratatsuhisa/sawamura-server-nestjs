@@ -8,7 +8,6 @@ import {
   Put,
 } from '@nestjs/common';
 import { IdentityUser, User } from 'src/auth/decorators/users.decorator';
-import { ParamsAsBody } from 'src/validations/params-as-body.decorator';
 
 import {
   CreateTodoDto,
@@ -18,7 +17,6 @@ import {
 } from './dtos';
 import { TodosService } from './todos.service';
 
-@ParamsAsBody()
 @Controller('todos')
 export class TodosController {
   constructor(private todosService: TodosService) {}

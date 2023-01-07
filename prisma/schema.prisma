@@ -25,7 +25,11 @@ model User {
 
   userRoles     UserRole[]
   refreshTokens RefreshToken[]
-  todos         Todo[]
+
+  todos Todo[]
+
+  roomMembers  RoomMember[]
+  roomMessages RoomMessage[]
 
   @@map("users")
 }
@@ -53,6 +57,7 @@ model UserRole {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@unique([userId, roleId])
   @@map("user_roles")
 }
 
@@ -88,4 +93,66 @@ model Todo {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("todos")
+}
+
+model Room {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar(255)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  roomMembers  RoomMember[]
+  roomMessages RoomMessage[]
+
+  @@map("rooms")
+}
+
+enum RoomMemberRole {
+  Admin     @map("admin")
+  Moderator @map("moderator")
+  Member    @map("member")
+}
+
+model RoomMember {
+  id String @id @default(uuid()) @db.Uuid
+
+  roomId    String         @map("room_id") @db.Uuid
+  room      Room           @relation(fields: [roomId], references: [id])
+  memberId  String         @map("member_id") @db.Uuid
+  member    User           @relation(fields: [memberId], references: [id])
+  role      RoomMemberRole @default(Member)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime?      @map("deleted_at")
+
+  @@unique([roomId, memberId])
+  @@map("room_members")
+}
+
+enum MessageType {
+  Text   @map("text")
+  Icon   @map("icon")
+  Icons  @map("icons")
+  Link   @map("link")
+  Image  @map("image")
+  Images @map("images")
+}
+
+model RoomMessage {
+  id      String      @id @default(uuid()) @db.Uuid
+  type    MessageType @default(Text)
+  content Json
+
+  roomId String @map("room_id") @db.Uuid
+  room   Room   @relation(fields: [roomId], references: [id])
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("room_messages")
 }

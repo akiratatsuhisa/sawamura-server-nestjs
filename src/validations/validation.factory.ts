@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import { AppError } from 'src/helpers/errors.helper';
 
 export enum ExceptionFactoryType {
-  Errors = 1,
-  Data = 2,
+  Errors = 1 << 0,
+  Data = 1 << 1,
   All = ExceptionFactoryType.Errors | ExceptionFactoryType.Data,
 }
 

@@ -15,7 +15,7 @@ export class GlobalExceptionsFilter extends BaseExceptionFilter {
     exception = catchPrismaException(exception);
 
     if (exception instanceof AppError.BasicError) {
-      response.status(exception.statusCode).json(exception.getResponseBody());
+      response.status(exception.getStatus()).json(exception.getResponseBody());
       return;
     }
 

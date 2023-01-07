@@ -5,12 +5,13 @@ import { messages } from './messages.helper';
 export namespace AppError {
   export abstract class BasicError {
     protected _isDetail = true;
+    protected _event = 'exception';
 
     data?: Record<string, unknown> | Array<unknown>;
     errors?: Record<string, unknown> | Array<unknown>;
 
     constructor(
-      public statusCode: number,
+      public readonly statusCode: number,
       public message: string = messages.UnknownError,
       public title: string = messages.UnknownError,
     ) {}
@@ -28,6 +29,19 @@ export namespace AppError {
     setErrors(errors: Record<string, unknown> | Array<unknown>) {
       this.errors = errors;
       return this;
+    }
+
+    setEvent(name: string) {
+      this._event = `error_${name}`;
+      return this;
+    }
+
+    getEvent() {
+      return this._event;
+    }
+
+    getStatus() {
+      return this.statusCode;
     }
 
     getResponseBody(): Record<string, unknown> {
