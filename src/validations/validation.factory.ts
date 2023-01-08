@@ -1,6 +1,6 @@
 import { ValidationError } from '@nestjs/common';
 import * as _ from 'lodash';
-import { AppError } from 'src/helpers/errors.helper';
+import { AppError } from 'src/common/errors';
 
 export enum ExceptionFactoryType {
   Errors = 1 << 0,

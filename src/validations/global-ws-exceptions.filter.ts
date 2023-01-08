@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
-import { AppError } from 'src/helpers/errors.helper';
+import { AppError } from 'src/common/errors';
 import { catchPrismaException } from 'src/prisma/catch-prisma-exception.factory';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 

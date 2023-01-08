@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AppError } from 'src/helpers/errors.helper';
+import { AppError } from 'src/common/errors';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
 

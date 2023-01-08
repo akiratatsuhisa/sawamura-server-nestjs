@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { AppError } from 'src/helpers/errors.helper';
+import { AppError } from 'src/common/errors';
 
 export function catchPrismaException(exception: unknown) {
   if (

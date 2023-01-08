@@ -10,4 +10,7 @@ export const messages = {
   BadDtoError: 'Bad Request Data',
   ArgumentError: 'Bad Argument',
   PrismaError: 'Database Storage Error',
+  NotRoomMember: (username: string) => `user(${username}) not in room`,
+  InvalidPrivateRoom: 'invalid private room declare',
+  InvalidGroupRoom: 'invalid group room declare',
 };
