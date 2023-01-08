@@ -1,14 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
+import { IdentityUser } from 'src/auth/identity.class';
 import { PaginationService } from 'src/common/services';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import {
+  CreateMemberDto,
+  CreateMessageDto,
+  CreateRoomDto,
+  DeleteMemberDto,
+  DeleteMessageDto,
+  DeleteRoomDto,
   SearchMembersDto,
   SearchMessagesDto,
   SearchRoomDto,
   SearchRoomsDto,
+  UpdateMemberDto,
+  UpdateMessageDto,
+  UpdateRoomDto,
 } from './dtos';
 
 @Injectable()
@@ -82,5 +92,41 @@ export class RoomsService extends PaginationService {
           break;
       }
     });
+  }
+
+  async createRoom(dto: CreateRoomDto, user: IdentityUser) {
+    //
+  }
+
+  async updateRoom(dto: UpdateRoomDto, user: IdentityUser) {
+    //
+  }
+
+  async deleteRoom(dto: DeleteRoomDto, user: IdentityUser) {
+    //
+  }
+
+  async createMember(dto: CreateMemberDto, user: IdentityUser) {
+    //
+  }
+
+  async updateMember(dto: UpdateMemberDto, user: IdentityUser) {
+    //
+  }
+
+  async deleteMember(dto: DeleteMemberDto, user: IdentityUser) {
+    //
+  }
+
+  async createMessage(dto: CreateMessageDto, user: IdentityUser) {
+    //
+  }
+
+  async updateMessage(dto: UpdateMessageDto, user: IdentityUser) {
+    //
+  }
+
+  async deleteMessage(dto: DeleteMessageDto, user: IdentityUser) {
+    //
   }
 }
