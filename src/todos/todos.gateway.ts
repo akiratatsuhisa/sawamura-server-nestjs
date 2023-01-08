@@ -9,10 +9,9 @@ import {
   WsResponse,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { Roles } from 'src/auth/decorators/roles.decorator';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
+import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
 
 import { SortTodoDto } from './dtos';
 import { TodosService } from './todos.service';
@@ -33,9 +32,9 @@ export class TodosGateway extends WsAuthGateway {
   @SubscribeMessage('events')
   async handleEvent(
     @MessageBody() data: SortTodoDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ): Promise<WsResponse<string>> {
-    await this.todosService.sort(data, client.user);
+    await this.todosService.sort(data, user);
 
     return {
       event: 'events',
