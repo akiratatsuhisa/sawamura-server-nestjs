@@ -9,27 +9,38 @@ import { Request } from 'express';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs';
 
-import { DTO_PARSE, TransformType } from './dto-parse.decorator';
+import {
+  DTO_PARSE,
+  makeHasTransformType,
+  TransformType,
+} from './dto-parse.decorator';
 
 @Injectable()
 export class DtoParseInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const type = this.reflector.getAllAndOverride<TransformType>(DTO_PARSE, [
-      context.getClass(),
-      context.getHandler(),
-    ]);
+    const type =
+      this.reflector.getAllAndOverride<TransformType>(DTO_PARSE, [
+        context.getClass(),
+        context.getHandler(),
+      ]) ?? TransformType.Default;
 
-    const { body, params, query, method }: Request = context
+    const hasTransformType = makeHasTransformType(type);
+
+    const { body, params, query }: Request = context
       .switchToHttp()
       .getRequest();
 
+    if (hasTransformType(TransformType.None)) {
+      return next.handle();
+    }
+
     // params as query
-    if (method === 'GET') {
+    if (hasTransformType(TransformType.Query)) {
       _(params).forEach((value, key) => {
         if (
-          (type & TransformType.Query) === TransformType.Query &&
+          hasTransformType(TransformType.QueryBottom) &&
           !_.isUndefined(query[key])
         ) {
           return;
@@ -39,10 +50,14 @@ export class DtoParseInterceptor implements NestInterceptor {
     }
 
     // params as body
-    else if (_.isObject(body) && !_.isArray(body)) {
+    if (
+      hasTransformType(TransformType.Body) &&
+      _.isObject(body) &&
+      !_.isArray(body)
+    ) {
       _(params).forEach((value, key) => {
         if (
-          (type & TransformType.Body) === TransformType.Body &&
+          hasTransformType(TransformType.BodyBottom) &&
           !_.isUndefined(body[key])
         ) {
           return;

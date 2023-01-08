@@ -112,10 +112,10 @@ export class WsAuthGateway
       if (socket?.isAuthenticating) {
         return;
       }
+      socket.isAuthenticating = true;
 
       socket.emit('authenticate', 'Plz auth');
 
-      socket.isAuthenticating = true;
       setTimeout(() => {
         if (socket?.isAuthenticating) {
           socket.disconnect();

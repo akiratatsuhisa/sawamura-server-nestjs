@@ -20,8 +20,9 @@ model User {
   birthDate DateTime? @map("birth_date") @db.Date
   salary    Decimal?  @db.Decimal(12, 3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   userRoles     UserRole[]
   refreshTokens RefreshToken[]
@@ -30,6 +31,8 @@ model User {
 
   roomMembers  RoomMember[]
   roomMessages RoomMessage[]
+  followers    Relationship[] @relation(name: "fk_follower")
+  followees    Relationship[] @relation(name: "fk_followee")
 
   @@map("users")
 }
@@ -59,6 +62,21 @@ model UserRole {
 
   @@unique([userId, roleId])
   @@map("user_roles")
+}
+
+model Relationship {
+  id String @id @default(uuid()) @db.Uuid
+
+  followerId String @map("follower_id") @db.Uuid
+  follower   User   @relation(name: "fk_follower", fields: [followerId], references: [id])
+  followeeId String @map("followee_id") @db.Uuid
+  followee   User   @relation(name: "fk_followee", fields: [followeeId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([followerId, followeeId])
+  @@map("relationships")
 }
 
 model RefreshToken {
@@ -96,8 +114,9 @@ model Todo {
 }
 
 model Room {
-  id   String @id @default(uuid()) @db.Uuid
-  name String @db.VarChar(255)
+  id      String  @id @default(uuid()) @db.Uuid
+  name    String  @db.VarChar(255)
+  isGroup Boolean @default(false) @map("is_group")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
@@ -113,6 +132,9 @@ enum RoomMemberRole {
   Admin     @map("admin")
   Moderator @map("moderator")
   Member    @map("member")
+  None      @map("none")
+
+  @@map("room_member_role")
 }
 
 model RoomMember {
@@ -122,6 +144,7 @@ model RoomMember {
   room      Room           @relation(fields: [roomId], references: [id])
   memberId  String         @map("member_id") @db.Uuid
   member    User           @relation(fields: [memberId], references: [id])
+  nickName  String?        @map("nick_name") @db.VarChar(255)
   role      RoomMemberRole @default(Member)
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @default(now()) @updatedAt @map("updated_at")
@@ -131,18 +154,21 @@ model RoomMember {
   @@map("room_members")
 }
 
-enum MessageType {
+enum RoomMessageType {
   Text   @map("text")
   Icon   @map("icon")
   Icons  @map("icons")
   Link   @map("link")
   Image  @map("image")
   Images @map("images")
+  None   @map("none")
+
+  @@map("room_message_type")
 }
 
 model RoomMessage {
-  id      String      @id @default(uuid()) @db.Uuid
-  type    MessageType @default(Text)
+  id      String          @id @default(uuid()) @db.Uuid
+  type    RoomMessageType @default(Text)
   content Json
 
   roomId String @map("room_id") @db.Uuid
@@ -154,5 +180,6 @@ model RoomMessage {
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([roomId, createdAt(sort: Desc)])
   @@map("room_messages")
 }

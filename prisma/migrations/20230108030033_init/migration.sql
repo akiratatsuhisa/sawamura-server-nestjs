@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "RoomMemberRole" AS ENUM ('admin', 'moderator', 'member');
+CREATE TYPE "room_member_role" AS ENUM ('admin', 'moderator', 'member', 'none');
 
 -- CreateEnum
-CREATE TYPE "MessageType" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images');
+CREATE TYPE "room_message_type" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images', 'none');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -16,6 +16,7 @@ CREATE TABLE "users" (
     "salary" DECIMAL(12,3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -76,6 +77,7 @@ CREATE TABLE "todos" (
 CREATE TABLE "rooms" (
     "id" UUID NOT NULL,
     "name" VARCHAR(255) NOT NULL,
+    "is_group" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "deleted_at" TIMESTAMP(3),
@@ -88,7 +90,7 @@ CREATE TABLE "room_members" (
     "id" UUID NOT NULL,
     "room_id" UUID NOT NULL,
     "member_id" UUID NOT NULL,
-    "role" "RoomMemberRole" NOT NULL DEFAULT 'member',
+    "role" "room_member_role" NOT NULL DEFAULT 'member',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "deleted_at" TIMESTAMP(3),
@@ -99,7 +101,7 @@ CREATE TABLE "room_members" (
 -- CreateTable
 CREATE TABLE "room_messages" (
     "id" UUID NOT NULL,
-    "type" "MessageType" NOT NULL DEFAULT 'text',
+    "type" "room_message_type" NOT NULL DEFAULT 'text',
     "content" JSONB NOT NULL,
     "room_id" UUID NOT NULL,
     "user_id" UUID NOT NULL,

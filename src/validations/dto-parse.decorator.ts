@@ -1,10 +1,25 @@
 import { SetMetadata } from '@nestjs/common';
 
 export enum TransformType {
-  Default = 0,
-  Body = 1 << 0,
-  Query = 1 << 1,
-  BodyAndQuery = 1 << 2,
+  None = 0,
+  BodyTop = 1 << 0,
+  BodyBottom = 1 << 1,
+  QueryTop = 1 << 2,
+  QueryBottom = 1 << 3,
+  Body = BodyTop | BodyBottom,
+  Query = QueryTop | QueryBottom,
+  BodyAndQueryTop = BodyTop | QueryTop,
+  BodyTopQueryBottom = BodyTop | QueryBottom,
+  BodyAndQueryBottom = BodyBottom | QueryBottom,
+  BodyBottomQueryTop = BodyBottom | QueryTop,
+  Default = BodyAndQueryTop,
+}
+
+export function makeHasTransformType(data: TransformType) {
+  // hasTransformType
+  return function (type: TransformType) {
+    return (data & type) === type;
+  };
 }
 
 export const DTO_PARSE = 'dtoParse';
