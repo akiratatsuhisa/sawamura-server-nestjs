@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, RoomMessageType } from '@prisma/client';
+import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
+import { AppError, messages } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -27,7 +28,7 @@ export class RoomsService extends PaginationService {
     super();
   }
 
-  private roomMemberSelect: Prisma.RoomMemberSelect = {
+  private roomMemberSelect = Prisma.validator<Prisma.RoomMemberSelect>()({
     id: true,
     nickName: true,
     role: true,
@@ -38,9 +39,9 @@ export class RoomsService extends PaginationService {
       },
     },
     createdAt: true,
-  };
+  });
 
-  private roomSelect: Prisma.RoomSelect = {
+  private roomSelect = Prisma.validator<Prisma.RoomSelect>()({
     id: true,
     name: true,
     isGroup: true,
@@ -51,7 +52,7 @@ export class RoomsService extends PaginationService {
       },
     },
     createdAt: true,
-  };
+  });
 
   async getRooms(query: SearchRoomsDto) {
     return this.prisma.room.findMany({
@@ -73,7 +74,7 @@ export class RoomsService extends PaginationService {
 
   async getMembersByRoomId(query: SearchMembersDto) {
     return this.prisma.roomMember.findMany({
-      select: this.roomMemberSelect,
+      select: this.roomSelect,
       where: { roomId: query.roomId, deletedAt: null },
     });
   }
@@ -95,7 +96,39 @@ export class RoomsService extends PaginationService {
   }
 
   async createRoom(dto: CreateRoomDto, user: IdentityUser) {
-    //
+    if (!_.some(dto.members, (member) => member.memberId === user.id)) {
+      throw new AppError.Argument(messages.NotRoomMember(user.username));
+    }
+
+    if (
+      !dto.isGroup &&
+      (_.size(dto.members) != 2 ||
+        _.every(
+          dto.members,
+          (member) => member.role !== RoomMemberRole.Moderator,
+        ))
+    ) {
+      throw new AppError.Argument(messages.InvalidPrivateRoom);
+    }
+
+    if (
+      dto.isGroup &&
+      (!_.some(dto.members, (member) => member.role === RoomMemberRole.Admin) ||
+        _.size(dto.members) != 2)
+    ) {
+      throw new AppError.Argument(messages.InvalidGroupRoom);
+    }
+
+    return this.prisma.room.create({
+      data: {
+        name: dto.name,
+        isGroup: dto.isGroup,
+        roomMembers: {
+          create: dto.members,
+        },
+      },
+      select: this.roomSelect,
+    });
   }
 
   async updateRoom(dto: UpdateRoomDto, user: IdentityUser) {

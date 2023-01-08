@@ -27,12 +27,13 @@ model User {
   userRoles     UserRole[]
   refreshTokens RefreshToken[]
 
-  todos Todo[]
+  followers Relationship[] @relation(name: "fk_follower")
+  followees Relationship[] @relation(name: "fk_followee")
 
   roomMembers  RoomMember[]
   roomMessages RoomMessage[]
-  followers    Relationship[] @relation(name: "fk_follower")
-  followees    Relationship[] @relation(name: "fk_followee")
+
+  todos Todo[]
 
   @@map("users")
 }

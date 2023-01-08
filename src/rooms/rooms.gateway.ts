@@ -10,6 +10,7 @@ import {
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
+import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
 
 import {
   CreateMemberDto,
@@ -43,9 +44,13 @@ export class RoomsGateway extends WsAuthGateway {
   @SubscribeMessage('create_room')
   async createRoom(
     @MessageBody() dto: CreateRoomDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const result = await this.roomsService.createRoom(dto, user);
+
+    this.server
+      .to(_.map(result.roomMembers, (m) => m.member.id))
+      .emit('create_room', result);
   }
 
   @SubscribeMessage('update_room')
