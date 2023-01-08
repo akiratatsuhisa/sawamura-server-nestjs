@@ -10,7 +10,6 @@ export class GlobalExceptionsFilter extends BaseExceptionFilter {
     const context = host.switchToHttp();
 
     const response = context.getResponse<Response>();
-    // const request = context.getRequest<Request>();
 
     exception = catchPrismaException(exception);
 

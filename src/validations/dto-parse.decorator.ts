@@ -16,7 +16,9 @@ export enum TransformType {
 }
 
 export function makeHasTransformType(data: TransformType) {
-  // hasTransformType
+  /**
+   * hasTransformType
+   */
   return function (type: TransformType) {
     return (data & type) === type;
   };

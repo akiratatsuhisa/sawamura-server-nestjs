@@ -36,7 +36,9 @@ export class DtoParseInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // params as query
+    /**
+     * params as query
+     */
     if (hasTransformType(TransformType.Query)) {
       _(params).forEach((value, key) => {
         if (
@@ -49,7 +51,9 @@ export class DtoParseInterceptor implements NestInterceptor {
       });
     }
 
-    // params as body
+    /**
+     *     params as body
+     */
     if (
       hasTransformType(TransformType.Body) &&
       _.isObject(body) &&
