@@ -76,6 +76,15 @@ export namespace AppError {
     }
   }
 
+  export class AccessDenied extends BasicError {
+    constructor(
+      message: string = messages.AccessDeninedError,
+      title: string = messages.UnauthorizedError,
+    ) {
+      super(HttpStatus.FORBIDDEN, message, title);
+    }
+  }
+
   export class NotFound extends BasicError {
     constructor(
       message: string = messages.NotFoundError,

@@ -36,6 +36,20 @@ export class RoomsGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
+  private emitToMembers(
+    event: string,
+    room: Awaited<ReturnType<RoomsService['getRoomById']>>,
+  ) {
+    this.server
+      .to(
+        _(room.roomMembers)
+          .filter((m) => m.role !== RoomMemberRole.None)
+          .map((m) => m.member.id)
+          .value(),
+      )
+      .emit(event, room);
+  }
+
   @SubscribeMessage('message')
   handleMessage(): WsResponse<string> {
     return { event: 'message', data: 'Hello world' };
@@ -46,27 +60,29 @@ export class RoomsGateway extends WsAuthGateway {
     @MessageBody() dto: CreateRoomDto,
     @User() user: IdentityUser,
   ) {
-    const result = await this.roomsService.createRoom(dto, user);
+    const room = await this.roomsService.createRoom(dto, user);
 
-    this.server
-      .to(_.map(result.roomMembers, (m) => m.member.id))
-      .emit('create_room', result);
+    this.emitToMembers('create_room', room);
   }
 
   @SubscribeMessage('update_room')
   async updateRoom(
     @MessageBody() dto: UpdateRoomDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const room = await this.roomsService.updateRoom(dto, user);
+
+    this.emitToMembers('update_room', room);
   }
 
   @SubscribeMessage('delete_room')
   async deleteRoom(
     @MessageBody() dto: DeleteRoomDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const room = await this.roomsService.deleteRoom(dto, user);
+
+    this.emitToMembers('delete_room', room);
   }
 
   @SubscribeMessage('create_member')
