@@ -7,6 +7,9 @@ import {
   WebSocketGateway,
   WsResponse,
 } from '@nestjs/websockets';
+import { RoomMemberRole } from '@prisma/client';
+import * as _ from 'lodash';
+import { PREFIX_SOCKET_USER } from 'src/ws-auth/constants';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
@@ -40,11 +43,11 @@ export class RoomsGateway extends WsAuthGateway {
     event: string,
     room: Awaited<ReturnType<RoomsService['getRoomById']>>,
   ) {
-    this.server
+    this.namespace
       .to(
         _(room.roomMembers)
           .filter((m) => m.role !== RoomMemberRole.None)
-          .map((m) => m.member.id)
+          .map((m) => `${PREFIX_SOCKET_USER}${m.member.id}`)
           .value(),
       )
       .emit(event, room);
@@ -88,25 +91,31 @@ export class RoomsGateway extends WsAuthGateway {
   @SubscribeMessage('create_member')
   async createMember(
     @MessageBody() dto: CreateMemberDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const room = await this.roomsService.createMember(dto, user);
+
+    this.emitToMembers('create_member', room);
   }
 
   @SubscribeMessage('update_member')
   async updateMember(
     @MessageBody() dto: UpdateMemberDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const room = await this.roomsService.updateMember(dto, user);
+
+    this.emitToMembers('update_member', room);
   }
 
   @SubscribeMessage('delete_member')
   async deleteMember(
     @MessageBody() dto: DeleteMemberDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const room = await this.roomsService.deleteMember(dto, user);
+
+    this.emitToMembers('delete_member', room);
   }
 
   @SubscribeMessage('create_message')

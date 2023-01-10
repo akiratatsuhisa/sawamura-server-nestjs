@@ -6,6 +6,7 @@ import * as moment from 'moment';
 import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
 import { RedisService } from 'src/redis/redis.service';
 
+import { PREFIX_SOCKET_USER, PREFIX_SOCKET_USER_SILENT } from './constants';
 import { AuthOptions, SocketWithAuth } from './ws-auth.type';
 
 @Injectable()
@@ -56,7 +57,8 @@ export class WsAuthService {
         ? Number(payload.exp) * 1000
         : undefined;
 
-      socket.join(socket.user.id);
+      socket.join(`${PREFIX_SOCKET_USER}${socket.user.id}`);
+      socket.join(`${PREFIX_SOCKET_USER_SILENT}${socket.user.id}`);
     } catch (error) {
       socket.user = undefined;
       socket.expires = undefined;

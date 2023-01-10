@@ -4,10 +4,8 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   WsResponse,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
@@ -18,8 +16,6 @@ import { TodosService } from './todos.service';
 @Injectable()
 @WebSocketGateway({ namespace: 'todos' })
 export class TodosGateway extends WsAuthGateway {
-  @WebSocketServer() server: Server;
-
   constructor(
     configService: ConfigService,
     wsAuthService: WsAuthService,

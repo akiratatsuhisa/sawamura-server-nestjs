@@ -1,6 +1,5 @@
 import { RoomMemberRole } from '@prisma/client';
-import { IsIn, IsNotEmpty, IsUUID } from 'class-validator';
-import * as _ from 'lodash';
+import { IsIn, IsNotEmpty, IsUUID, ValidateIf } from 'class-validator';
 
 export class CreateMemberDto {
   @IsUUID()
@@ -11,7 +10,7 @@ export class CreateMemberDto {
   @IsNotEmpty()
   memberId: string;
 
-  @IsIn(_.values(RoomMemberRole))
-  @IsNotEmpty()
-  role: string;
+  @IsIn([RoomMemberRole.Member, RoomMemberRole.Moderator])
+  @ValidateIf((object, value) => value !== undefined)
+  role?: RoomMemberRole;
 }

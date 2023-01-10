@@ -1,10 +1,6 @@
-export { CreateMemberDto, DeleteMemberDto, UpdateMemberDto } from './member';
-export {
-  CreateMessageDto,
-  DeleteMessageDto,
-  UpdateMessageDto,
-} from './message';
-export { CreateRoomDto, DeleteRoomDto, UpdateRoomDto } from './room';
-export { SearchMembersDto } from './search-members.dto';
-export { SearchMessagesDto } from './search-messages.dto';
-export { SearchRoomDto, SearchRoomsDto } from './search-rooms.dto';
+export * from './member';
+export * from './message';
+export * from './room';
+export * from './search-members.dto';
+export * from './search-messages.dto';
+export * from './search-rooms.dto';

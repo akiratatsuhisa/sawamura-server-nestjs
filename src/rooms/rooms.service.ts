@@ -205,15 +205,119 @@ export class RoomsService extends PaginationService {
   }
 
   async createMember(dto: CreateMemberDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      const room = await this.getRoomById({ id: dto.roomId });
+
+      if (!room) {
+        throw new AppError.NotFound();
+      }
+
+      if (
+        !room.isGroup ||
+        !this.isRoomMember(
+          room,
+          user.id,
+          RoomMemberRole.Admin,
+          RoomMemberRole.Moderator,
+        )
+      ) {
+        throw new AppError.AccessDenied();
+      }
+
+      if (!this.isRoomMember(room, dto.memberId)) {
+        await tx.roomMember.create({
+          data: { roomId: dto.roomId, memberId: dto.memberId, role: dto.role },
+        });
+        return this.getRoomById({ id: dto.roomId });
+      }
+
+      if (this.isRoomMember(room, dto.memberId, RoomMemberRole.None)) {
+        await tx.roomMember.update({
+          data: { role: dto.role },
+          where: {
+            roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+          },
+        });
+        return this.getRoomById({ id: dto.roomId });
+      }
+
+      throw new AppError.AccessDenied();
+    });
   }
 
   async updateMember(dto: UpdateMemberDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      const room = await this.getRoomById({ id: dto.roomId });
+
+      if (!room) {
+        throw new AppError.NotFound();
+      }
+
+      if (
+        (!room.isGroup && dto.role) ||
+        !this.isRoomMember(
+          room,
+          user.id,
+          RoomMemberRole.Admin,
+          RoomMemberRole.Moderator,
+        ) ||
+        this.isRoomMember(room, dto.memberId, RoomMemberRole.None) ||
+        (dto.role === RoomMemberRole.Admin &&
+          !this.isRoomMember(room, user.id, RoomMemberRole.Admin))
+      ) {
+        throw new AppError.AccessDenied();
+      }
+
+      await tx.roomMember.update({
+        data: {
+          nickName: dto.nickName,
+          role: dto.role,
+        },
+        where: {
+          roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+        },
+      });
+
+      return this.getRoomById({ id: dto.roomId });
+    });
   }
 
   async deleteMember(dto: DeleteMemberDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      const room = await this.getRoomById({ id: dto.roomId });
+
+      if (!room) {
+        throw new AppError.NotFound();
+      }
+
+      if (
+        !room.isGroup ||
+        !this.isRoomMember(
+          room,
+          user.id,
+          RoomMemberRole.Admin,
+          RoomMemberRole.Moderator,
+          RoomMemberRole.Member,
+        ) ||
+        (dto.memberId !== user.id &&
+          this.isRoomMember(room, user.id, RoomMemberRole.Member)) ||
+        (this.isRoomMember(room, dto.memberId, RoomMemberRole.Admin) &&
+          !this.isRoomMember(room, user.id, RoomMemberRole.Admin))
+      ) {
+        throw new AppError.AccessDenied();
+      }
+
+      await tx.roomMember.update({
+        data: {
+          role: RoomMemberRole.None,
+        },
+        where: {
+          roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+        },
+      });
+
+      return this.getRoomById({ id: dto.roomId });
+    });
   }
 
   async createMessage(dto: CreateMessageDto, user: IdentityUser) {

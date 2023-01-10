@@ -15,7 +15,6 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
 } from '@nestjs/websockets';
 import * as _ from 'lodash';
 import { Namespace, Server } from 'socket.io';
@@ -39,14 +38,12 @@ import { WsAuthService } from './ws-auth.service';
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  private socketOffset: number;
-  private wsAuthOffset: number;
+  private readonly socketOffset: number;
+  private readonly wsAuthOffset: number;
 
   private logger = new Logger(WsAuthGateway.name);
 
-  @WebSocketServer()
   public server: Server;
-
   public namespace: Namespace;
 
   constructor(
@@ -61,9 +58,13 @@ export class WsAuthGateway
       1500;
   }
 
-  afterInit(namespace: Namespace): void {
-    if (namespace instanceof Namespace) {
-      this.namespace = namespace;
+  afterInit(serverOrNamespace: unknown): void {
+    if (serverOrNamespace instanceof Server) {
+      this.server = serverOrNamespace;
+    }
+    if (serverOrNamespace instanceof Namespace) {
+      this.server = serverOrNamespace.server;
+      this.namespace = serverOrNamespace;
     }
   }
 
