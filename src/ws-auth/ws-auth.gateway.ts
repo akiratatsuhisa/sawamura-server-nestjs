@@ -1,5 +1,4 @@
 import {
-  Inject,
   Logger,
   UseFilters,
   UseGuards,
@@ -17,7 +16,6 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import * as _ from 'lodash';
 import { Namespace, Server } from 'socket.io';

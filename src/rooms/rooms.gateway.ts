@@ -3,10 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import {
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   WsResponse,
 } from '@nestjs/websockets';
-import { Server } from 'http';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 
@@ -24,7 +22,7 @@ export class RoomsGateway extends WsAuthGateway {
   }
 
   @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): WsResponse<string> {
+  handleMessage(): WsResponse<string> {
     return { event: 'message', data: 'Hello world' };
   }
 }

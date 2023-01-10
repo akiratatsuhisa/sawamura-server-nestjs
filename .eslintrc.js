@@ -17,13 +17,13 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
+    '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/no-namespace': 'off',
-    'simple-import-sort/imports': 'error',
-    'simple-import-sort/exports': 'error',
+    'simple-import-sort/imports': 'warn',
+    'simple-import-sort/exports': 'warn',
   },
 };

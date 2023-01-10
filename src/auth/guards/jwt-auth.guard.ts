@@ -31,7 +31,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     user: IdentityUser,
     info: unknown,
     context: ExecutionContext,
-    status?: unknown,
   ) {
     const req = context.switchToHttp().getRequest();
 
