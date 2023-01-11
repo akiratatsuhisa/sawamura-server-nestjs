@@ -15,6 +15,7 @@ import {
   DeleteRoomDto,
   SearchMemberDto,
   SearchMembersDto,
+  SearchMessageDto,
   SearchMessagesDto,
   SearchRoomDto,
   SearchRoomsDto,
@@ -52,6 +53,20 @@ export class RoomsService extends PaginationService {
     createdAt: true,
   });
 
+  private roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({
+    id: true,
+    type: true,
+    content: true,
+    room: { select: { id: true } },
+    user: {
+      select: {
+        username: true,
+      },
+    },
+    createdAt: true,
+    updatedAt: true,
+  });
+
   private isRoomMember(
     room: Awaited<ReturnType<RoomsService['getRoomById']>>,
     userId: string,
@@ -80,9 +95,16 @@ export class RoomsService extends PaginationService {
     });
   }
 
+  async getMembersByRoomId(query: SearchMembersDto) {
+    return this.prisma.roomMember.findMany({
+      select: this.roomMemberSelect,
+      where: { roomId: query.roomId, role: { not: RoomMemberRole.None } },
+    });
+  }
+
   private async getMemberByRoomId(query: SearchMemberDto) {
     return this.prisma.roomMember.findFirst({
-      select: this.roomSelect,
+      select: this.roomMemberSelect,
       where: {
         roomId: query.roomId,
         memberId: query.memberId,
@@ -91,15 +113,16 @@ export class RoomsService extends PaginationService {
     });
   }
 
-  async getMembersByRoomId(query: SearchMembersDto) {
-    return this.prisma.roomMember.findMany({
-      select: this.roomSelect,
-      where: { roomId: query.roomId, role: { not: RoomMemberRole.None } },
+  async getMessageById(query: SearchMessageDto) {
+    return this.prisma.roomMember.findFirst({
+      select: this.roomMessageSelect,
+      where: { id: query.id, role: { not: RoomMemberRole.None } },
     });
   }
 
   async getMessagesByRoomId(query: SearchMessagesDto) {
     const messages = await this.prisma.roomMessage.findMany({
+      select: this.roomMessageSelect,
       where: { roomId: query.roomId },
       orderBy: { createdAt: 'desc' },
       ...this.makePaginationCursor(query),
@@ -236,18 +259,18 @@ export class RoomsService extends PaginationService {
         throw new AppError.AccessDenied();
       }
 
-      if (!this.isRoomMember(room, dto.memberId)) {
+      if (!this.isRoomMember(room, dto.id)) {
         await tx.roomMember.create({
-          data: { roomId: dto.roomId, memberId: dto.memberId, role: dto.role },
+          data: { roomId: dto.roomId, memberId: dto.id, role: dto.role },
         });
         return this.getRoomById({ id: dto.roomId });
       }
 
-      if (this.isRoomMember(room, dto.memberId, RoomMemberRole.None)) {
+      if (this.isRoomMember(room, dto.id, RoomMemberRole.None)) {
         await tx.roomMember.update({
           data: { role: dto.role },
           where: {
-            roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+            roomId_memberId: { roomId: dto.roomId, memberId: dto.id },
           },
         });
         return this.getRoomById({ id: dto.roomId });
@@ -273,7 +296,7 @@ export class RoomsService extends PaginationService {
           RoomMemberRole.Admin,
           RoomMemberRole.Moderator,
         ) ||
-        this.isRoomMember(room, dto.memberId, RoomMemberRole.None) ||
+        this.isRoomMember(room, dto.id, RoomMemberRole.None) ||
         (dto.role === RoomMemberRole.Admin &&
           !this.isRoomMember(room, user.id, RoomMemberRole.Admin))
       ) {
@@ -286,7 +309,7 @@ export class RoomsService extends PaginationService {
           role: dto.role,
         },
         where: {
-          roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+          roomId_memberId: { roomId: dto.roomId, memberId: dto.id },
         },
       });
 
@@ -311,9 +334,9 @@ export class RoomsService extends PaginationService {
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
         ) ||
-        (dto.memberId !== user.id &&
+        (dto.id !== user.id &&
           this.isRoomMember(room, user.id, RoomMemberRole.Member)) ||
-        (this.isRoomMember(room, dto.memberId, RoomMemberRole.Admin) &&
+        (this.isRoomMember(room, dto.id, RoomMemberRole.Admin) &&
           !this.isRoomMember(room, user.id, RoomMemberRole.Admin))
       ) {
         throw new AppError.AccessDenied();
@@ -324,7 +347,7 @@ export class RoomsService extends PaginationService {
           role: RoomMemberRole.None,
         },
         where: {
-          roomId_memberId: { roomId: dto.roomId, memberId: dto.memberId },
+          roomId_memberId: { roomId: dto.roomId, memberId: dto.id },
         },
       });
 
@@ -334,19 +357,31 @@ export class RoomsService extends PaginationService {
 
   async createMessage(dto: CreateMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
-      //
+      if (
+        await this.getMemberByRoomId({ roomId: dto.roomId, memberId: user.id })
+      ) {
+        throw new AppError.AccessDenied();
+      }
     });
   }
 
   async updateMessage(dto: UpdateMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
-      //
+      if (
+        await this.getMemberByRoomId({ roomId: dto.roomId, memberId: user.id })
+      ) {
+        throw new AppError.AccessDenied();
+      }
     });
   }
 
   async deleteMessage(dto: DeleteMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
-      //
+      if (
+        await this.getMemberByRoomId({ roomId: dto.roomId, memberId: user.id })
+      ) {
+        throw new AppError.AccessDenied();
+      }
     });
   }
 }

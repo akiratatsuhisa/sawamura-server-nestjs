@@ -4,10 +4,10 @@ export class DeleteMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  roomId: string;
+  id: string;
 
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  memberId: string;
+  roomId: string;
 }

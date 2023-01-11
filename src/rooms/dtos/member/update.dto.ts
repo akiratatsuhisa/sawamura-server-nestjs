@@ -13,12 +13,12 @@ export class UpdateMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  roomId: string;
+  id: string;
 
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  memberId: string;
+  roomId: string;
 
   @MaxLength(255)
   @IsString()

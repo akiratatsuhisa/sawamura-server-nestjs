@@ -11,12 +11,12 @@ export class CreateMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  roomId: string;
+  id: string;
 
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  memberId: string;
+  roomId: string;
 
   @IsIn([RoomMemberRole.Member, RoomMemberRole.Moderator])
   @IsString()
