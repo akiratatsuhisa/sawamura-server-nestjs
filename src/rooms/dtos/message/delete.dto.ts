@@ -5,9 +5,4 @@ export class DeleteMessageDto {
   @IsString()
   @IsNotEmpty()
   id: string;
-
-  @IsUUID()
-  @IsString()
-  @IsNotEmpty()
-  roomId: string;
 }

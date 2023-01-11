@@ -5,9 +5,4 @@ export class UpdateMessageDto {
   @IsString()
   @IsNotEmpty()
   id: string;
-
-  @IsUUID()
-  @IsString()
-  @IsNotEmpty()
-  roomId: string;
 }

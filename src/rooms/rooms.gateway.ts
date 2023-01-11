@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
@@ -13,7 +12,6 @@ import { RedisService } from 'src/redis/redis.service';
 import { PREFIX_SOCKET_USER } from 'src/ws-auth/constants';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
 
 import {
@@ -123,24 +121,48 @@ export class RoomsGateway extends WsAuthGateway {
   @SubscribeMessage('create_message')
   async createMessage(
     @MessageBody() dto: CreateMessageDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const message = await this.roomsService.createMessage(dto, user);
+
+    this.namespace
+      .to(
+        _(message.room.roomMembers)
+          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
+          .value(),
+      )
+      .emit('create_message', message);
   }
 
   @SubscribeMessage('update_message')
   async updateMessage(
     @MessageBody() dto: UpdateMessageDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const message = await this.roomsService.updateMessage(dto, user);
+
+    this.namespace
+      .to(
+        _(message.room.roomMembers)
+          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
+          .value(),
+      )
+      .emit('update_message', message);
   }
 
   @SubscribeMessage('delete_message')
   async deleteMessage(
     @MessageBody() dto: DeleteMessageDto,
-    @ConnectedSocket() client: SocketWithAuth,
+    @User() user: IdentityUser,
   ) {
-    //
+    const message = await this.roomsService.deleteMessage(dto, user);
+
+    this.namespace
+      .to(
+        _(message.room.roomMembers)
+          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
+          .value(),
+      )
+      .emit('delete_message', message);
   }
 }

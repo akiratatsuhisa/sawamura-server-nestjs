@@ -21,10 +21,9 @@ export class CreateMessageDto {
       .value(),
   )
   @IsString()
-  @ValidateIf((value) => value !== undefined)
+  @ValidateIf((object, value) => value !== undefined)
   type?: RoomMessageType;
 
-  @IsUUID()
   @IsString()
   @IsNotEmpty()
   content: string;
