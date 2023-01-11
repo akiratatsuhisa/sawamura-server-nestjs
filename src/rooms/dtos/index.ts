@@ -1,3 +1,4 @@
+export * from './chat-room.dto';
 export * from './member';
 export * from './message';
 export * from './room';

@@ -11,10 +11,12 @@ import {
 
 export class UpdateMemberDto {
   @IsUUID()
+  @IsString()
   @IsNotEmpty()
   roomId: string;
 
   @IsUUID()
+  @IsString()
   @IsNotEmpty()
   memberId: string;
 
@@ -24,6 +26,7 @@ export class UpdateMemberDto {
   nickName?: string;
 
   @IsIn([RoomMemberRole.Admin, RoomMemberRole.Member, RoomMemberRole.Moderator])
+  @IsString()
   @ValidateIf((object, value) => value !== undefined)
   role?: RoomMemberRole;
 }

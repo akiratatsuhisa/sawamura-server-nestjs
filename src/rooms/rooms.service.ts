@@ -13,6 +13,7 @@ import {
   DeleteMemberDto,
   DeleteMessageDto,
   DeleteRoomDto,
+  SearchMemberDto,
   SearchMembersDto,
   SearchMessagesDto,
   SearchRoomDto,
@@ -76,6 +77,17 @@ export class RoomsService extends PaginationService {
     return this.prisma.room.findFirst({
       select: this.roomSelect,
       where: { id: query.id },
+    });
+  }
+
+  private async getMemberByRoomId(query: SearchMemberDto) {
+    return this.prisma.roomMember.findFirst({
+      select: this.roomSelect,
+      where: {
+        roomId: query.roomId,
+        memberId: query.memberId,
+        role: { not: RoomMemberRole.None },
+      },
     });
   }
 
@@ -321,14 +333,20 @@ export class RoomsService extends PaginationService {
   }
 
   async createMessage(dto: CreateMessageDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      //
+    });
   }
 
   async updateMessage(dto: UpdateMessageDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      //
+    });
   }
 
   async deleteMessage(dto: DeleteMessageDto, user: IdentityUser) {
-    //
+    return this.prisma.$transaction(async (tx) => {
+      //
+    });
   }
 }

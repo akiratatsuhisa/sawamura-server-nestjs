@@ -1,13 +1,8 @@
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
-export class DeleteMemberDto {
+export class ChatRoomDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
   roomId: string;
-
-  @IsUUID()
-  @IsString()
-  @IsNotEmpty()
-  memberId: string;
 }

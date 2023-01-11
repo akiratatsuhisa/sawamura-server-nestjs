@@ -1,1 +1,31 @@
-export class CreateMessageDto {}
+import { RoomMessageType } from '@prisma/client';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator';
+import * as _ from 'lodash';
+
+export class CreateMessageDto {
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+
+  @IsIn(
+    _(RoomMessageType)
+      .values()
+      .remove((v) => v !== RoomMessageType.None)
+      .value(),
+  )
+  @IsString()
+  @ValidateIf((value) => value !== undefined)
+  type?: RoomMessageType;
+
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+}

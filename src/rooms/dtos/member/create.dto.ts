@@ -1,16 +1,25 @@
 import { RoomMemberRole } from '@prisma/client';
-import { IsIn, IsNotEmpty, IsUUID, ValidateIf } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateMemberDto {
   @IsUUID()
+  @IsString()
   @IsNotEmpty()
   roomId: string;
 
   @IsUUID()
+  @IsString()
   @IsNotEmpty()
   memberId: string;
 
   @IsIn([RoomMemberRole.Member, RoomMemberRole.Moderator])
+  @IsString()
   @ValidateIf((object, value) => value !== undefined)
   role?: RoomMemberRole;
 }

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { RoomMemberRole } from '@prisma/client';
 import * as _ from 'lodash';
+import { RedisService } from 'src/redis/redis.service';
 import { PREFIX_SOCKET_USER } from 'src/ws-auth/constants';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
@@ -35,6 +36,7 @@ export class RoomsGateway extends WsAuthGateway {
     configService: ConfigService,
     wsAuthService: WsAuthService,
     private roomsService: RoomsService,
+    private redisService: RedisService,
   ) {
     super(configService, wsAuthService);
   }

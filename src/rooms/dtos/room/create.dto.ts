@@ -8,6 +8,7 @@ import {
   IsBoolean,
   IsIn,
   IsNotEmpty,
+  IsString,
   IsUUID,
   MaxLength,
   ValidateNested,
@@ -15,16 +16,19 @@ import {
 
 class CreateRoomMemberDto {
   @IsUUID()
+  @IsString()
   @IsNotEmpty()
   memberId: string;
 
   @IsIn([RoomMemberRole.Admin, RoomMemberRole.Moderator, RoomMemberRole.Member])
+  @IsString()
   @IsNotEmpty()
   role: RoomMemberRole;
 }
 
 export class CreateRoomDto {
   @MaxLength(255)
+  @IsString()
   @IsNotEmpty()
   name: string;
 
