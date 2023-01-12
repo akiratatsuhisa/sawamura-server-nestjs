@@ -9,7 +9,7 @@ import {
 import { RoomMemberRole } from '@prisma/client';
 import * as _ from 'lodash';
 import { RedisService } from 'src/redis/redis.service';
-import { PREFIX_SOCKET_USER } from 'src/ws-auth/constants';
+import { PREFIXES } from 'src/ws-auth/constants';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
@@ -47,7 +47,7 @@ export class RoomsGateway extends WsAuthGateway {
       .to(
         _(room.roomMembers)
           .filter((m) => m.role !== RoomMemberRole.None)
-          .map((m) => `${PREFIX_SOCKET_USER}${m.member.id}`)
+          .map((m) => `${PREFIXES.SOCKET_USER}:${m.member.id}`)
           .value(),
       )
       .emit(event, room);
@@ -58,111 +58,111 @@ export class RoomsGateway extends WsAuthGateway {
     return { event: 'message', data: 'Hello world' };
   }
 
-  @SubscribeMessage('create_room')
+  @SubscribeMessage('create:room')
   async createRoom(
     @MessageBody() dto: CreateRoomDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.createRoom(dto, user);
 
-    this.emitToMembers('create_room', room);
+    this.emitToMembers('create:room', room);
   }
 
-  @SubscribeMessage('update_room')
+  @SubscribeMessage('update:room')
   async updateRoom(
     @MessageBody() dto: UpdateRoomDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.updateRoom(dto, user);
 
-    this.emitToMembers('update_room', room);
+    this.emitToMembers('update:room', room);
   }
 
-  @SubscribeMessage('delete_room')
+  @SubscribeMessage('delete:room')
   async deleteRoom(
     @MessageBody() dto: DeleteRoomDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.deleteRoom(dto, user);
 
-    this.emitToMembers('delete_room', room);
+    this.emitToMembers('delete:room', room);
   }
 
-  @SubscribeMessage('create_member')
+  @SubscribeMessage('create:member')
   async createMember(
     @MessageBody() dto: CreateMemberDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.createMember(dto, user);
 
-    this.emitToMembers('create_member', room);
+    this.emitToMembers('create:member', room);
   }
 
-  @SubscribeMessage('update_member')
+  @SubscribeMessage('update:member')
   async updateMember(
     @MessageBody() dto: UpdateMemberDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.updateMember(dto, user);
 
-    this.emitToMembers('update_member', room);
+    this.emitToMembers('update:member', room);
   }
 
-  @SubscribeMessage('delete_member')
+  @SubscribeMessage('delete:member')
   async deleteMember(
     @MessageBody() dto: DeleteMemberDto,
     @User() user: IdentityUser,
   ) {
     const room = await this.roomsService.deleteMember(dto, user);
 
-    this.emitToMembers('delete_member', room);
+    this.emitToMembers('delete:member', room);
   }
 
-  @SubscribeMessage('create_message')
+  @SubscribeMessage('create:message')
   async createMessage(
     @MessageBody() dto: CreateMessageDto,
     @User() user: IdentityUser,
   ) {
     const message = await this.roomsService.createMessage(dto, user);
 
-    this.namespace
-      .to(
-        _(message.room.roomMembers)
-          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
-          .value(),
-      )
-      .emit('create_message', message);
+    this.sendToUsers({
+      event: 'create:message',
+      userIds: _.map(message.room.roomMembers, 'memberId'),
+      data: message,
+      unconnectedCallback: async (unconnected) =>
+        console.log(`Send notification to ${unconnected.join(',')}`),
+    });
   }
 
-  @SubscribeMessage('update_message')
+  @SubscribeMessage('update:message')
   async updateMessage(
     @MessageBody() dto: UpdateMessageDto,
     @User() user: IdentityUser,
   ) {
     const message = await this.roomsService.updateMessage(dto, user);
 
-    this.namespace
-      .to(
-        _(message.room.roomMembers)
-          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
-          .value(),
-      )
-      .emit('update_message', message);
+    this.sendToUsers({
+      event: 'update:message',
+      userIds: _.map(message.room.roomMembers, 'memberId'),
+      data: message,
+      unconnectedCallback: async (unconnected) =>
+        console.log(`Send notification to ${unconnected.join(',')}`),
+    });
   }
 
-  @SubscribeMessage('delete_message')
+  @SubscribeMessage('delete:message')
   async deleteMessage(
     @MessageBody() dto: DeleteMessageDto,
     @User() user: IdentityUser,
   ) {
     const message = await this.roomsService.deleteMessage(dto, user);
 
-    this.namespace
-      .to(
-        _(message.room.roomMembers)
-          .map((m) => `${PREFIX_SOCKET_USER}${m.memberId}`)
-          .value(),
-      )
-      .emit('delete_message', message);
+    this.sendToUsers({
+      event: 'delete:message',
+      userIds: _.map(message.room.roomMembers, 'memberId'),
+      data: message,
+      unconnectedCallback: async (unconnected) =>
+        console.log(`Send notification to ${unconnected.join(',')}`),
+    });
   }
 }

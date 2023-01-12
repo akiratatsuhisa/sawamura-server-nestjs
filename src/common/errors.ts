@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { EVENTS } from 'src/ws-auth/constants';
 
 import { messages } from '../helpers/messages.helper';
 
@@ -7,7 +8,7 @@ export { messages };
 export namespace AppError {
   export abstract class BasicError {
     protected _isDetail = true;
-    protected _event = 'exception';
+    protected _event = EVENTS.EXCEPTION;
 
     data?: Record<string, unknown> | Array<unknown>;
     errors?: Record<string, unknown> | Array<unknown>;

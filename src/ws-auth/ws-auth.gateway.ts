@@ -22,8 +22,10 @@ import { GlobalWsExceptionsFilter } from 'src/validations/global-ws-exceptions.f
 import { exceptionFactory } from 'src/validations/validation.factory';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 
+import { EVENTS, PREFIXES } from './constants';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { WsRolesGuard } from './guards/ws-roles.guard';
+import { ISendToUsersOptions } from './interfaces/send-to-users-options.interface';
 import { WsAuthService } from './ws-auth.service';
 
 @UseGuards(WsJwtAuthGuard, WsRolesGuard)
@@ -113,7 +115,7 @@ export class WsAuthGateway
       }
       socket.isAuthenticating = true;
 
-      socket.emit('authenticate', 'Plz auth');
+      socket.emit(EVENTS.AUTHENTICATE, 'Plz auth');
 
       setTimeout(() => {
         if (socket?.isAuthenticating) {
@@ -123,7 +125,7 @@ export class WsAuthGateway
     });
   }
 
-  @SubscribeMessage('authenticate')
+  @SubscribeMessage(EVENTS.AUTHENTICATE)
   authenticate(
     @MessageBody() data: string,
     @ConnectedSocket() client: SocketWithAuth,
@@ -131,6 +133,47 @@ export class WsAuthGateway
     this.wsAuthService.authenticate(client, { token: data });
     if (client.principal.isAuthenticated) {
       client.isAuthenticating = false;
+    }
+  }
+
+  sendToUsers<D = unknown>(options: ISendToUsersOptions<D>) {
+    const { event, userIds, data, unconnectedCallback } = options;
+    const rooms = this.namespace.adapter.rooms;
+
+    const { connected, connectedSilent, unconnected } = _(
+      userIds instanceof Array ? userIds : [userIds],
+    ).reduce(
+      (group, userId) => {
+        const connected = `${PREFIXES.SOCKET_USER}:${userId}`;
+        const connectedSilent = `${PREFIXES.SOCKET_USER_SILENT}:${userId}`;
+        if (rooms.has(connected)) {
+          group.connected.push(connected);
+        } else if (rooms.has(connectedSilent)) {
+          group.connectedSilent.push(connectedSilent);
+        } else {
+          group.unconnected.push(userId);
+        }
+        return group;
+      },
+      {
+        connected: [],
+        connectedSilent: [],
+        unconnected: [],
+      } as {
+        connected: Array<string>;
+        connectedSilent: Array<string>;
+        unconnected: Array<string>;
+      },
+    );
+
+    this.namespace.to(connected).emit(event, data);
+
+    const silentData =
+      _.isObject(data) && !_.isArray(data) ? { _event: event, ...data } : data;
+    this.namespace.to(connectedSilent).emit('silent', silentData);
+
+    if (unconnectedCallback && unconnected.length) {
+      unconnectedCallback(unconnected, data);
     }
   }
 }

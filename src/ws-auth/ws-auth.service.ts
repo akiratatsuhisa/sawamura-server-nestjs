@@ -6,8 +6,9 @@ import * as moment from 'moment';
 import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
 import { RedisService } from 'src/redis/redis.service';
 
-import { PREFIX_SOCKET_USER, PREFIX_SOCKET_USER_SILENT } from './constants';
-import { AuthOptions, SocketWithAuth } from './ws-auth.type';
+import { PREFIXES } from './constants';
+import { IAuthOptions } from './interfaces/auth-options.interface';
+import { SocketWithAuth } from './ws-auth.type';
 
 @Injectable()
 export class WsAuthService {
@@ -41,7 +42,7 @@ export class WsAuthService {
    * @param socket socket.io client
    * @param {string} token json web token
    */
-  authenticate(socket: SocketWithAuth, options?: AuthOptions): void {
+  authenticate(socket: SocketWithAuth, options?: IAuthOptions): void {
     try {
       const token =
         options?.token ??
@@ -57,8 +58,10 @@ export class WsAuthService {
         ? Number(payload.exp) * 1000
         : undefined;
 
-      socket.join(`${PREFIX_SOCKET_USER}${socket.user.id}`);
-      socket.join(`${PREFIX_SOCKET_USER_SILENT}${socket.user.id}`);
+      if (socket.handshake.query.silent !== 'true') {
+        socket.join(`${PREFIXES.SOCKET_USER}:${socket.user.id}`);
+      }
+      socket.join(`${PREFIXES.SOCKET_USER_SILENT}:${socket.user.id}`);
     } catch (error) {
       socket.user = undefined;
       socket.expires = undefined;
