@@ -1,8 +1,8 @@
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
-export class SearchMembersDto {
+export class UpdateMessageDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  roomId: string;
+  id: string;
 }

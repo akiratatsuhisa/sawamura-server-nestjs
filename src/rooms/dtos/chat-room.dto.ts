@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
-export class SearchMembersDto {
+export class ChatRoomDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
