@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
+import { AppGateway } from './app.gateway';
 import { appProviders } from './app.provider';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -28,6 +29,6 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     RoomsModule,
   ],
   controllers: [AppController],
-  providers: [...appProviders, AppService],
+  providers: [...appProviders, AppService, AppGateway],
 })
 export class AppModule {}

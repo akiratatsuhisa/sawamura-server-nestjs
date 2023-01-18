@@ -36,7 +36,7 @@ import { WsAuthService } from './ws-auth.service';
   }),
 )
 @UseFilters(new GlobalWsExceptionsFilter())
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -126,12 +126,13 @@ export class WsAuthGateway
   }
 
   @SubscribeMessage(EVENTS.AUTHENTICATE)
-  authenticate(
+  async authenticate(
     @MessageBody() data: string,
     @ConnectedSocket() client: SocketWithAuth,
-  ): void {
+  ): Promise<void> {
     this.wsAuthService.authenticate(client, { token: data });
     if (client.principal.isAuthenticated) {
+      await this.wsAuthService.zAddAuth(client, this.socketOffset);
       client.isAuthenticating = false;
     }
   }
