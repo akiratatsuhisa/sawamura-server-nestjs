@@ -5,6 +5,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common/decorators/core/use-interceptors.decorator';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import {
@@ -26,6 +27,7 @@ import { EVENTS, PREFIXES } from './constants';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { WsRolesGuard } from './guards/ws-roles.guard';
 import { ISendToUsersOptions } from './interfaces/send-to-users-options.interface';
+import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
 
 @UseGuards(WsJwtAuthGuard, WsRolesGuard)
@@ -35,7 +37,8 @@ import { WsAuthService } from './ws-auth.service';
     exceptionFactory,
   }),
 )
-@UseFilters(new GlobalWsExceptionsFilter())
+@UseInterceptors(WsAuthInterceptor)
+@UseFilters(GlobalWsExceptionsFilter)
 @WebSocketGateway({ cors: true })
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect

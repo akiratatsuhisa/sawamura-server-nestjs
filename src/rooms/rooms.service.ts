@@ -71,7 +71,6 @@ export class RoomsService extends PaginationService {
       },
     },
     createdAt: true,
-    updatedAt: true,
   });
 
   private isRoomMember(
@@ -89,34 +88,20 @@ export class RoomsService extends PaginationService {
     );
   }
 
-  async getRooms(query: SearchRoomsDto) {
-    return this.prisma.room.findMany({
-      select: this.roomSelect,
-      orderBy: { createdAt: 'desc' },
-      ...this.makePaginationCursor(query),
-    });
-  }
-
-  async getRoomById(query: SearchRoomDto) {
+  async getRoomById(query: SearchRoomDto, user?: IdentityUser) {
     return this.prisma.room.findFirst({
       select: this.roomSelect,
-      where: { id: query.id },
+      where: {
+        id: query.id,
+        roomMembers: { some: { memberId: user.id } },
+      },
     });
   }
 
-  async getMembersByRoomId(query: SearchMembersDto) {
+  private async getMembersByRoomId(query: SearchMembersDto) {
     return this.prisma.roomMember.findMany({
       select: this.roomMemberSelect,
       where: { roomId: query.roomId, role: { not: RoomMemberRole.None } },
-    });
-  }
-
-  async getMessagesByRoomId(query: SearchMessagesDto) {
-    return this.prisma.roomMessage.findMany({
-      select: this.roomMessageSelect,
-      where: { roomId: query.roomId },
-      orderBy: { createdAt: 'desc' },
-      ...this.makePaginationCursor(query),
     });
   }
 
@@ -124,6 +109,48 @@ export class RoomsService extends PaginationService {
     return this.prisma.roomMessage.findFirst({
       select: this.roomMessageSelect,
       where: { id: query.id, type: { not: RoomMemberRole.None } },
+    });
+  }
+
+  async getRooms(query: SearchRoomsDto, user: IdentityUser) {
+    return this.prisma.room.findMany({
+      select: this.roomSelect,
+      orderBy: { createdAt: 'desc' },
+      where: {
+        roomMembers: {
+          some: { memberId: user.id },
+        },
+      },
+      ...this.makePaginationCursor(query),
+    });
+  }
+
+  async getMessagesByRoomId(query: SearchMessagesDto, user: IdentityUser) {
+    return this.prisma.roomMessage.findMany({
+      select: {
+        id: true,
+        type: true,
+        content: true,
+        room: {
+          select: {
+            id: true,
+          },
+        },
+        user: {
+          select: {
+            username: true,
+          },
+        },
+        createdAt: true,
+      },
+      where: {
+        room: {
+          id: query.roomId,
+          roomMembers: { some: { memberId: user.id } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      ...this.makePaginationCursor(query),
     });
   }
 

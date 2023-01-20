@@ -9,7 +9,8 @@ export function catchPrismaException(exception: unknown) {
     exception instanceof Prisma.PrismaClientUnknownRequestError ||
     exception instanceof Prisma.PrismaClientKnownRequestError
   ) {
-    return new AppError.Prisma();
+    return new AppError.Prisma().setEvent(exception['_subscribeMessage']);
   }
+
   return exception;
 }

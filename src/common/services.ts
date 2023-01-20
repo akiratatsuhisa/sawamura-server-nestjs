@@ -12,7 +12,7 @@ export abstract class PaginationService {
     return {
       take: query.take,
       skip: query.cursor ? 1 : undefined,
-      cursor: { id: query.cursor },
+      cursor: query.cursor ? { id: query.cursor } : undefined,
     };
   }
 }

@@ -20,6 +20,9 @@ import {
   DeleteMemberDto,
   DeleteMessageDto,
   DeleteRoomDto,
+  SearchMessagesDto,
+  SearchRoomDto,
+  SearchRoomsDto,
   UpdateMemberDto,
   UpdateMessageDto,
   UpdateRoomDto,
@@ -54,6 +57,45 @@ export class RoomsGateway extends WsAuthGateway {
   @SubscribeMessage('message')
   handleMessage(): WsResponse<string> {
     return { event: 'message', data: 'Hello world' };
+  }
+
+  @SubscribeMessage('list:room')
+  async getRooms(
+    @MessageBody() dto: SearchRoomsDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const rooms = await this.roomsService.getRooms(dto, user);
+
+    return {
+      event: 'list:room',
+      data: rooms,
+    };
+  }
+
+  @SubscribeMessage('read:room')
+  async getRoom(
+    @MessageBody() dto: SearchRoomDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const room = await this.roomsService.getRoomById(dto, user);
+
+    return {
+      event: 'read:room',
+      data: room,
+    };
+  }
+
+  @SubscribeMessage('list:message')
+  async getMessages(
+    @MessageBody() dto: SearchMessagesDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const messages = await this.roomsService.getMessagesByRoomId(dto, user);
+
+    return {
+      event: 'list:message',
+      data: messages,
+    };
   }
 
   @SubscribeMessage('create:room')
