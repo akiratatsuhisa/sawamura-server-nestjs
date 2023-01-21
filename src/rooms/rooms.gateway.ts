@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { RoomMemberRole } from '@prisma/client';
 import * as _ from 'lodash';
+import { AppError } from 'src/common/errors';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
@@ -75,6 +76,9 @@ export class RoomsGateway extends WsAuthGateway {
     @User() user: IdentityUser,
   ): Promise<WsResponse<unknown>> {
     const room = await this.roomsService.getRoomById(dto, user);
+    if (!room) {
+      throw new AppError.NotFound();
+    }
 
     return {
       event: SOCKET_ROOM_EVENTS.READ_ROOM,

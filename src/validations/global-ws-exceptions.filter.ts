@@ -15,6 +15,7 @@ export class GlobalWsExceptionsFilter extends BaseWsExceptionFilter {
     exception = catchPrismaException(exception);
 
     if (exception instanceof AppError.BasicError) {
+      exception.setData(context.getData());
       client.emit(exception.getEvent(), exception.getResponseBody());
 
       /**
