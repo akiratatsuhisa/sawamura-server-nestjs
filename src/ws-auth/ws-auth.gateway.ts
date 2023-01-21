@@ -140,7 +140,10 @@ export class WsAuthGateway
     }
   }
 
-  sendToUsers<D = unknown>(options: ISendToUsersOptions<D>) {
+  sendToUsers<D = unknown>(
+    socket: SocketWithAuth,
+    options: ISendToUsersOptions<D>,
+  ) {
     const { event, userIds, data, unconnectedCallback } = options;
     const rooms = this.namespace.adapter.rooms;
 
@@ -170,11 +173,14 @@ export class WsAuthGateway
       },
     );
 
-    this.namespace.to(connected).emit(event, data);
+    socket.emit(event, data);
+    socket.to(connected).emit(`${EVENTS.LISTENER}:${event}`, data);
 
     const silentData =
       _.isObject(data) && !_.isArray(data) ? { _event: event, ...data } : data;
-    this.namespace.to(connectedSilent).emit('silent', silentData);
+    this.namespace
+      .to(connectedSilent)
+      .emit(`${EVENTS.SILENT}:${event}`, silentData);
 
     if (unconnectedCallback && unconnected.length) {
       unconnectedCallback(unconnected, data);
