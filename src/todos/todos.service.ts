@@ -65,9 +65,9 @@ export class TodosService {
       async (tx) => {
         const maxSort = await this.maxSort(tx);
         if (dto.sort > maxSort) {
-          throw new AppError.Argument('Sort is greater than max sort')
-            .setErrors([`Max sort is ${maxSort}, current sort is ${dto.sort}`])
-            .setData([{ sort: dto.sort }, { maxSort }]);
+          throw new AppError.Argument(
+            'Sort is greater than max sort',
+          ).setErrors([`Max sort is ${maxSort}, current sort is ${dto.sort}`]);
         }
 
         const newsort = dto.sort;

@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { compare, genSalt, hash } from 'bcrypt';
 import * as moment from 'moment';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserWithRoles } from 'src/users/types/UserWithRoles.type';
 import { UsersService } from 'src/users/users.service';
 
 import { RegisterDto } from './dtos/register.dto';
@@ -22,7 +21,9 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async generateAccessToken(user: UserWithRoles): Promise<string> {
+  async generateAccessToken(
+    user: Awaited<ReturnType<UsersService['findByUnique']>>,
+  ): Promise<string> {
     const payload = {
       sub: user.id,
       username: user.username,
@@ -80,10 +81,7 @@ export class AuthService {
     return revoked;
   }
 
-  async validateUser(
-    username: string,
-    password: string,
-  ): Promise<UserWithRoles> {
+  async validateUser(username: string, password: string) {
     const user = await this.usersService.findByUnique({ username });
     if (user && (await compare(password, user.password))) {
       return user;
@@ -116,7 +114,10 @@ export class AuthService {
     });
   }
 
-  async login(user: UserWithRoles, ipAddress: string) {
+  async login(
+    user: Awaited<ReturnType<UsersService['findByUnique']>>,
+    ipAddress: string,
+  ) {
     return {
       accessToken: await this.generateAccessToken(user),
       refreshToken: await this.generateRefreshToken(user.id, ipAddress),

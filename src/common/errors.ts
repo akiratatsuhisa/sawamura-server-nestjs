@@ -34,8 +34,8 @@ export namespace AppError {
       return this;
     }
 
-    setEvent(name: string) {
-      this._event = `error_${name}`;
+    setEvent(name?: string) {
+      this._event = name ? `exception:${name}` : this._event;
       return this;
     }
 

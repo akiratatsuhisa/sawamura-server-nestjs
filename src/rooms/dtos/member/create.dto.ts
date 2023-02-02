@@ -11,7 +11,7 @@ export class CreateMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  id: string;
+  memberId: string;
 
   @IsUUID()
   @IsString()

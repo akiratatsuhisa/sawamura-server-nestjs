@@ -4,7 +4,7 @@ export class DeleteMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  id: string;
+  memberId: string;
 
   @IsUUID()
   @IsString()

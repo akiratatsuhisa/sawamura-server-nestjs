@@ -13,7 +13,7 @@ export class UpdateMemberDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
-  id: string;
+  memberId: string;
 
   @IsUUID()
   @IsString()

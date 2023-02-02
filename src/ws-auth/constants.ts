@@ -7,4 +7,5 @@ export const EVENTS = {
   EXCEPTION: 'exception',
   SILENT: 'silent',
   AUTHENTICATE: 'authenticate',
+  LISTENER: 'listener',
 };

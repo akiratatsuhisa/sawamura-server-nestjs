@@ -5,6 +5,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common/decorators/core/use-interceptors.decorator';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import {
@@ -26,6 +27,7 @@ import { EVENTS, PREFIXES } from './constants';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { WsRolesGuard } from './guards/ws-roles.guard';
 import { ISendToUsersOptions } from './interfaces/send-to-users-options.interface';
+import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
 
 @UseGuards(WsJwtAuthGuard, WsRolesGuard)
@@ -35,7 +37,8 @@ import { WsAuthService } from './ws-auth.service';
     exceptionFactory,
   }),
 )
-@UseFilters(new GlobalWsExceptionsFilter())
+@UseInterceptors(WsAuthInterceptor)
+@UseFilters(GlobalWsExceptionsFilter)
 @WebSocketGateway({ cors: true })
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -137,7 +140,10 @@ export class WsAuthGateway
     }
   }
 
-  sendToUsers<D = unknown>(options: ISendToUsersOptions<D>) {
+  sendToUsers<D = unknown>(
+    socket: SocketWithAuth,
+    options: ISendToUsersOptions<D>,
+  ) {
     const { event, userIds, data, unconnectedCallback } = options;
     const rooms = this.namespace.adapter.rooms;
 
@@ -167,11 +173,14 @@ export class WsAuthGateway
       },
     );
 
-    this.namespace.to(connected).emit(event, data);
+    socket.emit(event, data);
+    socket.to(connected).emit(`${EVENTS.LISTENER}:${event}`, data);
 
     const silentData =
       _.isObject(data) && !_.isArray(data) ? { _event: event, ...data } : data;
-    this.namespace.to(connectedSilent).emit('silent', silentData);
+    this.namespace
+      .to(connectedSilent)
+      .emit(`${EVENTS.SILENT}:${event}`, silentData);
 
     if (unconnectedCallback && unconnected.length) {
       unconnectedCallback(unconnected, data);

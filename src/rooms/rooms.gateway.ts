@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
@@ -8,11 +9,13 @@ import {
 } from '@nestjs/websockets';
 import { RoomMemberRole } from '@prisma/client';
 import * as _ from 'lodash';
-import { PREFIXES } from 'src/ws-auth/constants';
+import { AppError } from 'src/common/errors';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
+import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
 import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
 
+import { SOCKET_ROOM_EVENTS } from './constants';
 import {
   CreateMemberDto,
   CreateMessageDto,
@@ -20,6 +23,9 @@ import {
   DeleteMemberDto,
   DeleteMessageDto,
   DeleteRoomDto,
+  SearchMessagesDto,
+  SearchRoomDto,
+  SearchRoomsDto,
   UpdateMemberDto,
   UpdateMessageDto,
   UpdateRoomDto,
@@ -37,18 +43,13 @@ export class RoomsGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
-  private emitToMembers(
-    event: string,
+  private getRoomMembers(
     room: Awaited<ReturnType<RoomsService['getRoomById']>>,
   ) {
-    this.namespace
-      .to(
-        _(room.roomMembers)
-          .filter((m) => m.role !== RoomMemberRole.None)
-          .map((m) => `${PREFIXES.SOCKET_USER}:${m.member.id}`)
-          .value(),
-      )
-      .emit(event, room);
+    return _(room.roomMembers)
+      .filter((m) => m.role !== RoomMemberRole.None)
+      .map((m) => m.member.id)
+      .value();
   }
 
   @SubscribeMessage('message')
@@ -56,75 +57,141 @@ export class RoomsGateway extends WsAuthGateway {
     return { event: 'message', data: 'Hello world' };
   }
 
-  @SubscribeMessage('create:room')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_ROOM)
+  async getRooms(
+    @MessageBody() dto: SearchRoomsDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const rooms = await this.roomsService.getRooms(dto, user);
+
+    return {
+      event: SOCKET_ROOM_EVENTS.LIST_ROOM,
+      data: rooms,
+    };
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.READ_ROOM)
+  async getRoom(
+    @MessageBody() dto: SearchRoomDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const room = await this.roomsService.getRoomById(dto, user);
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    return {
+      event: SOCKET_ROOM_EVENTS.READ_ROOM,
+      data: room,
+    };
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_MESSAGE)
+  async getMessages(
+    @MessageBody() dto: SearchMessagesDto,
+    @User() user: IdentityUser,
+  ): Promise<WsResponse<unknown>> {
+    const messages = await this.roomsService.getMessagesByRoomId(dto, user);
+
+    return {
+      event: SOCKET_ROOM_EVENTS.LIST_MESSAGE,
+      data: messages,
+    };
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_ROOM)
   async createRoom(
     @MessageBody() dto: CreateRoomDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.createRoom(dto, user);
+    const room = await this.roomsService.createRoom(dto, client.user);
 
-    this.emitToMembers('create:room', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.CREATE_ROOM,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('update:room')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_ROOM)
   async updateRoom(
     @MessageBody() dto: UpdateRoomDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.updateRoom(dto, user);
+    const room = await this.roomsService.updateRoom(dto, client.user);
 
-    this.emitToMembers('update:room', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.UPDATE_ROOM,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('delete:room')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_ROOM)
   async deleteRoom(
     @MessageBody() dto: DeleteRoomDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.deleteRoom(dto, user);
+    const room = await this.roomsService.deleteRoom(dto, client.user);
 
-    this.emitToMembers('delete:room', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.DELETE_ROOM,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('create:member')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_MEMBER)
   async createMember(
     @MessageBody() dto: CreateMemberDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.createMember(dto, user);
+    const room = await this.roomsService.createMember(dto, client.user);
 
-    this.emitToMembers('create:member', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.CREATE_MEMBER,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('update:member')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MEMBER)
   async updateMember(
     @MessageBody() dto: UpdateMemberDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.updateMember(dto, user);
+    const room = await this.roomsService.updateMember(dto, client.user);
 
-    this.emitToMembers('update:member', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.UPDATE_MEMBER,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('delete:member')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_MEMBER)
   async deleteMember(
     @MessageBody() dto: DeleteMemberDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const room = await this.roomsService.deleteMember(dto, user);
+    const room = await this.roomsService.deleteMember(dto, client.user);
 
-    this.emitToMembers('delete:member', room);
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.DELETE_MEMBER,
+      data: room,
+      userIds: this.getRoomMembers(room),
+    });
   }
 
-  @SubscribeMessage('create:message')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_MESSAGE)
   async createMessage(
     @MessageBody() dto: CreateMessageDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const message = await this.roomsService.createMessage(dto, user);
+    const message = await this.roomsService.createMessage(dto, client.user);
 
-    this.sendToUsers({
-      event: 'create:message',
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,
       unconnectedCallback: async (unconnected) =>
@@ -132,15 +199,15 @@ export class RoomsGateway extends WsAuthGateway {
     });
   }
 
-  @SubscribeMessage('update:message')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MESSAGE)
   async updateMessage(
     @MessageBody() dto: UpdateMessageDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const message = await this.roomsService.updateMessage(dto, user);
+    const message = await this.roomsService.updateMessage(dto, client.user);
 
-    this.sendToUsers({
-      event: 'update:message',
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.UPDATE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,
       unconnectedCallback: async (unconnected) =>
@@ -148,15 +215,15 @@ export class RoomsGateway extends WsAuthGateway {
     });
   }
 
-  @SubscribeMessage('delete:message')
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_MESSAGE)
   async deleteMessage(
     @MessageBody() dto: DeleteMessageDto,
-    @User() user: IdentityUser,
+    @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const message = await this.roomsService.deleteMessage(dto, user);
+    const message = await this.roomsService.deleteMessage(dto, client.user);
 
-    this.sendToUsers({
-      event: 'delete:message',
+    this.sendToUsers(client, {
+      event: SOCKET_ROOM_EVENTS.DELETE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,
       unconnectedCallback: async (unconnected) =>
