@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/auth/decorators/roles.decorator';
 import { AppError } from 'src/common/errors';
 
-import { SocketWithAuth } from '../ws-auth.type';
+import { SocketWithAuth } from '../ws-auth.types';
 
 @Injectable()
 export class WsRolesGuard implements CanActivate {

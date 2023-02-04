@@ -8,7 +8,7 @@ import { RedisService } from 'src/redis/redis.service';
 
 import { PREFIXES } from './constants';
 import { IAuthOptions } from './interfaces/auth-options.interface';
-import { SocketWithAuth } from './ws-auth.type';
+import { SocketWithAuth } from './ws-auth.types';
 
 @Injectable()
 export class WsAuthService {

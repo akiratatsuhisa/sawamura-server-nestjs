@@ -94,7 +94,9 @@ export class RoomsService extends PaginationService {
       select: this.roomSelect,
       where: {
         id: query.id,
-        roomMembers: user ? { some: { memberId: user.id } } : undefined,
+        roomMembers: user
+          ? { some: { memberId: user.id, role: { not: RoomMemberRole.None } } }
+          : undefined,
       },
     });
   }
@@ -119,7 +121,7 @@ export class RoomsService extends PaginationService {
       orderBy: { lastActivatedAt: { sort: 'desc', nulls: 'last' } },
       where: {
         roomMembers: {
-          some: { memberId: user.id },
+          some: { memberId: user.id, role: { not: RoomMemberRole.None } },
         },
         id: query.excludeIds?.length ? { notIn: query.excludeIds } : undefined,
       },
@@ -149,7 +151,9 @@ export class RoomsService extends PaginationService {
       where: {
         room: {
           id: query.roomId,
-          roomMembers: { some: { memberId: user.id } },
+          roomMembers: {
+            some: { memberId: user.id, role: { not: RoomMemberRole.None } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },

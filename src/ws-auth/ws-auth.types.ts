@@ -10,3 +10,7 @@ export abstract class SocketWithAuth extends Socket {
   user?: IdentityUser;
   principal: IdentityPrincipal;
 }
+
+export type EmitId = {
+  __emit_id__?: string;
+};

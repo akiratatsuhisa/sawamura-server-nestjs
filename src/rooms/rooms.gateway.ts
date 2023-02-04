@@ -12,8 +12,7 @@ import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
-import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
+import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
 import { SOCKET_ROOM_EVENTS } from './constants';
 import {
@@ -59,44 +58,50 @@ export class RoomsGateway extends WsAuthGateway {
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_ROOM)
   async getRooms(
+    @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchRoomsDto,
-    @User() user: IdentityUser,
-  ): Promise<WsResponse<unknown>> {
-    const rooms = await this.roomsService.getRooms(dto, user);
+  ) {
+    const rooms = await this.roomsService.getRooms(dto, client.user);
 
-    return {
+    this.sendToCaller(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.LIST_ROOM,
-      data: rooms,
-    };
+      data: { rooms },
+    });
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.READ_ROOM)
   async getRoom(
+    @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchRoomDto,
-    @User() user: IdentityUser,
-  ): Promise<WsResponse<unknown>> {
-    const room = await this.roomsService.getRoomById(dto, user);
+  ) {
+    const room = await this.roomsService.getRoomById(dto, client.user);
     if (!room) {
       throw new AppError.NotFound();
     }
 
-    return {
+    this.sendToCaller(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.READ_ROOM,
       data: room,
-    };
+    });
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_MESSAGE)
   async getMessages(
+    @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchMessagesDto,
-    @User() user: IdentityUser,
-  ): Promise<WsResponse<unknown>> {
-    const messages = await this.roomsService.getMessagesByRoomId(dto, user);
+  ) {
+    const messages = await this.roomsService.getMessagesByRoomId(
+      dto,
+      client.user,
+    );
 
-    return {
+    this.sendToCaller(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.LIST_MESSAGE,
-      data: messages,
-    };
+      data: { messages },
+    });
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_ROOM)
@@ -107,6 +112,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.createRoom(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.CREATE_ROOM,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -121,6 +127,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.updateRoom(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.UPDATE_ROOM,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -135,6 +142,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.deleteRoom(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.DELETE_ROOM,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -149,6 +157,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.createMember(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.CREATE_MEMBER,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -163,6 +172,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.updateMember(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.UPDATE_MEMBER,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -177,6 +187,7 @@ export class RoomsGateway extends WsAuthGateway {
     const room = await this.roomsService.deleteMember(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.DELETE_MEMBER,
       data: room,
       userIds: this.getRoomMembers(room),
@@ -191,6 +202,7 @@ export class RoomsGateway extends WsAuthGateway {
     const message = await this.roomsService.createMessage(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,
@@ -207,6 +219,7 @@ export class RoomsGateway extends WsAuthGateway {
     const message = await this.roomsService.updateMessage(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.UPDATE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,
@@ -223,6 +236,7 @@ export class RoomsGateway extends WsAuthGateway {
     const message = await this.roomsService.deleteMessage(dto, client.user);
 
     this.sendToUsers(client, {
+      dto,
       event: SOCKET_ROOM_EVENTS.DELETE_MESSAGE,
       userIds: _.map(message.room.roomMembers, 'memberId'),
       data: message,

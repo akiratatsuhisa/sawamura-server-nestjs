@@ -21,12 +21,15 @@ import * as _ from 'lodash';
 import { Namespace, Server } from 'socket.io';
 import { GlobalWsExceptionsFilter } from 'src/validations/global-ws-exceptions.filter';
 import { exceptionFactory } from 'src/validations/validation.factory';
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
+import { EmitId, SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
 import { EVENTS, PREFIXES } from './constants';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { WsRolesGuard } from './guards/ws-roles.guard';
-import { ISendToUsersOptions } from './interfaces/send-to-users-options.interface';
+import {
+  ISendToCallerOptions,
+  ISendToUsersOptions,
+} from './interfaces/send-to-options.interface';
 import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
 
@@ -140,11 +143,26 @@ export class WsAuthGateway
     }
   }
 
-  sendToUsers<D = unknown>(
+  sendToCaller<D extends Record<string, unknown>>(
+    socket: SocketWithAuth,
+    options: ISendToCallerOptions<D>,
+  ) {
+    const { event, data } = options;
+
+    const callerData: D & EmitId = _.cloneDeep(data);
+    if (typeof data === 'object') {
+      callerData.__emit_id__ = (options.dto as EmitId).__emit_id__;
+    }
+
+    socket.emit(event, callerData);
+  }
+
+  sendToUsers<D extends Record<string, unknown>>(
     socket: SocketWithAuth,
     options: ISendToUsersOptions<D>,
   ) {
     const { event, userIds, data, unconnectedCallback } = options;
+
     const rooms = this.namespace.adapter.rooms;
 
     const { connected, connectedSilent, unconnected } = _(
@@ -173,7 +191,7 @@ export class WsAuthGateway
       },
     );
 
-    socket.emit(event, data);
+    this.sendToCaller<D>(socket, options);
     socket.to(connected).emit(`${EVENTS.LISTENER}:${event}`, data);
 
     const silentData =

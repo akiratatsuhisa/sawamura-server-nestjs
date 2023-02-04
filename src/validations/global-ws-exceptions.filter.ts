@@ -3,7 +3,7 @@ import { BaseWsExceptionFilter } from '@nestjs/websockets';
 import { AppError } from 'src/common/errors';
 import { catchPrismaException } from 'src/prisma/catch-prisma-exception.factory';
 import { EVENTS } from 'src/ws-auth/constants';
-import { SocketWithAuth } from 'src/ws-auth/ws-auth.type';
+import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
 @Catch()
 export class GlobalWsExceptionsFilter extends BaseWsExceptionFilter {
