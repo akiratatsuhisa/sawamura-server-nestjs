@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["orderByNulls"]
 }
 
 datasource db {
@@ -114,9 +115,10 @@ model Todo {
 }
 
 model Room {
-  id      String  @id @default(uuid()) @db.Uuid
-  name    String  @db.VarChar(255)
-  isGroup Boolean @default(false) @map("is_group")
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String    @db.VarChar(255)
+  isGroup         Boolean   @default(false) @map("is_group")
+  lastActivatedAt DateTime? @map("last_activated_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")

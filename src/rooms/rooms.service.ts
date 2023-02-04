@@ -116,13 +116,14 @@ export class RoomsService extends PaginationService {
   async getRooms(query: SearchRoomsDto, user: IdentityUser) {
     return this.prisma.room.findMany({
       select: this.roomSelect,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { lastActivatedAt: { sort: 'desc', nulls: 'last' } },
       where: {
         roomMembers: {
           some: { memberId: user.id },
         },
+        id: query.excludeIds?.length ? { notIn: query.excludeIds } : undefined,
       },
-      ...this.makePaginationCursor(query),
+      take: query.take,
     });
   }
 
@@ -422,7 +423,7 @@ export class RoomsService extends PaginationService {
         throw new AppError.AccessDenied();
       }
 
-      return tx.roomMessage.create({
+      const roomMessage = await tx.roomMessage.create({
         select: this.roomMessageSelect,
         data: {
           roomId: dto.roomId,
@@ -431,6 +432,13 @@ export class RoomsService extends PaginationService {
           content: dto.content,
         },
       });
+
+      await tx.room.update({
+        data: { lastActivatedAt: roomMessage.createdAt },
+        where: { id: dto.roomId },
+      });
+
+      return roomMessage;
     });
   }
 

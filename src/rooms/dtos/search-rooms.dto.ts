@@ -1,5 +1,11 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { PaginationCursor } from 'src/common/dtos';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { PaginationExcludeIds } from 'src/common/dtos';
 
 export class SearchRoomDto {
   @IsUUID()
@@ -8,9 +14,10 @@ export class SearchRoomDto {
   id: string;
 }
 
-export class SearchRoomsDto extends PaginationCursor {
-  @IsUUID()
-  @IsString()
+export class SearchRoomsDto extends PaginationExcludeIds {
+  @IsUUID('all', { each: true })
+  @IsString({ each: true })
+  @IsArray()
   @IsOptional()
-  cursor?: string;
+  excludeIds?: Array<string>;
 }
