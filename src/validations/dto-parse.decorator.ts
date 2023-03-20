@@ -6,8 +6,6 @@ export enum TransformType {
   BodyBottom = 1 << 1,
   QueryTop = 1 << 2,
   QueryBottom = 1 << 3,
-  Body = BodyTop | BodyBottom,
-  Query = QueryTop | QueryBottom,
   BodyAndQueryTop = BodyTop | QueryTop,
   BodyTopQueryBottom = BodyTop | QueryBottom,
   BodyAndQueryBottom = BodyBottom | QueryBottom,
@@ -20,7 +18,7 @@ export function makeHasTransformType(data: TransformType) {
    * hasTransformType
    */
   return function (type: TransformType) {
-    return (data & type) === type;
+    return type === 0 ? data === type : (data & type) === type;
   };
 }
 

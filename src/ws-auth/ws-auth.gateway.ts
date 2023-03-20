@@ -42,7 +42,9 @@ import { WsAuthService } from './ws-auth.service';
 )
 @UseInterceptors(WsAuthInterceptor)
 @UseFilters(GlobalWsExceptionsFilter)
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({
+  cors: true,
+})
 export class WsAuthGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {

@@ -4,8 +4,11 @@ import * as _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError, messages } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
+import { DropboxService } from 'src/dropbox/dropbox.service';
+import { IFile, importFileTypeFromBuffer } from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+import { MESSAGE_FILE } from './constants';
 import {
   CreateMemberDto,
   CreateMessageDto,
@@ -15,6 +18,7 @@ import {
   DeleteRoomDto,
   SearchMembersDto,
   SearchMessageDto,
+  SearchMessageFileDto,
   SearchMessagesDto,
   SearchRoomDto,
   SearchRoomsDto,
@@ -22,10 +26,14 @@ import {
   UpdateMessageDto,
   UpdateRoomDto,
 } from './dtos';
+import { CreateFileMessageDto } from './dtos/message/create.dto';
 
 @Injectable()
 export class RoomsService extends PaginationService {
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private dropboxService: DropboxService,
+  ) {
     super();
   }
 
@@ -412,7 +420,30 @@ export class RoomsService extends PaginationService {
     return this.getRoomById({ id: dto.roomId });
   }
 
-  async createMessage(dto: CreateMessageDto, user: IdentityUser) {
+  private getMessageType(content: string): RoomMessageType {
+    if (
+      /^[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]$/u.test(
+        content,
+      )
+    ) {
+      return RoomMessageType.Icon;
+    }
+
+    if (
+      /^[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}](\s*[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}])+$/u.test(
+        content,
+      )
+    ) {
+      return RoomMessageType.Icons;
+    }
+
+    return RoomMessageType.Text;
+  }
+
+  async createMessage(
+    dto: Omit<CreateMessageDto, 'content' | 'files'> & { content: string },
+    user: IdentityUser,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const members = await this.getMembersByRoomId({ roomId: dto.roomId });
       if (
@@ -432,7 +463,7 @@ export class RoomsService extends PaginationService {
         data: {
           roomId: dto.roomId,
           userId: user.id,
-          type: dto.type,
+          type: this.getMessageType(dto.content),
           content: dto.content,
         },
       });
@@ -492,5 +523,93 @@ export class RoomsService extends PaginationService {
         where: { id: dto.id },
       });
     });
+  }
+
+  async createMessageFiles(
+    dto: Omit<CreateMessageDto, 'content' | 'files'> & {
+      type: RoomMessageType;
+      files: Array<IFile>;
+    },
+    user: IdentityUser,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const members = await this.getMembersByRoomId({ roomId: dto.roomId });
+      if (
+        !this.isRoomMember(
+          members,
+          user.id,
+          RoomMemberRole.Admin,
+          RoomMemberRole.Moderator,
+          RoomMemberRole.Member,
+        )
+      ) {
+        throw new AppError.AccessDenied();
+      }
+
+      const result = await this.dropboxService.filesUpload(dto.files, {
+        path: dto.roomId,
+      });
+
+      const roomMessage = await tx.roomMessage.create({
+        select: this.roomMessageSelect,
+        data: {
+          roomId: dto.roomId,
+          userId: user.id,
+          type: dto.type,
+          content: result,
+        },
+      });
+
+      await tx.room.update({
+        data: { lastActivatedAt: roomMessage.createdAt },
+        where: { id: dto.roomId },
+      });
+
+      return roomMessage;
+    });
+  }
+
+  async getFile(dto: SearchMessageFileDto, user: IdentityUser) {
+    const room = await this.getRoomById({ id: dto.roomId });
+
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    if (
+      !room.isGroup ||
+      !this.isRoomMember(
+        room.roomMembers,
+        user.id,
+        RoomMemberRole.Admin,
+        RoomMemberRole.Moderator,
+      )
+    ) {
+      throw new AppError.AccessDenied();
+    }
+
+    return this.dropboxService.filesDownload(dto.name, dto.roomId);
+  }
+
+  async partitionFiles(files: Array<CreateFileMessageDto>) {
+    const fileTypeFromBuffer = await importFileTypeFromBuffer();
+
+    const filesWithDetail = await Promise.all(
+      _.map(files, async ({ data, name }) => {
+        const { ext: extension, mime } = await fileTypeFromBuffer(data);
+
+        return {
+          name,
+          buffer: data,
+          type: (MESSAGE_FILE.IMAGE_MIME_TYPES.test(mime)
+            ? RoomMessageType.Images
+            : RoomMessageType.None) as RoomMessageType,
+          extension,
+          mime,
+        } as IFile;
+      }),
+    );
+
+    return _.groupBy(filesWithDetail, 'type');
   }
 }

@@ -18,3 +18,14 @@ export class SearchMessagesDto extends PaginationCursor {
   @IsOptional()
   cursor?: string;
 }
+
+export class SearchMessageFileDto {
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+}

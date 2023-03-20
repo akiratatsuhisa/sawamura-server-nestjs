@@ -7,6 +7,7 @@ import { AppGateway } from './app.gateway';
 import { appProviders } from './app.provider';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { DropboxModule } from './dropbox/dropbox.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { RolesModule } from './roles/roles.module';
@@ -27,6 +28,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     RolesModule,
     TodosModule,
     RoomsModule,
+    DropboxModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService, AppGateway],

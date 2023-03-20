@@ -7,7 +7,7 @@ import {
   WebSocketGateway,
   WsResponse,
 } from '@nestjs/websockets';
-import { RoomMemberRole } from '@prisma/client';
+import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
@@ -32,7 +32,9 @@ import {
 import { RoomsService } from './rooms.service';
 
 @Injectable()
-@WebSocketGateway({ namespace: 'chat' })
+@WebSocketGateway({
+  namespace: 'chat',
+})
 export class RoomsGateway extends WsAuthGateway {
   constructor(
     configService: ConfigService,
@@ -199,16 +201,51 @@ export class RoomsGateway extends WsAuthGateway {
     @MessageBody() dto: CreateMessageDto,
     @ConnectedSocket() client: SocketWithAuth,
   ) {
-    const message = await this.roomsService.createMessage(dto, client.user);
+    if (_.size(dto.content)) {
+      const message = await this.roomsService.createMessage(
+        { roomId: dto.roomId, content: dto.content },
+        client.user,
+      );
 
-    this.sendToUsers(client, {
-      dto,
-      event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-      userIds: _.map(message.room.roomMembers, 'memberId'),
-      data: message,
-      unconnectedCallback: async (unconnected) =>
-        console.log(`Send notification to ${unconnected.join(',')}`),
-    });
+      this.sendToUsers(client, {
+        dto,
+        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        userIds: _.map(message.room.roomMembers, 'memberId'),
+        data: message,
+        unconnectedCallback: async (unconnected) =>
+          console.log(`Send notification to ${unconnected.join(',')}`),
+      });
+    }
+
+    if (!_.size(dto.files)) {
+      return;
+    }
+
+    const { [RoomMessageType.Images]: imageFiles } =
+      await this.roomsService.partitionFiles(dto.files);
+
+    if (imageFiles) {
+      const message = await this.roomsService.createMessageFiles(
+        {
+          roomId: dto.roomId,
+          type:
+            _.size(imageFiles) === 1
+              ? RoomMessageType.Image
+              : RoomMessageType.Images,
+          files: imageFiles,
+        },
+        client.user,
+      );
+
+      this.sendToUsers(client, {
+        dto,
+        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        userIds: _.map(message.room.roomMembers, 'memberId'),
+        data: message,
+        unconnectedCallback: async (unconnected) =>
+          console.log(`Send notification to ${unconnected.join(',')}`),
+      });
+    }
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MESSAGE)

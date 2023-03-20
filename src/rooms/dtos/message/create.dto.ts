@@ -1,30 +1,50 @@
-import { RoomMessageType } from '@prisma/client';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsIn,
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsArray,
   IsNotEmpty,
   IsString,
   IsUUID,
+  MaxLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
-import * as _ from 'lodash';
+import {
+  IsFileBuffer,
+  IsFileMime,
+  MaxFileSize,
+} from 'src/common/class-validator';
+import { MESSAGE_FILE } from 'src/rooms/constants';
 
+export class CreateFileMessageDto {
+  @MaxLength(255)
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsFileMime(MESSAGE_FILE.ALL_MIME_TYPES)
+  @MaxFileSize(MESSAGE_FILE.MAX_FILE_SIZE)
+  @IsFileBuffer()
+  data: Buffer;
+}
 export class CreateMessageDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
   roomId: string;
 
-  @IsIn(
-    _(RoomMessageType)
-      .values()
-      .remove((v) => v !== RoomMessageType.None)
-      .value(),
-  )
-  @IsString()
-  @ValidateIf((object, value) => value !== undefined)
-  type?: RoomMessageType;
-
   @IsString()
   @IsNotEmpty()
-  content: string;
+  @ValidateIf((obj) => obj.content != '' || !(obj.files instanceof Array))
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  content?: string;
+
+  @ValidateNested({ each: true })
+  @ArrayMaxSize(32)
+  @ArrayNotEmpty()
+  @IsArray()
+  @ValidateIf((obj) => obj.files != null || obj.content == '')
+  @Type(() => CreateFileMessageDto)
+  files?: Array<CreateFileMessageDto>;
 }

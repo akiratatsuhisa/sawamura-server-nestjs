@@ -14,7 +14,8 @@ export function parseErrorsDetail(errors: Array<ValidationError>) {
     }))
     .thru((result) => {
       return Object.assign({}, ...result) as Record<string, unknown>;
-    });
+    })
+    .value();
 }
 
 export function parseErrors(errors: Array<ValidationError>) {
@@ -24,7 +25,8 @@ export function parseErrors(errors: Array<ValidationError>) {
       ...(error.children?.length ? parseErrors(error.children) : []),
     ])
     .flatten()
-    .filter((text) => !_.isNil(text));
+    .filter((text) => !_.isNil(text))
+    .value();
 }
 
 export function exceptionFactory(errors: ValidationError[], detail?: boolean) {
