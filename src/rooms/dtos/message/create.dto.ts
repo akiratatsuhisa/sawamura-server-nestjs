@@ -15,7 +15,7 @@ import {
   IsFileMime,
   MaxFileSize,
 } from 'src/common/class-validator';
-import { MESSAGE_FILE } from 'src/rooms/constants';
+import { MESSAGE_FILE } from 'src/constants';
 
 export class CreateFileMessageDto {
   @MaxLength(255)

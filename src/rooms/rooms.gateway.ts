@@ -221,8 +221,10 @@ export class RoomsGateway extends WsAuthGateway {
       return;
     }
 
-    const { [RoomMessageType.Images]: imageFiles } =
-      await this.roomsService.partitionFiles(dto.files);
+    const {
+      [RoomMessageType.Images]: imageFiles,
+      [RoomMessageType.Files]: officeFiles,
+    } = await this.roomsService.partitionFiles(dto.files);
 
     if (imageFiles) {
       const message = await this.roomsService.createMessageFiles(
@@ -233,6 +235,26 @@ export class RoomsGateway extends WsAuthGateway {
               ? RoomMessageType.Image
               : RoomMessageType.Images,
           files: imageFiles,
+        },
+        client.user,
+      );
+
+      this.sendToUsers(client, {
+        dto,
+        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        userIds: _.map(message.room.roomMembers, 'memberId'),
+        data: message,
+        unconnectedCallback: async (unconnected) =>
+          console.log(`Send notification to ${unconnected.join(',')}`),
+      });
+    }
+
+    if (officeFiles) {
+      const message = await this.roomsService.createMessageFiles(
+        {
+          roomId: dto.roomId,
+          type: RoomMessageType.Files,
+          files: officeFiles,
         },
         client.user,
       );

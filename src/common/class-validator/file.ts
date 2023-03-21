@@ -29,9 +29,9 @@ export async function isFileMime(value: Buffer, mimeRegex: RegExp | string) {
 
   const fileType = await import('file-type');
 
-  const { mime } = await fileType.fileTypeFromBuffer(value);
+  const result = await fileType.fileTypeFromBuffer(value);
 
-  return mimeRegex.test(mime);
+  return !result || mimeRegex.test(result.mime);
 }
 
 export function IsFileMime(
@@ -56,7 +56,7 @@ export function IsFileMime(
   );
 }
 
-export async function maxFileSize(value: Buffer, maxSize: number) {
+export function maxFileSize(value: Buffer, maxSize: number) {
   return Buffer.byteLength(value) <= maxSize;
 }
 
@@ -68,10 +68,8 @@ export function MaxFileSize(
     {
       name: 'maxFileSize',
       constraints: [maxSize],
-      async: true,
       validator: {
-        validate: async (value, args) =>
-          maxFileSize(value, args?.constraints[0]),
+        validate: (value, args) => maxFileSize(value, args?.constraints[0]),
         defaultMessage: buildMessage(
           (eachPrefix) =>
             eachPrefix +

@@ -161,6 +161,9 @@ enum RoomMessageType {
   Link   @map("link")
   Image  @map("image")
   Images @map("images")
+  Files  @map("files")
+  Audios @map("audios")
+  Medias @map("medias")
   None   @map("none")
 
   @@map("room_message_type")

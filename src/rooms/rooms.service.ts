@@ -4,11 +4,15 @@ import * as _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError, messages } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
+import { MESSAGE_FILE } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
-import { IFile, importFileTypeFromBuffer } from 'src/helpers/file-type.helper';
+import {
+  getMimeTypeFromExtension,
+  IFile,
+  importFileTypeFromBuffer,
+} from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-import { MESSAGE_FILE } from './constants';
 import {
   CreateMemberDto,
   CreateMessageDto,
@@ -596,13 +600,16 @@ export class RoomsService extends PaginationService {
 
     const filesWithDetail = await Promise.all(
       _.map(files, async ({ data, name }) => {
-        const { ext: extension, mime } = await fileTypeFromBuffer(data);
+        const { ext: extension, mime } =
+          (await fileTypeFromBuffer(data)) ?? getMimeTypeFromExtension(name);
 
         return {
           name,
           buffer: data,
           type: (MESSAGE_FILE.IMAGE_MIME_TYPES.test(mime)
             ? RoomMessageType.Images
+            : MESSAGE_FILE.OFFICE_MIME_TYPES.test(mime)
+            ? RoomMessageType.Files
             : RoomMessageType.None) as RoomMessageType,
           extension,
           mime,

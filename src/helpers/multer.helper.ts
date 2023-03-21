@@ -1,6 +1,7 @@
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
 import path, { extname } from 'path';
+import { MESSAGE_FILE } from 'src/constants';
 import { v4 as uuidv4 } from 'uuid';
 
 export namespace Multer {
@@ -33,7 +34,7 @@ export namespace Multer {
   }
 
   export const officeFileFilter = Multer.declareFileFilter(
-    26214400, // 25 MiB
+    MESSAGE_FILE.MAX_FILE_SIZE,
     /\.(txt|zip|accdb|accde|csv|docx?|dotx?|eml|mdb|mde|mpp|mpt|msg|odp|ods|odt|one|pdf|potx?|pp(s|sx)|pptx?|potx?|pst|pub|rtf|tsv|txt|vsd(x|s)?|vs(s|t)?|xls(x|b)?|xlt(x|m)?|xps)$/,
   );
 
