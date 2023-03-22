@@ -9,7 +9,7 @@ import { DropboxService } from 'src/dropbox/dropbox.service';
 import {
   getMimeTypeFromExtension,
   IFile,
-  importFileTypeFromBuffer,
+  importFileType,
 } from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -596,7 +596,7 @@ export class RoomsService extends PaginationService {
   }
 
   async partitionFiles(files: Array<CreateFileMessageDto>) {
-    const fileTypeFromBuffer = await importFileTypeFromBuffer();
+    const { fileTypeFromBuffer } = await importFileType();
 
     const filesWithDetail = await Promise.all(
       _.map(files, async ({ data, name }) => {

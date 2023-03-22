@@ -10,6 +10,7 @@ import {
 import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
+import { IFile } from 'src/helpers/file-type.interface';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
@@ -226,48 +227,53 @@ export class RoomsGateway extends WsAuthGateway {
       [RoomMessageType.Files]: officeFiles,
     } = await this.roomsService.partitionFiles(dto.files);
 
-    if (imageFiles) {
-      const message = await this.roomsService.createMessageFiles(
+    await _.reduce(
+      [
         {
-          roomId: dto.roomId,
+          files: imageFiles,
           type:
             _.size(imageFiles) === 1
               ? RoomMessageType.Image
               : RoomMessageType.Images,
-          files: imageFiles,
         },
-        client.user,
-      );
-
-      this.sendToUsers(client, {
-        dto,
-        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-        userIds: _.map(message.room.roomMembers, 'memberId'),
-        data: message,
-        unconnectedCallback: async (unconnected) =>
-          console.log(`Send notification to ${unconnected.join(',')}`),
-      });
-    }
-
-    if (officeFiles) {
-      const message = await this.roomsService.createMessageFiles(
         {
-          roomId: dto.roomId,
-          type: RoomMessageType.Files,
           files: officeFiles,
+          type: RoomMessageType.Files,
         },
-        client.user,
-      );
+      ] as Array<{ files: Array<IFile>; type: RoomMessageType }>,
+      async (promise, { files, type }) => {
+        const hasSendUnconnectedCallback = await promise;
+        if (!files.length) {
+          return hasSendUnconnectedCallback;
+        }
 
-      this.sendToUsers(client, {
-        dto,
-        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-        userIds: _.map(message.room.roomMembers, 'memberId'),
-        data: message,
-        unconnectedCallback: async (unconnected) =>
-          console.log(`Send notification to ${unconnected.join(',')}`),
-      });
-    }
+        const message = await this.roomsService.createMessageFiles(
+          {
+            roomId: dto.roomId,
+            type,
+            files,
+          },
+          client.user,
+        );
+
+        this.sendToUsers(client, {
+          dto,
+          event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+          userIds: _.map(message.room.roomMembers, 'memberId'),
+          data: message,
+          unconnectedCallback: async (unconnected) => {
+            if (hasSendUnconnectedCallback) {
+              return;
+            }
+
+            console.log(`Send notification to ${unconnected.join(',')}`);
+          },
+        });
+
+        return true;
+      },
+      Promise.resolve(!!_.size(dto.content)),
+    );
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MESSAGE)
