@@ -17,6 +17,11 @@ export const messages = {
   FilesDownloadFailed:
     'file(s) download has failed. Please review the downloaded file(s) or try again',
   FilesDeleteFailed: 'file(s) delete has failed. Please try again',
+  //Auth Messages
+  InvalidRefreshToken:
+    'The refresh token provided is invalid or has expired. Please log in again to generate a new refresh token',
+  InvalidVerificationToken:
+    'This verification token is invalid or has already been used. Please request a new one if you need to verify your account again',
   // Room Messages
   NotRoomMember: (username: string) => `user(${username}) not in room`,
   InvalidPrivateRoom: 'invalid private room declare',

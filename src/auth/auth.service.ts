@@ -1,25 +1,114 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, genSalt, hash } from 'bcrypt';
 import * as moment from 'moment';
+import { AppError, messages } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { UsersService } from 'src/users/users.service';
+import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
-import { RegisterDto } from './dtos/register.dto';
+import { ForgotPasswordDto, RegisterDto, ResetPasswordDto } from './dtos';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private usersService: UsersService,
     private jwtService: JwtService,
-    private config: ConfigService,
+    private configService: ConfigService,
+    private sendgridService: SendgridService,
+    private usersService: UsersService,
+    private verificationTokensService: VerificationTokensService,
   ) {}
+
+  async hashPassword(password: string) {
+    const salt = await genSalt(10);
+    return hash(password, salt);
+  }
+
+  async register(dto: RegisterDto) {
+    const hashPassword = await this.hashPassword(dto.password);
+
+    return this.prisma.user.create({
+      data: {
+        username: dto.username,
+        password: hashPassword,
+        userRoles: {
+          create: [
+            {
+              role: {
+                connect: { name: 'User' },
+              },
+            },
+          ],
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+      },
+    });
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.usersService.findByUnique({
+      username: dto.username,
+    });
+
+    if (!user || !user.email) {
+      throw new AppError.Argument(
+        'Not found username or account not have an email.',
+      );
+    }
+
+    const { token } = await this.verificationTokensService.generateToken(
+      user.id,
+    );
+
+    const from = this.sendgridService.sender;
+    const to = user.email;
+    const resetLink = new URL(
+      this.configService.get<string>('RESET_PASSWORD_URL'),
+    );
+    resetLink.searchParams.set('token', token);
+
+    const html = await this.sendgridService.renderTemplate('forgot-password', {
+      username: user.username,
+      resetLink: resetLink.toString(),
+      userEmail: to,
+      supportEmail: from,
+    });
+
+    await this.sendgridService.send({
+      subject: 'Forgot Password?',
+      from: from,
+      to: to,
+      html,
+    });
+
+    return { email: user.email };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const verificationToken =
+      await this.verificationTokensService.getTokenActive(dto.token);
+
+    const hashPassword = await this.hashPassword(dto.password);
+
+    const user = await this.prisma.user.update({
+      data: {
+        password: hashPassword,
+      },
+      where: {
+        id: verificationToken.userId,
+      },
+    });
+
+    await this.verificationTokensService.revokeToken(dto.token);
+
+    return { username: user.username };
+  }
 
   async generateAccessToken(
     user: Awaited<ReturnType<UsersService['findByUnique']>>,
@@ -46,7 +135,7 @@ export class AuthService {
       data: {
         expires: moment()
           .add(
-            this.config.get<number>('REFRESH_TOKEN_EXPIRES') || 2592000,
+            this.configService.get<number>('REFRESH_TOKEN_EXPIRES') || 2592000,
             'seconds',
           )
           .toDate(),
@@ -89,31 +178,6 @@ export class AuthService {
     return null;
   }
 
-  async register(dto: RegisterDto) {
-    const salt = await genSalt(10);
-    const hashPassword = await hash(dto.password, salt);
-
-    return this.prisma.user.create({
-      data: {
-        username: dto.username,
-        password: hashPassword,
-        userRoles: {
-          create: [
-            {
-              role: {
-                connect: { name: 'User' },
-              },
-            },
-          ],
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-      },
-    });
-  }
-
   async login(
     user: Awaited<ReturnType<UsersService['findByUnique']>>,
     ipAddress: string,
@@ -136,14 +200,14 @@ export class AuthService {
       });
 
       if (!oldRefreshToken) {
-        throw new NotFoundException(`refreshToken = ${token}`);
+        throw new AppError.NotFound();
       }
 
       if (
         oldRefreshToken.revoked ||
         moment(oldRefreshToken.expires).isSameOrBefore()
       ) {
-        throw new BadRequestException('RefreshToken is inactive.');
+        throw new AppError.Argument(messages.InvalidRefreshToken);
       }
 
       const accessToken = await this.generateAccessToken(user);
@@ -164,18 +228,18 @@ export class AuthService {
       });
 
       if (!refreshToken) {
-        throw new NotFoundException(`refreshToken = ${token}`);
+        throw new AppError.NotFound();
       }
 
       if (refreshToken.userId !== userId) {
-        throw new BadRequestException('Invalid RefreshToken owner.');
+        throw new AppError.Argument(messages.InvalidRefreshToken);
       }
 
       if (
         refreshToken.revoked ||
         moment(refreshToken.expires).isSameOrBefore()
       ) {
-        throw new BadRequestException('RefreshToken is inactive.');
+        throw new AppError.Argument(messages.InvalidRefreshToken);
       }
 
       await this.revokeRefreshToken(refreshToken.id, ip);

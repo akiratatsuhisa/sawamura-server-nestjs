@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Headers,
@@ -11,12 +10,17 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { AppError } from 'src/common/errors';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { User } from './decorators/users.decorator';
-import { RefreshTokenDto } from './dtos/refresh-token.dto';
-import { RegisterDto } from './dtos/register.dto';
+import {
+  ForgotPasswordDto,
+  RefreshTokenDto,
+  RegisterDto,
+  ResetPasswordDto,
+} from './dtos';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
@@ -36,11 +40,23 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Post('forgotPassword')
+  @Public()
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('resetPassword')
+  @Public()
+  async resetPassword(@Body() registerDto: ResetPasswordDto) {
+    return this.authService.resetPassword(registerDto);
+  }
+
   @Post('refreshToken')
   @Public()
   async refreshToken(@Headers('refreshtoken') token: string, @Ip() ip: string) {
     if (!token) {
-      throw new BadRequestException(`Not Found Token in header`);
+      throw new AppError.Argument(`Not Found Token in header`);
     }
 
     return this.authService.refreshToken(token, ip);
@@ -57,7 +73,7 @@ export class AuthController {
     const token = refreshTokenDto.value ?? headerToken;
 
     if (!token) {
-      throw new BadRequestException(`Not Found Token in header or body`);
+      throw new AppError.Argument(`Not Found Token in header or body`);
     }
 
     return this.authService.revoke(token, userId, ip);
