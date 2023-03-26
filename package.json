@@ -43,6 +43,7 @@
     "dropbox": "^10.34.0",
     "file-type": "^18.2.1",
     "handlebars": "^4.7.7",
+    "image-size": "^1.0.2",
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",

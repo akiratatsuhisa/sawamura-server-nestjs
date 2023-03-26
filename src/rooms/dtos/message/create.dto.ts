@@ -10,11 +10,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import {
-  IsFileBuffer,
-  IsFileMime,
-  MaxFileSize,
-} from 'src/common/class-validator';
+import { IsFile, IsFileMime, MaxFileSize } from 'src/common/class-validator';
 import { MESSAGE_FILE } from 'src/constants';
 
 export class CreateFileMessageDto {
@@ -25,7 +21,7 @@ export class CreateFileMessageDto {
 
   @IsFileMime(MESSAGE_FILE.ALL_MIME_TYPES)
   @MaxFileSize(MESSAGE_FILE.MAX_FILE_SIZE)
-  @IsFileBuffer()
+  @IsFile()
   data: Buffer;
 }
 export class CreateMessageDto {

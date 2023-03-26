@@ -1,25 +1,37 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpStatus,
   Ip,
+  Param,
   Patch,
   Post,
-  Request,
+  Query,
+  Req,
+  Res,
+  StreamableFile,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { AppError } from 'src/common/errors';
+import { COMMON_FILE } from 'src/constants';
+import { Multer } from 'src/helpers/multer.helper';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
-import { User } from './decorators/users.decorator';
+import { IdentityUser, User } from './decorators/users.decorator';
 import {
   ForgotPasswordDto,
   RefreshTokenDto,
   RegisterDto,
   ResetPasswordDto,
+  SearchImageDto,
 } from './dtos';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
@@ -30,7 +42,7 @@ export class AuthController {
   @Post('login')
   @Public()
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req, @Ip() ip: string) {
+  async login(@Req() req, @Ip() ip: string) {
     return this.authService.login(req.user, ip);
   }
 
@@ -77,5 +89,67 @@ export class AuthController {
     }
 
     return this.authService.revoke(token, userId, ip);
+  }
+
+  @Get(':type(photo|cover)')
+  @Public()
+  async getImage(
+    @Query() dto: SearchImageDto,
+    @Param('type') type: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { mimeType, buffer } = await this.authService.getImage(
+      type === 'cover' ? 'coverUrl' : 'photoUrl',
+      dto.username,
+    );
+
+    res.set({
+      'Content-Type': mimeType,
+    });
+    return new StreamableFile(buffer);
+  }
+
+  @Patch(':type(photo|cover)')
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateImage(
+    @Param('type') type: string,
+    @UploadedFile()
+    file: Express.Multer.File,
+    @User() user: IdentityUser,
+  ) {
+    const isCover = type === 'cover';
+
+    const { unlink } = Multer.validateFiles(file, {
+      fileSize: isCover
+        ? COMMON_FILE.IMAGE_MAX_FILE_SIZE * 2
+        : COMMON_FILE.IMAGE_MAX_FILE_SIZE,
+      mimeTypeRegex: COMMON_FILE.IMAGE_MIME_TYPES,
+      required: true,
+      dimensions: {
+        equal: true,
+        ...(isCover
+          ? {
+              width: 1280,
+              height: 720,
+            }
+          : {
+              width: 1024,
+              height: 1024,
+            }),
+      },
+    });
+
+    try {
+      await this.authService.updateImage(
+        isCover ? 'coverUrl' : 'photoUrl',
+        Multer.convertToIFile(file, {
+          fileName: isCover ? 'background' : 'avatar',
+        }),
+        user,
+      );
+    } finally {
+      await unlink();
+    }
   }
 }

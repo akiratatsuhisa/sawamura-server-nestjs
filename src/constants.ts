@@ -33,3 +33,16 @@ export namespace MESSAGE_FILE {
     ].join('|'),
   );
 }
+
+export namespace COMMON_FILE {
+  // 2 MiB
+  export const IMAGE_MAX_FILE_SIZE = 2_097_152;
+
+  // 25 MiB
+  export const MAX_FILE_SIZE = 26_214_400;
+
+  export const IMAGE_MIME_TYPES = /image\/(jpe?g|png)/;
+
+  export const OFFICE_MIME_TYPES =
+    /(application\/pdf|application\/rtf|text\/plain|text\/html|application\/xml|application\/json)/;
+}

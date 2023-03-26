@@ -1,14 +1,13 @@
+import { SocketWithAuth } from '../ws-auth.types';
+
 export interface ISendToCallerOptions<D extends Record<string, unknown>> {
-  dto: unknown;
+  socket?: SocketWithAuth;
   event: string;
+  dto: unknown;
   data: D;
 }
 
 export interface ISendToUsersOptions<D extends Record<string, unknown>>
   extends ISendToCallerOptions<D> {
   userIds: string | Array<string>;
-  unconnectedCallback?: (
-    unconnectedUserIds: Array<string>,
-    data: D,
-  ) => void | Promise<void>;
 }

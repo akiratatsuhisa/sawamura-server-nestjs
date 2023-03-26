@@ -21,3 +21,10 @@ export class SearchRoomsDto extends PaginationExcludeIds {
   @IsOptional()
   excludeIds?: Array<string>;
 }
+
+export class SearchRoomPhotoDto {
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+}

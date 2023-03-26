@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
+import * as path from 'path';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError, messages } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
@@ -25,6 +26,7 @@ import {
   SearchMessageFileDto,
   SearchMessagesDto,
   SearchRoomDto,
+  SearchRoomPhotoDto,
   SearchRoomsDto,
   UpdateMemberDto,
   UpdateMessageDto,
@@ -49,6 +51,7 @@ export class RoomsService extends PaginationService {
       select: {
         id: true,
         username: true,
+        photoUrl: true,
       },
     },
     createdAt: true,
@@ -61,6 +64,7 @@ export class RoomsService extends PaginationService {
     roomMembers: {
       select: this.roomMemberSelect,
     },
+    photoUrl: true,
     createdAt: true,
   });
 
@@ -81,6 +85,7 @@ export class RoomsService extends PaginationService {
       select: {
         id: true,
         username: true,
+        photoUrl: true,
       },
     },
     createdAt: true,
@@ -143,23 +148,7 @@ export class RoomsService extends PaginationService {
 
   async getMessagesByRoomId(query: SearchMessagesDto, user: IdentityUser) {
     return this.prisma.roomMessage.findMany({
-      select: {
-        id: true,
-        type: true,
-        content: true,
-        room: {
-          select: {
-            id: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        createdAt: true,
-      },
+      select: this.roomMessageSelect,
       where: {
         room: {
           id: query.roomId,
@@ -272,6 +261,59 @@ export class RoomsService extends PaginationService {
         select: this.roomSelect,
         where: { id: dto.id },
       });
+    });
+  }
+
+  async getRoomPhoto(dto: SearchRoomPhotoDto) {
+    const room = await this.getRoomById({ id: dto.id });
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    const buffer = await this.dropboxService.fileDownload(
+      room.photoUrl?.substring(1),
+    );
+
+    const mimeType = 'image/' + path.extname(room.photoUrl)?.substring(1);
+
+    return { mimeType, buffer };
+  }
+
+  async updateRoomPhoto(
+    image: IFile,
+    dto: SearchRoomPhotoDto,
+    user: IdentityUser,
+  ) {
+    const room = await this.getRoomById({ id: dto.id });
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    if (
+      !room.isGroup ||
+      !this.isRoomMember(
+        room.roomMembers,
+        user.id,
+        RoomMemberRole.Admin,
+        RoomMemberRole.Moderator,
+      )
+    ) {
+      throw new AppError.AccessDenied();
+    }
+
+    const result = await this.dropboxService.fileUpload(image, {
+      path: room.id,
+      mode: { '.tag': 'overwrite' },
+    });
+
+    return this.prisma.room.update({
+      data: {
+        photoUrl: result.pathDisplay,
+      },
+      where: {
+        id: dto.id,
+      },
+      select: this.roomSelect,
     });
   }
 
@@ -550,9 +592,13 @@ export class RoomsService extends PaginationService {
         throw new AppError.AccessDenied();
       }
 
-      const result = await this.dropboxService.filesUpload(dto.files, {
-        path: dto.roomId,
-      });
+      const result = await this.dropboxService.filesUpload(
+        dto.files,
+        {
+          path: dto.roomId,
+        },
+        { throwOnFail: false },
+      );
 
       const roomMessage = await tx.roomMessage.create({
         select: this.roomMessageSelect,
@@ -582,17 +628,14 @@ export class RoomsService extends PaginationService {
 
     if (
       !room.isGroup ||
-      !this.isRoomMember(
-        room.roomMembers,
-        user.id,
-        RoomMemberRole.Admin,
-        RoomMemberRole.Moderator,
-      )
+      this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)
     ) {
       throw new AppError.AccessDenied();
     }
 
-    return this.dropboxService.filesDownload(dto.name, dto.roomId);
+    const buffer = await this.dropboxService.fileDownload(dto.name, dto.roomId);
+
+    return { buffer };
   }
 
   async partitionFiles(files: Array<CreateFileMessageDto>) {

@@ -3,6 +3,7 @@ export const SOCKET_ROOM_EVENTS = {
   READ_ROOM: 'read:room',
   CREATE_ROOM: 'create:room',
   UPDATE_ROOM: 'update:room',
+  UPDATE_ROOM_PHOTO: 'update:room:photo',
   DELETE_ROOM: 'delete:room',
 
   CREATE_MEMBER: 'create:member',

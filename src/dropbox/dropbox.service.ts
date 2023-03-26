@@ -6,6 +6,7 @@ import {
   Error as DropboxError,
   files as filesType,
 } from 'dropbox';
+import { readFile } from 'fs/promises';
 import * as _ from 'lodash';
 import { AppError, messages } from 'src/common/errors';
 import { IFile } from 'src/helpers/file-type.interface';
@@ -53,7 +54,7 @@ export class DropboxService {
             ..._.pick(file, 'mime', 'extension'),
           };
         } catch (error) {
-          if (options?.throwOnFail) {
+          if (options?.throwOnFail ?? true) {
             throw error as DropboxError<filesType.UploadError>;
           }
 
@@ -71,18 +72,34 @@ export class DropboxService {
     return result;
   }
 
+  async fileUpload(file: IFile, arg: Omit<filesType.UploadArg, 'contents'>) {
+    const path = `/${arg.path}/${file.name}.${file.extension}`;
+
+    const response = await this.dbx.filesUpload({
+      ...arg,
+      path,
+      contents: file.buffer ?? (await readFile(file.path)),
+    });
+
+    return {
+      name: file.name,
+      pathDisplay: response.result.path_display,
+      ..._.pick(file, 'mime', 'extension'),
+    };
+  }
+
   private getPath(name: string, prefix?: string) {
     return '/' + (prefix ? `${prefix}/${name}` : name);
   }
 
-  async filesDownload(name: string, prefix?: string) {
+  async fileDownload(name: string, prefix?: string) {
     const path = this.getPath(name, prefix);
 
     try {
       const response = await this.dbx.filesDownload({ path });
 
       // dropbox sdk fileBinary
-      return (<any>response.result).fileBinary;
+      return (response.result as any).fileBinary as Buffer;
     } catch {
       throw new AppError.Argument(messages.FilesDownloadFailed);
     }
@@ -94,7 +111,6 @@ export class DropboxService {
     try {
       await this.dbx.filesDeleteV2({ path });
 
-      // dropbox sdk fileBinary
       return { name, path };
     } catch {
       throw new AppError.Argument(messages.FilesDeleteFailed);
