@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as mailService from '@sendgrid/mail';
+import * as sendgridMail from '@sendgrid/mail';
 import * as fs from 'fs/promises';
 import * as hbs from 'handlebars';
 import * as path from 'path';
@@ -14,14 +14,14 @@ export class SendgridService {
   constructor(private readonly configService: ConfigService) {
     this.sender = configService.get<string>('SENDGRID_SENDER');
 
-    mailService.setApiKey(this.configService.get<string>('SENDGRID_API_KEY'));
+    sendgridMail.setApiKey(this.configService.get<string>('SENDGRID_API_KEY'));
   }
 
   async send(
-    data: mailService.MailDataRequired | mailService.MailDataRequired[],
+    data: sendgridMail.MailDataRequired | sendgridMail.MailDataRequired[],
     isMultiple?: boolean,
   ) {
-    const transport = await mailService.send(data, isMultiple);
+    const transport = await sendgridMail.send(data, isMultiple);
 
     return transport;
   }

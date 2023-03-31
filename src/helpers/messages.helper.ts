@@ -11,6 +11,7 @@ export const messages = {
   BadDtoError: 'Bad Request Data',
   ArgumentError: 'Bad Argument',
   PrismaError: 'Database Storage Error',
+  InvalidDateFromTo: 'The field from date must less than or equal to date',
   // Storage Messages
   FilesUploadFailed:
     'file(s) upload has failed. Please review the uploaded file(s) or try again',

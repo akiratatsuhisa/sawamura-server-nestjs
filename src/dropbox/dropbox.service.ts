@@ -5,6 +5,7 @@ import {
   DropboxAuth,
   Error as DropboxError,
   files as filesType,
+  users as DropboxUsers,
 } from 'dropbox';
 import { readFile } from 'fs/promises';
 import * as _ from 'lodash';
@@ -27,6 +28,16 @@ export class DropboxService {
     this.dbx = new Dropbox({
       auth: this.dbxAuth,
     });
+  }
+
+  async getSpaceUsage() {
+    const response = await this.dbx.usersGetSpaceUsage();
+    return {
+      used: response.result.used,
+      allocated: (
+        response.result.allocation as DropboxUsers.SpaceAllocationIndividual
+      ).allocated,
+    };
   }
 
   async filesUpload(

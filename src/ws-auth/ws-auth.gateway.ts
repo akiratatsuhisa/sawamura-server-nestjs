@@ -112,6 +112,12 @@ export class WsAuthGateway
 
     const sockets = this.namespace.sockets;
 
+    if (socketIds.length) {
+      this.logger.log(
+        `Authenticating connection to server ${this.namespace.name}`,
+      );
+    }
+
     _.forEach(socketIds, (socketId) => {
       if (!sockets.has(socketId)) {
         return;

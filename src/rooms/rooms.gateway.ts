@@ -5,7 +5,6 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
-  WsResponse,
 } from '@nestjs/websockets';
 import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
@@ -50,11 +49,6 @@ export class RoomsGateway extends WsAuthGateway {
       .filter((m) => m.role !== RoomMemberRole.None)
       .map((m) => m.member.id)
       .value();
-  }
-
-  @SubscribeMessage('message')
-  handleMessage(): WsResponse<string> {
-    return { event: 'message', data: 'Hello world' };
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_ROOM)
