@@ -8,6 +8,7 @@ import { AppGateway } from './app.gateway';
 import { appProviders } from './app.provider';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { DropboxModule } from './dropbox/dropbox.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -41,6 +42,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     TodosModule,
     RoomsModule,
     VerificationTokensModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService, AppGateway],

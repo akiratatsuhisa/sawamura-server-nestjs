@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { MulterModule } from '@nestjs/platform-express';
+import { DropboxModule } from 'src/dropbox/dropbox.module';
+import { Multer } from 'src/helpers/multer.helper';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { UsersModule } from 'src/users/users.module';
 import { VerificationTokensModule } from 'src/verification-tokens/verification-tokens.module';
@@ -14,6 +17,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 @Module({
   imports: [
     SendgridModule,
+    DropboxModule,
     PassportModule,
     UsersModule,
     VerificationTokensModule,
@@ -25,6 +29,9 @@ import { LocalStrategy } from './strategies/local.strategy';
           signOptions: { expiresIn: configService.get<string>('EXPIRES_IN') },
         };
       },
+    }),
+    MulterModule.register({
+      storage: Multer.declareStorageEngine(),
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

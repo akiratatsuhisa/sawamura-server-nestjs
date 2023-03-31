@@ -16,6 +16,8 @@ export class UsersService {
     lastName: true,
     birthDate: true,
     salary: true,
+    photoUrl: true,
+    coverUrl: true,
     createdAt: true,
     updatedAt: true,
     userRoles: {

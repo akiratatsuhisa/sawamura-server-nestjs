@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, genSalt, hash } from 'bcrypt';
 import * as moment from 'moment';
+import * as path from 'path';
+import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError, messages } from 'src/common/errors';
+import { DropboxService } from 'src/dropbox/dropbox.service';
+import { IFile } from 'src/helpers/file-type.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { UsersService } from 'src/users/users.service';
@@ -18,6 +22,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private sendgridService: SendgridService,
+    private dropboxService: DropboxService,
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
   ) {}
@@ -122,6 +127,8 @@ export class AuthService {
       birthDate: user.birthDate,
       salary: user.salary,
       roles: user.userRoles.map((userRole) => userRole.role.name),
+      photoUrl: user.photoUrl,
+      coverUrl: user.coverUrl,
     };
 
     return this.jwtService.signAsync(payload);
@@ -243,6 +250,41 @@ export class AuthService {
       }
 
       await this.revokeRefreshToken(refreshToken.id, ip);
+    });
+  }
+
+  async getImage(fieldName: 'photoUrl' | 'coverUrl', username: string) {
+    const user = await this.usersService.findByUnique({ username });
+
+    if (!user) {
+      throw new AppError.NotFound();
+    }
+
+    const buffer = await this.dropboxService.fileDownload(
+      user[fieldName]?.substring(1),
+    );
+    const mimeType = 'image/' + path.extname(user[fieldName])?.substring(1);
+
+    return { mimeType, buffer };
+  }
+
+  async updateImage(
+    fieldName: 'photoUrl' | 'coverUrl',
+    image: IFile,
+    user: IdentityUser,
+  ) {
+    const result = await this.dropboxService.fileUpload(image, {
+      path: user.id,
+      mode: { '.tag': 'overwrite' },
+    });
+
+    await this.prisma.user.update({
+      data: {
+        [fieldName]: result.pathDisplay,
+      },
+      where: {
+        id: user.id,
+      },
     });
   }
 }

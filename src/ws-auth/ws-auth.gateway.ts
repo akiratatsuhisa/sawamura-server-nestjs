@@ -112,6 +112,12 @@ export class WsAuthGateway
 
     const sockets = this.namespace.sockets;
 
+    if (socketIds.length) {
+      this.logger.log(
+        `Authenticating connection to server ${this.namespace.name}`,
+      );
+    }
+
     _.forEach(socketIds, (socketId) => {
       if (!sockets.has(socketId)) {
         return;
@@ -146,24 +152,22 @@ export class WsAuthGateway
   }
 
   sendToCaller<D extends Record<string, unknown>>(
-    socket: SocketWithAuth,
     options: ISendToCallerOptions<D>,
   ) {
-    const { event, data } = options;
+    const { socket, event, data } = options;
 
     const callerData: D & EmitId = _.cloneDeep(data);
-    if (typeof data === 'object') {
+    if (_.isObject(callerData) && !_.isArray(callerData)) {
       callerData.__emit_id__ = (options.dto as EmitId).__emit_id__;
     }
 
-    socket.emit(event, callerData);
+    socket?.emit(event, callerData);
   }
 
   sendToUsers<D extends Record<string, unknown>>(
-    socket: SocketWithAuth,
     options: ISendToUsersOptions<D>,
   ) {
-    const { event, userIds, data, unconnectedCallback } = options;
+    const { socket, event, data, userIds } = options;
 
     const rooms = this.namespace.adapter.rooms;
 
@@ -173,6 +177,7 @@ export class WsAuthGateway
       (group, userId) => {
         const connected = `${PREFIXES.SOCKET_USER}:${userId}`;
         const connectedSilent = `${PREFIXES.SOCKET_USER_SILENT}:${userId}`;
+
         if (rooms.has(connected)) {
           group.connected.push(connected);
         } else if (rooms.has(connectedSilent)) {
@@ -180,6 +185,7 @@ export class WsAuthGateway
         } else {
           group.unconnected.push(userId);
         }
+
         return group;
       },
       {
@@ -193,17 +199,30 @@ export class WsAuthGateway
       },
     );
 
-    this.sendToCaller<D>(socket, options);
-    socket.to(connected).emit(`${EVENTS.LISTENER}:${event}`, data);
+    if (!_.isNil(socket)) {
+      this.sendToCaller<D>(options);
 
-    const silentData =
-      _.isObject(data) && !_.isArray(data) ? { _event: event, ...data } : data;
-    this.namespace
-      .to(connectedSilent)
-      .emit(`${EVENTS.SILENT}:${event}`, silentData);
-
-    if (unconnectedCallback && unconnected.length) {
-      unconnectedCallback(unconnected, data);
+      socket
+        .to(connected)
+        .to(connectedSilent)
+        .emit(`${EVENTS.LISTENER}:${event}`, data);
+    } else {
+      this.namespace
+        .to(connected)
+        .to(connectedSilent)
+        .emit(`${EVENTS.LISTENER}:${event}`, data);
     }
+
+    return [
+      ..._.map(connected, (id) => ({ userId: id, type: 'connected' })),
+      ..._.map(connectedSilent, (id) => ({
+        userId: id,
+        type: 'connectedSilent',
+      })),
+      ..._.map(unconnected, (id) => ({ userId: id, type: 'unconnected' })),
+    ] as Array<{
+      userId: string;
+      type: 'connected' | 'connectedSilent' | 'unconnected';
+    }>;
   }
 }

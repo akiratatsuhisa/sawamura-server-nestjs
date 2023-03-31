@@ -5,7 +5,6 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
-  WsResponse,
 } from '@nestjs/websockets';
 import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
@@ -45,18 +44,11 @@ export class RoomsGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
-  private getRoomMembers(
-    room: Awaited<ReturnType<RoomsService['getRoomById']>>,
-  ) {
+  mapSendToRoomMembers(room: Awaited<ReturnType<RoomsService['getRoomById']>>) {
     return _(room.roomMembers)
       .filter((m) => m.role !== RoomMemberRole.None)
       .map((m) => m.member.id)
       .value();
-  }
-
-  @SubscribeMessage('message')
-  handleMessage(): WsResponse<string> {
-    return { event: 'message', data: 'Hello world' };
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_ROOM)
@@ -66,9 +58,10 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const rooms = await this.roomsService.getRooms(dto, client.user);
 
-    this.sendToCaller(client, {
-      dto,
+    this.sendToCaller({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.LIST_ROOM,
+      dto,
       data: { rooms },
     });
   }
@@ -83,9 +76,10 @@ export class RoomsGateway extends WsAuthGateway {
       throw new AppError.NotFound();
     }
 
-    this.sendToCaller(client, {
-      dto,
+    this.sendToCaller({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.READ_ROOM,
+      dto,
       data: room,
     });
   }
@@ -100,9 +94,10 @@ export class RoomsGateway extends WsAuthGateway {
       client.user,
     );
 
-    this.sendToCaller(client, {
-      dto,
+    this.sendToCaller({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.LIST_MESSAGE,
+      dto,
       data: { messages },
     });
   }
@@ -114,11 +109,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.createRoom(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.CREATE_ROOM,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -129,11 +125,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.updateRoom(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.UPDATE_ROOM,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -144,11 +141,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.deleteRoom(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.DELETE_ROOM,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -159,11 +157,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.createMember(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.CREATE_MEMBER,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -174,11 +173,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.updateMember(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.UPDATE_MEMBER,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -189,11 +189,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const room = await this.roomsService.deleteMember(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.DELETE_MEMBER,
+      dto,
       data: room,
-      userIds: this.getRoomMembers(room),
+      userIds: this.mapSendToRoomMembers(room),
     });
   }
 
@@ -208,13 +209,12 @@ export class RoomsGateway extends WsAuthGateway {
         client.user,
       );
 
-      this.sendToUsers(client, {
-        dto,
+      this.sendToUsers({
+        socket: client,
         event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-        userIds: _.map(message.room.roomMembers, 'memberId'),
+        dto,
         data: message,
-        unconnectedCallback: async (unconnected) =>
-          console.log(`Send notification to ${unconnected.join(',')}`),
+        userIds: _.map(message.room.roomMembers, 'memberId'),
       });
     }
 
@@ -242,10 +242,7 @@ export class RoomsGateway extends WsAuthGateway {
         },
       ] as Array<{ files: Array<IFile>; type: RoomMessageType }>,
       async (promise, { files, type }) => {
-        const hasSendUnconnectedCallback = await promise;
-        if (!files.length) {
-          return hasSendUnconnectedCallback;
-        }
+        await promise;
 
         const message = await this.roomsService.createMessageFiles(
           {
@@ -256,23 +253,17 @@ export class RoomsGateway extends WsAuthGateway {
           client.user,
         );
 
-        this.sendToUsers(client, {
-          dto,
+        this.sendToUsers({
+          socket: client,
           event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-          userIds: _.map(message.room.roomMembers, 'memberId'),
+          dto,
           data: message,
-          unconnectedCallback: async (unconnected) => {
-            if (hasSendUnconnectedCallback) {
-              return;
-            }
-
-            console.log(`Send notification to ${unconnected.join(',')}`);
-          },
+          userIds: _.map(message.room.roomMembers, 'memberId'),
         });
 
-        return true;
+        return;
       },
-      Promise.resolve(!!_.size(dto.content)),
+      Promise.resolve(),
     );
   }
 
@@ -283,13 +274,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const message = await this.roomsService.updateMessage(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.UPDATE_MESSAGE,
-      userIds: _.map(message.room.roomMembers, 'memberId'),
+      dto,
       data: message,
-      unconnectedCallback: async (unconnected) =>
-        console.log(`Send notification to ${unconnected.join(',')}`),
+      userIds: _.map(message.room.roomMembers, 'memberId'),
     });
   }
 
@@ -300,13 +290,12 @@ export class RoomsGateway extends WsAuthGateway {
   ) {
     const message = await this.roomsService.deleteMessage(dto, client.user);
 
-    this.sendToUsers(client, {
-      dto,
+    this.sendToUsers({
+      socket: client,
       event: SOCKET_ROOM_EVENTS.DELETE_MESSAGE,
-      userIds: _.map(message.room.roomMembers, 'memberId'),
+      dto,
       data: message,
-      unconnectedCallback: async (unconnected) =>
-        console.log(`Send notification to ${unconnected.join(',')}`),
+      userIds: _.map(message.room.roomMembers, 'memberId'),
     });
   }
 }

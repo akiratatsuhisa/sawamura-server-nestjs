@@ -10,6 +10,8 @@ export class IdentityUser {
   public birthDate: string;
   public salary: number;
   public roles: Array<string>;
+  public photoUrl: string;
+  public coverUrl: string;
 
   constructor(payload?: Record<string, any>) {
     this.id = Jwt.get(payload, 'sub');
@@ -20,6 +22,8 @@ export class IdentityUser {
     this.birthDate = Jwt.get(payload, 'birthDate');
     this.salary = Jwt.get(payload, 'salary', 'number');
     this.roles = Jwt.getAll(payload, 'roles');
+    this.photoUrl = Jwt.get(payload, 'photoUrl');
+    this.coverUrl = Jwt.get(payload, 'coverUrl');
   }
 }
 
