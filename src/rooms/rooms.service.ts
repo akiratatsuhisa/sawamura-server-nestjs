@@ -3,7 +3,7 @@ import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { IdentityUser } from 'src/auth/identity.class';
-import { AppError, messages } from 'src/common/errors';
+import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
 import { MESSAGE_FILE } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
@@ -164,7 +164,9 @@ export class RoomsService extends PaginationService {
 
   async createRoom(dto: CreateRoomDto, user: IdentityUser) {
     if (!_.some(dto.members, (member) => member.memberId === user.id)) {
-      throw new AppError.Argument(messages.NotRoomMember(user.username));
+      throw new AppError.Argument(
+        AppError.Messages.NotRoomMember(user.username),
+      );
     }
 
     if (
@@ -172,7 +174,7 @@ export class RoomsService extends PaginationService {
       (!_.some(dto.members, (member) => member.role === RoomMemberRole.Admin) ||
         _.size(dto.members) < 2)
     ) {
-      throw new AppError.Argument(messages.InvalidGroupRoom);
+      throw new AppError.Argument(AppError.Messages.InvalidGroupRoom);
     }
 
     if (
@@ -183,7 +185,7 @@ export class RoomsService extends PaginationService {
           (member) => member.role !== RoomMemberRole.Moderator,
         ))
     ) {
-      throw new AppError.Argument(messages.InvalidPrivateRoom);
+      throw new AppError.Argument(AppError.Messages.InvalidPrivateRoom);
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -201,7 +203,7 @@ export class RoomsService extends PaginationService {
         });
 
         if (privateRoom) {
-          throw new AppError.Argument(messages.InvalidPrivateRoom);
+          throw new AppError.Argument(AppError.Messages.InvalidPrivateRoom);
         }
       }
 

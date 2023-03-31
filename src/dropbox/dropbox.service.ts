@@ -9,7 +9,7 @@ import {
 } from 'dropbox';
 import { readFile } from 'fs/promises';
 import * as _ from 'lodash';
-import { AppError, messages } from 'src/common/errors';
+import { AppError } from 'src/common/errors';
 import { IFile } from 'src/helpers/file-type.interface';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -77,7 +77,7 @@ export class DropboxService {
     const result = _.filter(responses, (r) => !_.isNull(r));
 
     if (!_.size(result)) {
-      throw new AppError.Argument(messages.FilesUploadFailed);
+      throw new AppError.Argument(AppError.Messages.FilesUploadFailed);
     }
 
     return result;
@@ -112,7 +112,7 @@ export class DropboxService {
       // dropbox sdk fileBinary
       return (response.result as any).fileBinary as Buffer;
     } catch {
-      throw new AppError.Argument(messages.FilesDownloadFailed);
+      throw new AppError.Argument(AppError.Messages.FilesDownloadFailed);
     }
   }
 
@@ -124,7 +124,7 @@ export class DropboxService {
 
       return { name, path };
     } catch {
-      throw new AppError.Argument(messages.FilesDeleteFailed);
+      throw new AppError.Argument(AppError.Messages.FilesDeleteFailed);
     }
   }
 }

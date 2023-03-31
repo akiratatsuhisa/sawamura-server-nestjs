@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import { AppError, messages } from 'src/common/errors';
+import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -63,10 +63,10 @@ export class DashboardService {
     const toDate = moment(dto.toDate).endOf('date');
 
     if (fromDate.isAfter(toDate)) {
-      throw new AppError.Argument(messages.InvalidDateFromTo);
+      throw new AppError.Argument(AppError.Messages.InvalidDateFromTo);
     }
 
-    const roomMessages = await this.prisma.roomMessage.findMany({
+    const messages = await this.prisma.roomMessage.findMany({
       select: {
         type: true,
         content: true,
@@ -81,7 +81,7 @@ export class DashboardService {
       },
     });
 
-    const messagesGroupByMonth = _.groupBy(roomMessages, ({ createdAt }) =>
+    const messagesGroupByMonth = _.groupBy(messages, ({ createdAt }) =>
       moment(createdAt).format('YYYY-MM'),
     );
 

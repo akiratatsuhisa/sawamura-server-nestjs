@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, Todo } from '@prisma/client';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError } from 'src/common/errors';
-import { messages } from 'src/helpers/messages.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import {
@@ -78,7 +77,7 @@ export class TodosService {
 
         if (!todo) {
           throw new AppError.NotFound(
-            messages.NotFoundEntityError('todo', dto.id),
+            AppError.Messages.NotFoundEntityError('todo', dto.id),
           );
         }
 

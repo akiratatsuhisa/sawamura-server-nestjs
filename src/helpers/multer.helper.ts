@@ -7,8 +7,6 @@ import { AppError } from 'src/common/errors';
 import { IFile } from 'src/helpers/file-type.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-import { messages } from './messages.helper';
-
 export namespace Multer {
   export function declareStorageEngine(...paths: string[]) {
     return diskStorage({
@@ -51,7 +49,7 @@ export namespace Multer {
 
     const errors: Array<string> = [];
     if (options.required && !value.length) {
-      errors.push(messages.FilesRequired);
+      errors.push(AppError.Messages.FilesRequired);
     }
 
     const [validFiles, invalidFiles] = _.partition(value, (file) => {
@@ -59,11 +57,14 @@ export namespace Multer {
 
       if (file.size > options.fileSize) {
         currentErrors.push(
-          messages.OverMaxFileSize(file.originalname, options.fileSize),
+          AppError.Messages.OverMaxFileSize(
+            file.originalname,
+            options.fileSize,
+          ),
         );
       } else if (!options.mimeTypeRegex.test(file.mimetype)) {
         currentErrors.push(
-          messages.InvalidFileMimeType(
+          AppError.Messages.InvalidFileMimeType(
             file.originalname,
             options.mimeTypeRegex.toString(),
           ),
@@ -77,7 +78,7 @@ export namespace Multer {
             : width < dimensions.width || height < dimensions.height
         ) {
           currentErrors.push(
-            messages.InvalidFileDimensions(
+            AppError.Messages.InvalidFileDimensions(
               file.originalname,
               options.dimensions,
             ),

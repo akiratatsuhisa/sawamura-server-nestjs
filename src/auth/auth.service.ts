@@ -5,7 +5,7 @@ import { compare, genSalt, hash } from 'bcrypt';
 import * as moment from 'moment';
 import * as path from 'path';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
-import { AppError, messages } from 'src/common/errors';
+import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { IFile } from 'src/helpers/file-type.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -214,7 +214,7 @@ export class AuthService {
         oldRefreshToken.revoked ||
         moment(oldRefreshToken.expires).isSameOrBefore()
       ) {
-        throw new AppError.Argument(messages.InvalidRefreshToken);
+        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
       }
 
       const accessToken = await this.generateAccessToken(user);
@@ -239,14 +239,14 @@ export class AuthService {
       }
 
       if (refreshToken.userId !== userId) {
-        throw new AppError.Argument(messages.InvalidRefreshToken);
+        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
       }
 
       if (
         refreshToken.revoked ||
         moment(refreshToken.expires).isSameOrBefore()
       ) {
-        throw new AppError.Argument(messages.InvalidRefreshToken);
+        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
       }
 
       await this.revokeRefreshToken(refreshToken.id, ip);
