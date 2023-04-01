@@ -272,7 +272,7 @@ export class RoomsService extends PaginationService {
       throw new AppError.NotFound();
     }
 
-    const buffer = await this.dropboxService.fileDownload(
+    const { buffer } = await this.dropboxService.fileDownload(
       room.photoUrl?.substring(1),
     );
 
@@ -635,7 +635,10 @@ export class RoomsService extends PaginationService {
       throw new AppError.AccessDenied();
     }
 
-    const buffer = await this.dropboxService.fileDownload(dto.name, dto.roomId);
+    const { buffer } = await this.dropboxService.fileDownload(
+      dto.name,
+      dto.roomId,
+    );
 
     return { buffer };
   }

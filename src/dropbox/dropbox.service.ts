@@ -110,7 +110,9 @@ export class DropboxService {
       const response = await this.dbx.filesDownload({ path });
 
       // dropbox sdk fileBinary
-      return (response.result as any).fileBinary as Buffer;
+      return {
+        buffer: (response.result as any).fileBinary as Buffer,
+      };
     } catch {
       throw new AppError.Argument(AppError.Messages.FilesDownloadFailed);
     }

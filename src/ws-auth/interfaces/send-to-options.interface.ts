@@ -11,3 +11,8 @@ export interface ISendToUsersOptions<D extends Record<string, unknown>>
   extends ISendToCallerOptions<D> {
   userIds: string | Array<string>;
 }
+
+export interface ISocketUser {
+  userId: string;
+  type: 'connected' | 'connectedSilent' | 'unconnected';
+}

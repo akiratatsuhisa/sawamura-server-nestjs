@@ -260,7 +260,7 @@ export class AuthService {
       throw new AppError.NotFound();
     }
 
-    const buffer = await this.dropboxService.fileDownload(
+    const { buffer } = await this.dropboxService.fileDownload(
       user[fieldName]?.substring(1),
     );
     const mimeType = 'image/' + path.extname(user[fieldName])?.substring(1);

@@ -29,6 +29,7 @@ import { WsRolesGuard } from './guards/ws-roles.guard';
 import {
   ISendToCallerOptions,
   ISendToUsersOptions,
+  ISocketUser,
 } from './interfaces/send-to-options.interface';
 import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
@@ -166,7 +167,7 @@ export class WsAuthGateway
 
   sendToUsers<D extends Record<string, unknown>>(
     options: ISendToUsersOptions<D>,
-  ) {
+  ): Array<ISocketUser> {
     const { socket, event, data, userIds } = options;
 
     const rooms = this.namespace.adapter.rooms;

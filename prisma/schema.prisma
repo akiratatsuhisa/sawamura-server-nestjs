@@ -21,7 +21,7 @@ model User {
   birthDate DateTime? @map("birth_date") @db.Date
   salary    Decimal?  @db.Decimal(12, 3)
 
-  photoUrl      String? @map("photo_url") @db.VarChar(450)
+  photoUrl String? @map("photo_url") @db.VarChar(450)
   coverUrl String? @map("cover_url") @db.VarChar(450)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -38,6 +38,7 @@ model User {
 
   todos             Todo[]
   VerificationToken VerificationToken[]
+  Notification      Notification[]
 
   @@map("users")
 }
@@ -215,4 +216,43 @@ model RoomMessage {
 
   @@index([roomId, createdAt(sort: Desc)])
   @@map("room_messages")
+}
+
+enum NotificationEntityName {
+  User        @map("user")
+  Room        @map("room")
+  RoomMessage @map("roomMessage")
+  RoomMember  @map("roomMember")
+  None        @map("none")
+
+  @@map("notification_entity_name")
+}
+
+enum NotificationStatus {
+  Queued    @map("queued")
+  Sent      @map("sent")
+  Delivered @map("delivered")
+  Viewed    @map("viewed")
+  Read      @map("read")
+  Archived  @map("archived")
+
+  @@map("notification_status")
+}
+
+model Notification {
+  id           String                 @id @default(uuid()) @db.Uuid
+  entity       NotificationEntityName @default(None)
+  referenceId  String?                @map("reference_id") @db.Uuid
+  targetUserId String                 @map("target_user_id") @db.Uuid
+  targetUser   User                   @relation(fields: [targetUserId], references: [id])
+  code         String                 @db.VarChar(255)
+  params       Json
+  status       NotificationStatus
+  viewedAt     DateTime?              @map("viewed_at")
+  readAt       DateTime?              @map("read_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("notifications")
 }
