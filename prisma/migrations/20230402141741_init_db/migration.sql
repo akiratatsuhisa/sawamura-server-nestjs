@@ -1,8 +1,17 @@
 -- CreateEnum
+CREATE TYPE "verification_token_type" AS ENUM ('reset_password', 'verify_email');
+
+-- CreateEnum
 CREATE TYPE "room_member_role" AS ENUM ('admin', 'moderator', 'member', 'none');
 
 -- CreateEnum
-CREATE TYPE "room_message_type" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images', 'none');
+CREATE TYPE "room_message_type" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images', 'files', 'audios', 'medias', 'none');
+
+-- CreateEnum
+CREATE TYPE "notification_entity_name" AS ENUM ('user', 'room', 'roomMessage', 'roomMember', 'none');
+
+-- CreateEnum
+CREATE TYPE "notification_status" AS ENUM ('queued', 'sent', 'delivered', 'viewed', 'read', 'archived');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -14,6 +23,8 @@ CREATE TABLE "users" (
     "last_name" VARCHAR(255),
     "birth_date" DATE,
     "salary" DECIMAL(12,3),
+    "photo_url" VARCHAR(450),
+    "cover_url" VARCHAR(450),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -70,6 +81,20 @@ CREATE TABLE "refresh_tokens" (
 );
 
 -- CreateTable
+CREATE TABLE "verification_tokens" (
+    "id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "token" VARCHAR(255) NOT NULL,
+    "type" "verification_token_type" NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+    "revoked" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "verification_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "todos" (
     "id" SERIAL NOT NULL,
     "user_id" UUID NOT NULL,
@@ -88,6 +113,8 @@ CREATE TABLE "rooms" (
     "id" UUID NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "is_group" BOOLEAN NOT NULL DEFAULT false,
+    "photo_url" VARCHAR(450),
+    "last_activated_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -120,6 +147,24 @@ CREATE TABLE "room_messages" (
     CONSTRAINT "room_messages_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" UUID NOT NULL,
+    "reference_id" UUID,
+    "entity" "notification_entity_name" NOT NULL DEFAULT 'none',
+    "source_user_id" UUID NOT NULL,
+    "target_user_id" UUID NOT NULL,
+    "code" VARCHAR(255) NOT NULL,
+    "params" JSONB NOT NULL,
+    "status" "notification_status" NOT NULL,
+    "viewed_at" TIMESTAMP(3),
+    "read_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
@@ -130,13 +175,22 @@ CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
 CREATE UNIQUE INDEX "user_roles_user_id_role_id_key" ON "user_roles"("user_id", "role_id");
 
 -- CreateIndex
-CREATE INDEX "relationships_follower_id_followee_id_idx" ON "relationships"("follower_id", "followee_id");
+CREATE UNIQUE INDEX "relationships_follower_id_followee_id_key" ON "relationships"("follower_id", "followee_id");
+
+-- CreateIndex
+CREATE INDEX "refresh_tokens_expires_revoked_idx" ON "refresh_tokens"("expires" DESC, "revoked" DESC);
+
+-- CreateIndex
+CREATE INDEX "verification_tokens_expires_revoked_idx" ON "verification_tokens"("expires" DESC, "revoked" DESC);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "room_members_room_id_member_id_key" ON "room_members"("room_id", "member_id");
 
 -- CreateIndex
 CREATE INDEX "room_messages_room_id_created_at_idx" ON "room_messages"("room_id", "created_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "notifications_target_user_id_created_at_idx" ON "notifications"("target_user_id", "created_at" DESC);
 
 -- AddForeignKey
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -154,6 +208,9 @@ ALTER TABLE "relationships" ADD CONSTRAINT "relationships_followee_id_fkey" FORE
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "verification_tokens" ADD CONSTRAINT "verification_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "todos" ADD CONSTRAINT "todos_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -167,3 +224,9 @@ ALTER TABLE "room_messages" ADD CONSTRAINT "room_messages_room_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "room_messages" ADD CONSTRAINT "room_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_source_user_id_fkey" FOREIGN KEY ("source_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_target_user_id_fkey" FOREIGN KEY ("target_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

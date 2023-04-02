@@ -27,8 +27,9 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  userRoles     UserRole[]
-  refreshTokens RefreshToken[]
+  userRoles          UserRole[]
+  refreshTokens      RefreshToken[]
+  verificationTokens VerificationToken[]
 
   followers Relationship[] @relation(name: "fk_follower")
   followees Relationship[] @relation(name: "fk_followee")
@@ -36,9 +37,10 @@ model User {
   roomMembers  RoomMember[]
   roomMessages RoomMessage[]
 
-  todos             Todo[]
-  VerificationToken VerificationToken[]
-  Notification      Notification[]
+  notificationSource Notification[] @relation(name: "fk_notification_source")
+  notificationTarget Notification[] @relation(name: "fk_notification_target")
+
+  todos Todo[]
 
   @@map("users")
 }
@@ -241,10 +243,12 @@ enum NotificationStatus {
 
 model Notification {
   id           String                 @id @default(uuid()) @db.Uuid
-  entity       NotificationEntityName @default(None)
   referenceId  String?                @map("reference_id") @db.Uuid
+  entity       NotificationEntityName @default(None)
+  sourceUserId String                 @map("source_user_id") @db.Uuid
+  sourceUser   User                   @relation(name: "fk_notification_source", fields: [sourceUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   targetUserId String                 @map("target_user_id") @db.Uuid
-  targetUser   User                   @relation(fields: [targetUserId], references: [id])
+  targetUser   User                   @relation(name: "fk_notification_target", fields: [targetUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   code         String                 @db.VarChar(255)
   params       Json
   status       NotificationStatus
@@ -254,5 +258,6 @@ model Notification {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@index([targetUserId, createdAt(sort: Desc)])
   @@map("notifications")
 }

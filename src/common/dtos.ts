@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 export abstract class PaginationOffset {
   @Min(0)
@@ -38,4 +46,21 @@ export abstract class PaginationExcludeIds<
   @IsOptional()
   @Type(() => Number)
   take?: number;
+}
+
+export namespace FindOneParams {
+  export class Number {
+    @IsNumber()
+    @IsNotEmpty()
+    @Type(() => Number)
+    id: number;
+  }
+
+  export class Uuid {
+    @IsUUID()
+    @IsString()
+    @IsNotEmpty()
+    @Type(() => String)
+    id: string;
+  }
 }

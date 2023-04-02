@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { FindOneParams } from 'src/common/dtos';
 import { AppError } from 'src/common/errors';
-import { FindOneParams } from 'src/validations/find-one.validation';
 
 import { SearchUsersDto } from './dtos';
 import { UsersService } from './users.service';

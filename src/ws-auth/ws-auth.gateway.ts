@@ -180,9 +180,9 @@ export class WsAuthGateway
         const connectedSilent = `${PREFIXES.SOCKET_USER_SILENT}:${userId}`;
 
         if (rooms.has(connected)) {
-          group.connected.push(connected);
+          group.connected.push(userId);
         } else if (rooms.has(connectedSilent)) {
-          group.connectedSilent.push(connectedSilent);
+          group.connectedSilent.push(userId);
         } else {
           group.unconnected.push(userId);
         }

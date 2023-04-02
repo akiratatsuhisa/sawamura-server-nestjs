@@ -10,6 +10,7 @@ import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
 import { IFile } from 'src/helpers/file-type.interface';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
@@ -40,6 +41,7 @@ export class RoomsGateway extends WsAuthGateway {
     configService: ConfigService,
     wsAuthService: WsAuthService,
     private roomsService: RoomsService,
+    private notificationsService: NotificationsService,
   ) {
     super(configService, wsAuthService);
   }
@@ -209,13 +211,19 @@ export class RoomsGateway extends WsAuthGateway {
         client.user,
       );
 
-      this.sendToUsers({
+      const socketUsers = this.sendToUsers({
         socket: client,
         event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
         dto,
         data: message,
         userIds: _.map(message.room.roomMembers, 'memberId'),
       });
+
+      this.notificationsService.prepareMessageNotifications(
+        message,
+        socketUsers,
+        client.user,
+      );
     }
 
     if (!_.size(dto.files)) {
@@ -253,13 +261,19 @@ export class RoomsGateway extends WsAuthGateway {
           client.user,
         );
 
-        this.sendToUsers({
+        const socketUsers = this.sendToUsers({
           socket: client,
           event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
           dto,
           data: message,
           userIds: _.map(message.room.roomMembers, 'memberId'),
         });
+
+        this.notificationsService.prepareMessageNotifications(
+          message,
+          socketUsers,
+          client.user,
+        );
 
         return;
       },

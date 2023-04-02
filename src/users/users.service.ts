@@ -3,37 +3,15 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import { SearchUsersDto } from './dtos';
+import { userSelect } from './users.type';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
-  private userSelect = Prisma.validator<Prisma.UserSelect>()({
-    id: true,
-    username: true,
-    password: true,
-    email: true,
-    firstName: true,
-    lastName: true,
-    birthDate: true,
-    salary: true,
-    photoUrl: true,
-    coverUrl: true,
-    createdAt: true,
-    updatedAt: true,
-    userRoles: {
-      select: {
-        role: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    },
-  });
 
   async findAll(dto: SearchUsersDto) {
     return this.prisma.user.findMany({
-      select: this.userSelect,
+      select: userSelect,
       where: {
         OR: dto.search
           ? [
@@ -48,7 +26,7 @@ export class UsersService {
 
   async findByUnique(idOrUsername: Prisma.UserWhereUniqueInput) {
     return this.prisma.user.findUnique({
-      select: this.userSelect,
+      select: userSelect,
       where: idOrUsername,
     });
   }
@@ -56,7 +34,7 @@ export class UsersService {
   async findByRefreshToken(token: string) {
     return this.prisma.user.findFirst({
       where: { refreshTokens: { some: { token } } },
-      select: this.userSelect,
+      select: userSelect,
     });
   }
 }

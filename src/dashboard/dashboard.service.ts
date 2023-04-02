@@ -6,6 +6,7 @@ import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
+import { RoomsService } from 'src/rooms/rooms.service';
 
 import { REDIS_DASHBOARD_KEYS } from './constants';
 import { SearchChartMessagesDto } from './dtos';
@@ -15,6 +16,7 @@ export class DashboardService {
   constructor(
     private prisma: PrismaService,
     private redisService: RedisService,
+    private roomsService: RoomsService,
     private dropboxService: DropboxService,
   ) {}
 
@@ -43,19 +45,6 @@ export class DashboardService {
 
   async countUsers() {
     return { count: await this.prisma.user.count() };
-  }
-
-  private roomMessageFileTypes = [
-    RoomMessageType.Files,
-    RoomMessageType.Images,
-    RoomMessageType.Image,
-    RoomMessageType.Audios,
-    RoomMessageType.Medias,
-    RoomMessageType,
-  ];
-
-  isRoomMessageFileTypes(type: RoomMessageType) {
-    return _.some(this.roomMessageFileTypes, (t) => t === type);
   }
 
   async chartMessages(dto: SearchChartMessagesDto) {
@@ -97,7 +86,7 @@ export class DashboardService {
     return _.map(months, (date) => {
       const [dataFiles, dataMessages] = _.partition(
         messagesGroupByMonth[date.format('YYYY-MM')],
-        ({ type }) => this.isRoomMessageFileTypes(type),
+        ({ type }) => this.roomsService.isRoomMessageFileTypes(type),
       );
 
       const countFiles = _.reduce(

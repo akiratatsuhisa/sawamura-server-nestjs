@@ -33,6 +33,11 @@ import {
   UpdateRoomDto,
 } from './dtos';
 import { CreateFileMessageDto } from './dtos/message/create.dto';
+import {
+  roomMemberSelect,
+  roomMessageSelect,
+  roomSelect,
+} from './rooms.factory';
 
 @Injectable()
 export class RoomsService extends PaginationService {
@@ -42,54 +47,6 @@ export class RoomsService extends PaginationService {
   ) {
     super();
   }
-
-  private roomMemberSelect = Prisma.validator<Prisma.RoomMemberSelect>()({
-    id: true,
-    nickName: true,
-    role: true,
-    member: {
-      select: {
-        id: true,
-        username: true,
-        photoUrl: true,
-      },
-    },
-    createdAt: true,
-  });
-
-  private roomSelect = Prisma.validator<Prisma.RoomSelect>()({
-    id: true,
-    name: true,
-    isGroup: true,
-    roomMembers: {
-      select: this.roomMemberSelect,
-    },
-    photoUrl: true,
-    createdAt: true,
-  });
-
-  private roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({
-    id: true,
-    type: true,
-    content: true,
-    room: {
-      select: {
-        id: true,
-        roomMembers: {
-          select: { memberId: true },
-          where: { role: { not: RoomMemberRole.None } },
-        },
-      },
-    },
-    user: {
-      select: {
-        id: true,
-        username: true,
-        photoUrl: true,
-      },
-    },
-    createdAt: true,
-  });
 
   private isRoomMember(
     roomMembers: Awaited<
@@ -108,7 +65,7 @@ export class RoomsService extends PaginationService {
 
   async getRoomById(query: SearchRoomDto, user?: IdentityUser) {
     return this.prisma.room.findFirst({
-      select: this.roomSelect,
+      select: roomSelect,
       where: {
         id: query.id,
         roomMembers: user
@@ -120,21 +77,21 @@ export class RoomsService extends PaginationService {
 
   private async getMembersByRoomId(query: SearchMembersDto) {
     return this.prisma.roomMember.findMany({
-      select: this.roomMemberSelect,
+      select: roomMemberSelect,
       where: { roomId: query.roomId, role: { not: RoomMemberRole.None } },
     });
   }
 
   private async getMessageById(query: SearchMessageDto) {
     return this.prisma.roomMessage.findFirst({
-      select: this.roomMessageSelect,
+      select: roomMessageSelect,
       where: { id: query.id, type: { not: RoomMemberRole.None } },
     });
   }
 
   async getRooms(query: SearchRoomsDto, user: IdentityUser) {
     return this.prisma.room.findMany({
-      select: this.roomSelect,
+      select: roomSelect,
       orderBy: { lastActivatedAt: { sort: 'desc', nulls: 'last' } },
       where: {
         roomMembers: {
@@ -148,7 +105,7 @@ export class RoomsService extends PaginationService {
 
   async getMessagesByRoomId(query: SearchMessagesDto, user: IdentityUser) {
     return this.prisma.roomMessage.findMany({
-      select: this.roomMessageSelect,
+      select: roomMessageSelect,
       where: {
         room: {
           id: query.roomId,
@@ -215,7 +172,7 @@ export class RoomsService extends PaginationService {
             create: dto.members,
           },
         },
-        select: this.roomSelect,
+        select: roomSelect,
       });
     });
   }
@@ -239,7 +196,7 @@ export class RoomsService extends PaginationService {
       }
 
       return tx.room.update({
-        select: this.roomSelect,
+        select: roomSelect,
         data: {
           name: dto.name,
         },
@@ -260,7 +217,7 @@ export class RoomsService extends PaginationService {
       }
 
       return tx.room.delete({
-        select: this.roomSelect,
+        select: roomSelect,
         where: { id: dto.id },
       });
     });
@@ -315,7 +272,7 @@ export class RoomsService extends PaginationService {
       where: {
         id: dto.id,
       },
-      select: this.roomSelect,
+      select: roomSelect,
     });
   }
 
@@ -507,7 +464,7 @@ export class RoomsService extends PaginationService {
       }
 
       const roomMessage = await tx.roomMessage.create({
-        select: this.roomMessageSelect,
+        select: roomMessageSelect,
         data: {
           roomId: dto.roomId,
           userId: user.id,
@@ -542,7 +499,7 @@ export class RoomsService extends PaginationService {
       }
 
       return tx.roomMessage.findFirst({
-        select: this.roomMessageSelect,
+        select: roomMessageSelect,
         where: { id: dto.id },
       });
     });
@@ -566,7 +523,7 @@ export class RoomsService extends PaginationService {
       }
 
       return tx.roomMessage.update({
-        select: this.roomMessageSelect,
+        select: roomMessageSelect,
         data: { content: Prisma.JsonNull, type: RoomMessageType.None },
         where: { id: dto.id },
       });
@@ -603,7 +560,7 @@ export class RoomsService extends PaginationService {
       );
 
       const roomMessage = await tx.roomMessage.create({
-        select: this.roomMessageSelect,
+        select: roomMessageSelect,
         data: {
           roomId: dto.roomId,
           userId: user.id,
@@ -666,5 +623,18 @@ export class RoomsService extends PaginationService {
     );
 
     return _.groupBy(filesWithDetail, 'type');
+  }
+
+  private roomMessageFileTypes = [
+    RoomMessageType.Files,
+    RoomMessageType.Images,
+    RoomMessageType.Image,
+    RoomMessageType.Audios,
+    RoomMessageType.Medias,
+    RoomMessageType,
+  ];
+
+  isRoomMessageFileTypes(type: RoomMessageType) {
+    return _.some(this.roomMessageFileTypes, (t) => t === type);
   }
 }
