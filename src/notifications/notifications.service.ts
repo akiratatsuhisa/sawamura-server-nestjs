@@ -5,7 +5,6 @@ import { Queue } from 'bull';
 import * as _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
-import { PaginationService } from 'src/common/services';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RoomsService } from 'src/rooms/rooms.service';
 import { ISocketUser } from 'src/ws-auth/interfaces/send-to-options.interface';
@@ -21,13 +20,11 @@ import {
 import { notificationSelect } from './notifcations.type';
 
 @Injectable()
-export class NotificationsService extends PaginationService {
+export class NotificationsService {
   constructor(
     private prisma: PrismaService,
     @InjectQueue(NAME) private notificationsQueue: Queue,
-  ) {
-    super();
-  }
+  ) {}
 
   async getNotificationById(query: SearchNotificationDto, user: IdentityUser) {
     const notifcation = await this.prisma.notification.findUnique({
@@ -45,8 +42,12 @@ export class NotificationsService extends PaginationService {
   async getNotifications(query: SearchNotificationsDto, user: IdentityUser) {
     return this.prisma.notification.findMany({
       select: notificationSelect,
-      where: { targetUserId: user.id },
-      ...this.makePaginationCursor(query),
+      orderBy: { createdAt: 'desc' },
+      where: {
+        targetUserId: user.id,
+        id: query.excludeIds?.length ? { notIn: query.excludeIds } : undefined,
+      },
+      take: query.take,
     });
   }
 
@@ -88,23 +89,27 @@ export class NotificationsService extends PaginationService {
     socketUsers: Array<ISocketUser>,
     user: IdentityUser,
   ) {
+    const code = 'notification:message';
+
+    const params = {
+      fromUsername: message.user.username,
+      content: _.truncate(
+        typeof message.content === 'string' ? message.content : 'file',
+        { length: 24 },
+      ),
+    };
+
     return Promise.all(
       _.map(socketUsers, async (socketUser) => {
         const dto: CreateNotificationDto = {
           entity: 'RoomMessage',
           referenceId: message.id,
           targetUserId: socketUser.userId,
-          code: 'notification:message',
-          params: {
-            from: message.user.username,
-            content: _.truncate(
-              typeof message.content === 'string' ? message.content : 'file',
-              { length: 24 },
-            ),
-          },
+          code,
+          params,
           status:
             user.id === socketUser.userId
-              ? NotificationStatus.Delivered
+              ? NotificationStatus.Viewed
               : socketUser.type === 'unconnected'
               ? NotificationStatus.Queued
               : NotificationStatus.Sent,

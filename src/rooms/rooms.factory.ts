@@ -1,4 +1,4 @@
-import { Prisma, RoomMemberRole } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const roomMemberSelect = Prisma.validator<Prisma.RoomMemberSelect>()({
   id: true,
@@ -30,13 +30,7 @@ export const roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({
   type: true,
   content: true,
   room: {
-    select: {
-      id: true,
-      roomMembers: {
-        select: { memberId: true },
-        where: { role: { not: RoomMemberRole.None } },
-      },
-    },
+    select: roomSelect,
   },
   user: {
     select: {

@@ -216,7 +216,7 @@ export class RoomsGateway extends WsAuthGateway {
         event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
         dto,
         data: message,
-        userIds: _.map(message.room.roomMembers, 'memberId'),
+        userIds: this.mapSendToRoomMembers(message.room),
       });
 
       this.notificationsService.prepareMessageNotifications(
@@ -266,7 +266,7 @@ export class RoomsGateway extends WsAuthGateway {
           event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
           dto,
           data: message,
-          userIds: _.map(message.room.roomMembers, 'memberId'),
+          userIds: this.mapSendToRoomMembers(message.room),
         });
 
         this.notificationsService.prepareMessageNotifications(
@@ -293,7 +293,7 @@ export class RoomsGateway extends WsAuthGateway {
       event: SOCKET_ROOM_EVENTS.UPDATE_MESSAGE,
       dto,
       data: message,
-      userIds: _.map(message.room.roomMembers, 'memberId'),
+      userIds: this.mapSendToRoomMembers(message.room),
     });
   }
 
@@ -309,7 +309,7 @@ export class RoomsGateway extends WsAuthGateway {
       event: SOCKET_ROOM_EVENTS.DELETE_MESSAGE,
       dto,
       data: message,
-      userIds: _.map(message.room.roomMembers, 'memberId'),
+      userIds: this.mapSendToRoomMembers(message.room),
     });
   }
 }

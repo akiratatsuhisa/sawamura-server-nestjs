@@ -32,7 +32,17 @@ export class NotificationsGateway extends WsAuthGateway {
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchNotificationsDto,
   ) {
-    this.notificationsService.getNotifications(dto, client.user);
+    const notifications = await this.notificationsService.getNotifications(
+      dto,
+      client.user,
+    );
+
+    this.sendToCaller({
+      socket: client,
+      event: SOCKET_NOTIFICATION_EVENTS.LIST_NOTIFICATION,
+      dto,
+      data: { notifications },
+    });
   }
 
   @SubscribeMessage(SOCKET_NOTIFICATION_EVENTS.UPDATE_NOTIFICATION)
