@@ -10,6 +10,7 @@ import { NotificationEntityName, NotificationStatus } from '@prisma/client';
 import { Job } from 'bull';
 import * as _ from 'lodash';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PREFIXES } from 'src/ws-auth/constants';
 
 import { NAME, SOCKET_NOTIFICATION_EVENTS } from './constants';
 import {
@@ -36,7 +37,7 @@ export class NotificationsConsumer {
     job: Job<CreateNotificationDto & { sourceUserId: string }>,
   ) {
     return this.prisma.$transaction(async (tx) => {
-      const { entity, referenceId } = job.data;
+      const { status, entity, referenceId } = job.data;
 
       if (entity !== NotificationEntityName.None) {
         await tx[_.camelCase(entity)].findUniqueOrThrow({
@@ -44,9 +45,24 @@ export class NotificationsConsumer {
         });
       }
 
+      const now = new Date();
+
       return tx.notification.create({
         select: notificationSelect,
-        data: job.data,
+        data: {
+          ...job.data,
+          viewedAt:
+            status === NotificationStatus.Viewed ||
+            status === NotificationStatus.Read ||
+            status === NotificationStatus.Archived
+              ? now
+              : undefined,
+          readAt:
+            status === NotificationStatus.Read ||
+            status === NotificationStatus.Archived
+              ? now
+              : undefined,
+        },
       });
     });
   }
@@ -63,22 +79,40 @@ export class NotificationsConsumer {
         where: { id, targetUserId },
       });
 
-      const { status: currentStatus } = notification;
+      const {
+        status: currentStatus,
+        viewedAt: currentViewedAt,
+        readAt: currentReadAt,
+      } = notification;
 
-      if (
-        (status === NotificationStatus.Delivered &&
-          currentStatus !== NotificationStatus.Queued &&
-          currentStatus !== NotificationStatus.Sent) ||
-        (status === NotificationStatus.Viewed &&
-          (currentStatus === NotificationStatus.Read ||
-            currentStatus === NotificationStatus.Archived))
-      ) {
-        return notification;
-      }
+      const now = new Date();
 
       return tx.notification.update({
         select: notificationSelect,
-        data: { status },
+        data: {
+          status:
+            (status === NotificationStatus.Delivered &&
+              currentStatus !== NotificationStatus.Queued &&
+              currentStatus !== NotificationStatus.Sent) ||
+            (status === NotificationStatus.Viewed &&
+              (currentStatus === NotificationStatus.Read ||
+                currentStatus === NotificationStatus.Archived))
+              ? currentStatus
+              : status,
+          viewedAt:
+            (status === NotificationStatus.Viewed ||
+              status === NotificationStatus.Read ||
+              status === NotificationStatus.Archived) &&
+            !currentViewedAt
+              ? now
+              : undefined,
+          readAt:
+            (status === NotificationStatus.Read ||
+              status === NotificationStatus.Archived) &&
+            !currentReadAt
+              ? now
+              : undefined,
+        },
         where: { id },
       });
     });
@@ -114,7 +148,7 @@ export class NotificationsConsumer {
   ) {
     if (result.status !== NotificationStatus.Queued) {
       this.notificationsGateway.namespace
-        .to(result.targetUser.id)
+        .to(`${PREFIXES.SOCKET_USER_SILENT}:${result.targetUser.id}`)
         .emit(job.name, result);
     }
 

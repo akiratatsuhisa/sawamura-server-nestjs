@@ -1,11 +1,12 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
-import { FindOneParams, PaginationCursor } from 'src/common/dtos';
+import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
+import { FindOneParams, PaginationExcludeIds } from 'src/common/dtos';
 
 export class SearchNotificationDto extends FindOneParams.Uuid {}
 
-export class SearchNotificationsDto extends PaginationCursor {
-  @IsUUID()
-  @IsString()
+export class SearchNotificationsDto extends PaginationExcludeIds {
+  @IsUUID('all', { each: true })
+  @IsString({ each: true })
+  @IsArray()
   @IsOptional()
-  cursor?: string;
+  excludeIds?: Array<string>;
 }
