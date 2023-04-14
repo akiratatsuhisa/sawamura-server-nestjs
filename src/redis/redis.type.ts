@@ -3,5 +3,5 @@ export declare type BucketType =
   | string
   | number
   | boolean
-  | object
+  | { [key: string]: BucketType }
   | Array<BucketType>;

@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-export type { IFile } from 'src/helpers/file-type.interface';
+export { IFile } from 'src/helpers/file.interface';
 
 export async function importFileType() {
   const {

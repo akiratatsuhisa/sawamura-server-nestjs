@@ -9,7 +9,7 @@ import {
 import { RoomMemberRole, RoomMessageType } from '@prisma/client';
 import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
-import { IFile } from 'src/helpers/file-type.interface';
+import { IFile } from 'src/helpers/file.interface';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';

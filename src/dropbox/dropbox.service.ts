@@ -10,7 +10,7 @@ import {
 import { readFile } from 'fs/promises';
 import * as _ from 'lodash';
 import { AppError } from 'src/common/errors';
-import { IFile } from 'src/helpers/file-type.interface';
+import { IFile } from 'src/helpers/file.interface';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()

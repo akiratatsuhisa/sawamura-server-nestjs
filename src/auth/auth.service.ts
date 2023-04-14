@@ -7,7 +7,7 @@ import * as path from 'path';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
-import { IFile } from 'src/helpers/file-type.interface';
+import { IFile } from 'src/helpers/file.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { UsersService } from 'src/users/users.service';
