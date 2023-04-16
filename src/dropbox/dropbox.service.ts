@@ -32,6 +32,7 @@ export class DropboxService {
 
   async getSpaceUsage() {
     const response = await this.dbx.usersGetSpaceUsage();
+
     return {
       used: response.result.used,
       allocated: (

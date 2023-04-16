@@ -15,7 +15,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   handleRequest(
     err: unknown,
     user: IdentityUser,
-    info: unknown,
+    _info: unknown,
     context: ExecutionContext,
   ) {
     const req = context.switchToHttp().getRequest();
@@ -26,6 +26,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         context.getHandler(),
         context.getClass(),
       ]) ?? false;
+
     if (isPublic && !user) {
       return null;
     }
