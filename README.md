@@ -9,16 +9,20 @@
 
 - [About](#about)
 - [Development](#development)
+
   - [Local installation](#local-installation)
   - [Docker](#docker)
+
 - [Support](#support)
 - [License](#license)
 
 ## About
 
-This repository made for the purpose of learning, and practicing coding.
+This repository is intended for learning and practicing coding. However, please note that this application may contain bugs, and I advise against using it for commercial or personal purposes, as it has not been secured and tested.
 
-This applications may have many potential bugs, and I advise you not to use it for commercial or personal purposes, as it hasn't been secured and tested.
+The project utilizes a web UI from [vuetify-app](https://github.com/akiratatsuhisa/vuetify-app).
+
+This back-end app is modeled after Facebook's messenger and offers a variety of features to facilitate communication between users. It supports both one-on-one and group chats, and users can customize their chat rooms by changing the chat room's image and chat name. Group chat's member have additional control over the chat, including the ability to invite or remove members, update member roles, and change nicknames. Furthermore, the app enables users to share files by allowing uploads and downloads within chat conversations. With these features, users can easily communicate and share information with friends.
 
 ## Development
 
@@ -31,45 +35,50 @@ For installation instructions, please use the following ways.
 
 ### Prerequisites
 
-**Node.js (18.x.x+)**
+**Node.js (v18 or higher)**
 
 See the [official Node.js installation documentation](https://nodejs.org/).
 
-**Postgresql (15.x.x+)**
+**Postgresql (v15 or higher)**
 
 See the [official Postgresql installation documentation](https://www.postgresql.org/docs/current/tutorial-install.html).
 
-**Redis (6.x.x+)**
+**Redis (v6 or higher)**
 
 See the [official redis installation documentation](https://redis.io/docs/getting-started/installation/).
 
 ### Installation
 
-Clone the repository, and install dependencies.
+To install the application, clone the repository and install the required dependencies:
 
 ```bash
 $ git clone https://github.com/akiratatsuhisa/first-nestjs-app.git
 ```
 
-Install Dependencies for web api, open new terminal.
+Install Dependencies for server app, open new terminal.
 
 ```bash
 $ npm install
 ```
 
-Create an `.env` file and add all below values.
+Next, create an `.env` file with the following contents:
 
-- `PORT` - The port number for runned the server
-
-- `DATABASE_URL` - The main database postgres url
-- `REDIS_URL` - The sub database redis url
-
-- `SECRET` - Used for hash jwt token
-- `EXPIRES_IN` - Expiration time for jwt token, the unit used is `milliseconds`
-- `REFRESH_TOKEN_EXPIRES` - Expiration time for refresh token, the unit used is `milliseconds`
-- `REFRESH_TOKEN_SOCKET_OFFSET` - offset timeout for socket.io to request client renew token, the unit used is `milliseconds`
-- `REFRESH_TOKEN_WSAUTH_OFFSET` - offset timeout to expires client authenticating, the unit used is `milliseconds`
-
+| KEY                         | DESCRIPTION                                                                                                                                                                                                                                                                  | EXAMPLE VALUE                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| PORT                        | The port number that the server will be running on.                                                                                                                                                                                                                          | 4000                                                        |
+| SECRET                      | A secret key used to sign and verify JWT token.                                                                                                                                                                                                                              | S3cr4t                                                      |
+| EXPIRES_IN                  | The time period for which an access token (jwt token) is valid.                                                                                                                                                                                                              | 5m                                                          |
+| REFRESH_TOKEN_EXPIRES       | The time period for which a refresh token is valid, in seconds.                                                                                                                                                                                                              | 1800                                                        |
+| REFRESH_TOKEN_SOCKET_OFFSET | The time offset in milliseconds to renew refresh token via Socket.IO, based on the remaining expiration time of the access token. The server will emit a request to the client to send a new token when the remaining time of the access token reaches the specified offset. | 60000                                                       |
+| REFRESH_TOKEN_WSAUTH_OFFSET | The time in milliseconds to wait for the client to send the latest token back to the server using the Authorization header. If the server does not receive any response from the client within this period, it will disconnect the socket client from the socket.io server.  | 1500                                                        |
+| DATABASE_URL                | The URL to connect to the PostgreSQL database.                                                                                                                                                                                                                               | postgresql://username:password@host:port/name?schema=public |
+| REDIS_URL                   | The URL to connect to Redis cache database.                                                                                                                                                                                                                                  | redis://host:port/                                          |
+| SENDGRID_SENDER             | The email address used as the sender of SendGrid emails.                                                                                                                                                                                                                     | example@example.com                                         |
+| SENDGRID_API_KEY            | The API key used to authenticate with SendGrid.                                                                                                                                                                                                                              |                                                             |
+| DROPBOX_CLIENT_ID           | The client ID used to authenticate with the Dropbox API.                                                                                                                                                                                                                     |                                                             |
+| DROPBOX_CLIENT_SECRET       | The client secret used to authenticate with the Dropbox API.                                                                                                                                                                                                                 |                                                             |
+| DROPBOX_REFRESH_TOKEN       | The refresh token used to authenticate with the Dropbox API.                                                                                                                                                                                                                 |                                                             |
+| RESET_PASSWORD_URL          | The URL used for resetting the user's password.                                                                                                                                                                                                                              | "http://localhost:3000/resetPassword                        |
 
 ## Running the app
 
@@ -88,20 +97,17 @@ $ npm run start:prod
 
 ### Prerequisites
 
-**Docker (20.x.x+)**
+**Docker (v20 or higher)**
 
-See the [official Docker installation documentation](https://docs.docker.com/get-docker/).
+Please see the [official Docker installation documentation](https://docs.docker.com/get-docker/) for installation instructions.
 
 ### Installation
 
-Clone the repository, and create `.env` files same as [above](#local-installation).
-
-Create an `.env` file in root repository folder and add all below values.
-
+To install the application using Docker, clone the repository and create an .env file with the same contents as for [Local Installation](#local-installation).
 
 ### Running
 
-To run the containers, open terminal at root repository folder and run these **commands**: 
+To run the application in a Docker container, use the following commands:
 
 ```bash
 # Dockerfile hasn't been create
@@ -113,4 +119,4 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 ## License
 
-Released under the [Released under the MIT license.](LICENSE)
+This application is released under the [MIT license](LICENSE).
