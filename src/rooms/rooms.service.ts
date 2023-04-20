@@ -604,7 +604,7 @@ export class RoomsService extends PaginationService {
     const { fileTypeFromBuffer } = await importFileType();
 
     const filesWithDetail = await Promise.all(
-      _.map(files, async ({ data, name }) => {
+      files.map(async ({ data, name }) => {
         const { ext: extension, mime } =
           (await fileTypeFromBuffer(data)) ?? getMimeTypeFromExtension(name);
 

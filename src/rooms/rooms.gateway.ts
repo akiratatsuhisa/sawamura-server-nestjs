@@ -235,50 +235,48 @@ export class RoomsGateway extends WsAuthGateway {
       [RoomMessageType.Files]: officeFiles,
     } = await this.roomsService.partitionFiles(dto.files);
 
-    await _.reduce(
-      [
-        {
-          files: imageFiles,
-          type:
-            _.size(imageFiles) === 1
-              ? RoomMessageType.Image
-              : RoomMessageType.Images,
-        },
-        {
-          files: officeFiles,
-          type: RoomMessageType.Files,
-        },
-      ] as Array<{ files: Array<IFile>; type: RoomMessageType }>,
-      async (promise, { files, type }) => {
-        await promise;
-
-        const message = await this.roomsService.createMessageFiles(
-          {
-            roomId: dto.roomId,
-            type,
-            files,
-          },
-          client.user,
-        );
-
-        const socketUsers = this.sendToUsers({
-          socket: client,
-          event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
-          dto,
-          data: message,
-          userIds: this.mapSendToRoomMembers(message.room),
-        });
-
-        this.notificationsService.prepareMessageNotifications(
-          message,
-          socketUsers,
-          client.user,
-        );
-
-        return;
+    const filesByType: Array<{ files: Array<IFile>; type: RoomMessageType }> = [
+      {
+        files: imageFiles,
+        type:
+          _.size(imageFiles) === 1
+            ? RoomMessageType.Image
+            : RoomMessageType.Images,
       },
-      Promise.resolve(),
-    );
+      {
+        files: officeFiles,
+        type: RoomMessageType.Files,
+      },
+    ];
+
+    await filesByType.reduce(async (promise, { files, type }) => {
+      await promise;
+
+      const message = await this.roomsService.createMessageFiles(
+        {
+          roomId: dto.roomId,
+          type,
+          files,
+        },
+        client.user,
+      );
+
+      const socketUsers = this.sendToUsers({
+        socket: client,
+        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        dto,
+        data: message,
+        userIds: this.mapSendToRoomMembers(message.room),
+      });
+
+      this.notificationsService.prepareMessageNotifications(
+        message,
+        socketUsers,
+        client.user,
+      );
+
+      return;
+    }, Promise.resolve());
   }
 
   @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MESSAGE)

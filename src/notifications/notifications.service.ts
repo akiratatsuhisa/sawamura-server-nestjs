@@ -100,7 +100,7 @@ export class NotificationsService {
     };
 
     return Promise.all(
-      _.map(socketUsers, async (socketUser) => {
+      socketUsers.map(async (socketUser) => {
         const dto: CreateNotificationDto = {
           entity: 'RoomMessage',
           referenceId: message.id,

@@ -38,7 +38,7 @@ export namespace Multer {
   ) {
     value = _.isArray(value) ? value : [value];
 
-    await Promise.all(_.map(value, async (file) => unlink(file.path)));
+    await Promise.all(value.map(async (file) => unlink(file.path)));
   }
 
   export function validateFiles(

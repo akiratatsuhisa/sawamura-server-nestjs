@@ -49,7 +49,7 @@ export class DropboxService {
     },
   ) {
     const responses = await Promise.all(
-      _.map(files, async (file) => {
+      files.map(async (file) => {
         const uuid = uuidv4();
         const path = `/${arg.path}/${uuid}.${file.extension}`;
         try {
