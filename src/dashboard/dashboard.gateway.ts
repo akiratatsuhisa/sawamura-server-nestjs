@@ -5,6 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
@@ -18,6 +19,7 @@ import {
   SearchStorageDropbox,
 } from './dtos';
 
+@Roles('Administrator')
 @WebSocketGateway({ namespace: 'dashboard' })
 export class DashboardGateway extends WsAuthGateway {
   constructor(

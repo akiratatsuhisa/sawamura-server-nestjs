@@ -127,6 +127,5 @@ export class TodosService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
-    return;
   }
 }

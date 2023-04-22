@@ -3,6 +3,7 @@ export const SOCKET_DASHBOARD_EVENTS = {
   READ_STORAGE_CACHE: 'read:storage:cahe',
 
   READ_COUNT_USERS: 'read:count:users',
+  LIST_ROLE: 'list:role',
 
   CHART_MESSAGES: 'chart:messages',
 

@@ -136,6 +136,7 @@ export namespace AppError {
     UnauthenticatedError: 'Unauthenticated',
     UnauthorizedError: 'Unauthorized',
     AccessDeninedError: 'Access Denined',
+    DefaultDataError: 'Default Data',
     BadQueryError: 'Bad Request Query',
     BadDtoError: 'Bad Request Data',
     ArgumentError: 'Bad Argument',
