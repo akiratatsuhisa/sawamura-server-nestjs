@@ -172,20 +172,32 @@ export class WsAuthGateway
 
     const rooms = this.namespace.adapter.rooms;
 
-    const { connected, connectedSilent, unconnected } = _(
+    const { connected, connectedSilent, result } = _(
       userIds instanceof Array ? userIds : [userIds],
     ).reduce(
       (group, userId) => {
         const connected = `${PREFIXES.SOCKET_USER}:${userId}`;
         const connectedSilent = `${PREFIXES.SOCKET_USER_SILENT}:${userId}`;
 
-        if (rooms.has(connected)) {
-          group.connected.push(userId);
-        } else if (rooms.has(connectedSilent)) {
-          group.connectedSilent.push(userId);
-        } else {
-          group.unconnected.push(userId);
-        }
+        const type: 'connected' | 'connectedSilent' | 'unconnected' = rooms.has(
+          connected,
+        )
+          ? 'connected'
+          : rooms.has(connectedSilent)
+          ? 'connectedSilent'
+          : 'unconnected';
+
+        group[type].push(
+          type === 'connected'
+            ? connected
+            : type === 'connectedSilent'
+            ? connectedSilent
+            : userId,
+        );
+        group.result.push({
+          userId,
+          type,
+        });
 
         return group;
       },
@@ -193,10 +205,15 @@ export class WsAuthGateway
         connected: [],
         connectedSilent: [],
         unconnected: [],
+        result: [],
       } as {
         connected: Array<string>;
         connectedSilent: Array<string>;
         unconnected: Array<string>;
+        result: Array<{
+          userId: string;
+          type: 'connected' | 'connectedSilent' | 'unconnected';
+        }>;
       },
     );
 
@@ -214,16 +231,6 @@ export class WsAuthGateway
         .emit(`${EVENTS.LISTENER}:${event}`, data);
     }
 
-    return [
-      ..._.map(connected, (id) => ({ userId: id, type: 'connected' })),
-      ..._.map(connectedSilent, (id) => ({
-        userId: id,
-        type: 'connectedSilent',
-      })),
-      ..._.map(unconnected, (id) => ({ userId: id, type: 'unconnected' })),
-    ] as Array<{
-      userId: string;
-      type: 'connected' | 'connectedSilent' | 'unconnected';
-    }>;
+    return result;
   }
 }

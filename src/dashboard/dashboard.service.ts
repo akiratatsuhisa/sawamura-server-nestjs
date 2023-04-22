@@ -124,6 +124,7 @@ export class DashboardService {
         name: true,
         userRoles: { select: { id: true } },
       },
+      orderBy: { sort: 'asc' },
     });
 
     return _.map(roles, (role) => ({

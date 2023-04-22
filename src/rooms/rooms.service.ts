@@ -427,7 +427,7 @@ export class RoomsService extends PaginationService {
 
   private getMessageType(content: string): RoomMessageType {
     if (
-      /^[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]$/u.test(
+      /^[\p{Extended_Pictographic}][\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]*$/u.test(
         content,
       )
     ) {
@@ -435,7 +435,7 @@ export class RoomsService extends PaginationService {
     }
 
     if (
-      /^[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}](\s*[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}])+$/u.test(
+      /^[\p{Extended_Pictographic}][\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]*(\s*[\p{Extended_Pictographic}][\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]*)+$/u.test(
         content,
       )
     ) {
