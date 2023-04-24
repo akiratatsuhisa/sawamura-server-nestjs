@@ -28,3 +28,15 @@ export class SearchRoomPhotoDto {
   @IsNotEmpty()
   id: string;
 }
+
+export class TypingRoomDto {
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+}

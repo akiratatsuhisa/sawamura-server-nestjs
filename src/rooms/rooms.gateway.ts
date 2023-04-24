@@ -26,6 +26,7 @@ import {
   SearchMessagesDto,
   SearchRoomDto,
   SearchRoomsDto,
+  TypingRoomDto,
   UpdateMemberDto,
   UpdateMessageDto,
   UpdateRoomDto,
@@ -44,6 +45,29 @@ export class RoomsGateway extends WsAuthGateway {
     private notificationsService: NotificationsService,
   ) {
     super(configService, wsAuthService);
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.JOIN_ROOM)
+  joinRoom(
+    @MessageBody() dto: SearchRoomDto,
+    @ConnectedSocket() client: SocketWithAuth,
+  ) {
+    client.join(dto.id);
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.LEAVE_ROOM)
+  leaveRoom(
+    @MessageBody() dto: SearchRoomDto,
+    @ConnectedSocket() client: SocketWithAuth,
+  ) {
+    client.leave(dto.id);
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.TYPING_ROOM)
+  typingRoom(@MessageBody() dto: TypingRoomDto) {
+    this.namespace.to(dto.roomId).emit(`typing:room:${dto.roomId}`, {
+      userId: dto.userId,
+    });
   }
 
   mapSendToRoomMembers(room: Awaited<ReturnType<RoomsService['getRoomById']>>) {

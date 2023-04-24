@@ -1,4 +1,8 @@
 export const SOCKET_ROOM_EVENTS = {
+  JOIN_ROOM: 'join:room',
+  LEAVE_ROOM: 'leave:room',
+  TYPING_ROOM: 'typing:room',
+
   LIST_ROOM: 'list:room',
   READ_ROOM: 'read:room',
   CREATE_ROOM: 'create:room',

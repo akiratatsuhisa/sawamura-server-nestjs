@@ -18,7 +18,7 @@ import {
   DeleteNotificationDto,
   UpdateNotificationDto,
 } from './dtos';
-import { notificationSelect } from './notifcations.type';
+import { notificationSelect } from './notifcations.factory';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
 
@@ -142,11 +142,13 @@ export class NotificationsConsumer {
   }
 
   @OnQueueCompleted()
-  onQueueCompleted(
+  async onQueueCompleted(
     job: Job,
     result: Awaited<ReturnType<NotificationsService['getNotificationById']>>,
   ) {
     if (result.status !== NotificationStatus.Queued) {
+      await this.notificationsService.linkReference(result);
+
       this.notificationsGateway.namespace
         .to(`${PREFIXES.SOCKET_USER_SILENT}:${result.targetUser.id}`)
         .emit(job.name, result);

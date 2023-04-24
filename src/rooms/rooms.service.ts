@@ -478,6 +478,7 @@ export class RoomsService extends PaginationService {
         where: { id: dto.roomId },
       });
 
+      roomMessage.room.lastActivatedAt = roomMessage.createdAt;
       return roomMessage;
     });
   }
@@ -574,6 +575,7 @@ export class RoomsService extends PaginationService {
         where: { id: dto.roomId },
       });
 
+      roomMessage.room.lastActivatedAt = roomMessage.createdAt;
       return roomMessage;
     });
   }

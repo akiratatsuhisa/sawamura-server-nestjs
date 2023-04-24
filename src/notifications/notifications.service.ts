@@ -1,6 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { NotificationStatus } from '@prisma/client';
+import { NotificationEntityName, NotificationStatus } from '@prisma/client';
 import { Queue } from 'bull';
 import * as _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
@@ -17,7 +17,7 @@ import {
   SearchNotificationsDto,
   UpdateNotificationDto,
 } from './dtos';
-import { notificationSelect } from './notifcations.type';
+import { notificationSelect } from './notifcations.factory';
 
 @Injectable()
 export class NotificationsService {
@@ -25,6 +25,21 @@ export class NotificationsService {
     private prisma: PrismaService,
     @InjectQueue(NAME) private notificationsQueue: Queue,
   ) {}
+
+  async linkReference(
+    notifcation: Awaited<
+      ReturnType<NotificationsService['getNotificationById']>
+    >,
+  ) {
+    const reference =
+      notifcation.entity === NotificationEntityName.None
+        ? null
+        : await this.prisma[_.camelCase(notifcation.entity)].findFirst({
+            where: { id: notifcation.referenceId ?? '_' },
+          });
+
+    _.set(notifcation, 'reference', reference);
+  }
 
   async getNotificationById(query: SearchNotificationDto, user: IdentityUser) {
     const notifcation = await this.prisma.notification.findUnique({
@@ -36,11 +51,13 @@ export class NotificationsService {
       throw new AppError.NotFound();
     }
 
+    await this.linkReference(notifcation);
+
     return notifcation;
   }
 
   async getNotifications(query: SearchNotificationsDto, user: IdentityUser) {
-    return this.prisma.notification.findMany({
+    const notifications = await this.prisma.notification.findMany({
       select: notificationSelect,
       orderBy: { createdAt: 'desc' },
       where: {
@@ -49,6 +66,13 @@ export class NotificationsService {
       },
       take: query.take,
     });
+
+    return Promise.all(
+      notifications.map(async (notification) => {
+        await this.linkReference(notification);
+        return notification;
+      }),
+    );
   }
 
   async createNotification(dto: CreateNotificationDto, user: IdentityUser) {
