@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { SecurityGuard } from './auth/guards/security.guard';
 import { DtoParseInterceptor } from './validations/dto-parse.interceptor';
 import { GlobalExceptionsFilter } from './validations/global-exceptions.filter';
 import { exceptionFactory } from './validations/validation.factory';
@@ -12,6 +13,10 @@ export const appProviders: Array<Provider> = [
   {
     provide: APP_GUARD,
     useClass: JwtAuthGuard,
+  },
+  {
+    provide: APP_GUARD,
+    useClass: SecurityGuard,
   },
   {
     provide: APP_GUARD,

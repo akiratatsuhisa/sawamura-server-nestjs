@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Cron } from '@nestjs/schedule';
 import { compare, genSalt, hash } from 'bcrypt';
+import * as crypto from 'crypto';
 import * as moment from 'moment';
 import * as path from 'path';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
@@ -9,16 +11,24 @@ import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { IFile } from 'src/helpers/file.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/redis/redis.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { UsersService } from 'src/users/users.service';
 import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
-import { ForgotPasswordDto, RegisterDto, ResetPasswordDto } from './dtos';
+import { SECURITY_STAMPS_REDIS_KEY } from './constants';
+import {
+  ConfirmEmailDto,
+  ForgotPasswordDto,
+  RegisterDto,
+  ResetPasswordDto,
+} from './dtos';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
+    private redisService: RedisService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private sendgridService: SendgridService,
@@ -26,6 +36,107 @@ export class AuthService {
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
   ) {}
+
+  private generateSecurityStamp() {
+    const randomBytes = crypto.randomBytes(16).toString('hex');
+
+    const date = new Date().getTime().toString().padStart(16, '0');
+
+    return `${date}${randomBytes}`.slice(0, 128);
+  }
+
+  async updateSecurityStamp(
+    userOrUserId: string | { id: string; securityStamp: string },
+  ) {
+    const { securityStamp } =
+      typeof userOrUserId === 'string'
+        ? await this.prisma.user.findUniqueOrThrow({
+            where: { id: userOrUserId },
+            select: { securityStamp: true },
+          })
+        : userOrUserId;
+
+    await this.redisService.db.zRem(SECURITY_STAMPS_REDIS_KEY, securityStamp);
+
+    await this.prisma.user.update({
+      where: {
+        id: typeof userOrUserId === 'string' ? userOrUserId : userOrUserId.id,
+      },
+      data: { securityStamp: this.generateSecurityStamp() },
+      select: { id: true },
+    });
+  }
+
+  async verifySecurityStamp(securityStamp: string) {
+    const score = await this.redisService.db.zScore(
+      SECURITY_STAMPS_REDIS_KEY,
+      securityStamp,
+    );
+
+    if (score !== null) {
+      return true;
+    }
+
+    const count = await this.prisma.user.count({
+      where: { securityStamp },
+    });
+
+    if (count) {
+      await this.redisService.db.zAdd(SECURITY_STAMPS_REDIS_KEY, {
+        value: securityStamp,
+        score: moment().add(15, 'minutes').unix(),
+      });
+    }
+
+    return count === 1;
+  }
+
+  @Cron('0 */30 * * * *')
+  async taskSecurityStamp() {
+    const score = moment().unix();
+
+    await this.redisService.db.zRemRangeByScore(
+      SECURITY_STAMPS_REDIS_KEY,
+      '-inf',
+      `(${score}`,
+    );
+  }
+
+  async sendConfirmEmail(user: {
+    id: string;
+    username: string;
+    email: string;
+  }) {
+    const expires = moment().add(7, 'days');
+
+    const { token } = await this.verificationTokensService.generateToken(
+      user.id,
+      expires.toDate(),
+    );
+
+    const to = user.email;
+    const from = this.sendgridService.sender;
+
+    const confirmationLink = new URL(
+      this.configService.get<string>('CONFIRM_EMAIL_URL'),
+    );
+    confirmationLink.searchParams.set('token', token);
+
+    const html = await this.sendgridService.renderTemplate('confirm-email', {
+      username: user.username,
+      expires: expires.format('YYYY-MM-DD HH:mm:ss'),
+      confirmationLink: confirmationLink.toString(),
+      userEmail: to,
+      supportEmail: from,
+    });
+
+    await this.sendgridService.send({
+      subject: 'Confirm Email!',
+      from: from,
+      to: to,
+      html,
+    });
+  }
 
   async hashPassword(password: string) {
     const salt = await genSalt(10);
@@ -35,9 +146,10 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const hashPassword = await this.hashPassword(dto.password);
 
-    return this.prisma.user.create({
+    const result = await this.prisma.user.create({
       data: {
         username: dto.username,
+        email: dto.email,
         password: hashPassword,
         userRoles: {
           create: [
@@ -48,12 +160,38 @@ export class AuthService {
             },
           ],
         },
+        securityStamp: this.generateSecurityStamp(),
       },
       select: {
         id: true,
         username: true,
+        email: true,
       },
     });
+
+    if (dto.email) {
+      await this.sendConfirmEmail(result);
+    }
+
+    return result;
+  }
+
+  async confirmEmail(dto: ConfirmEmailDto) {
+    const verificationToken =
+      await this.verificationTokensService.getTokenActive(dto.token);
+
+    const user = await this.prisma.user.update({
+      data: {
+        emailConfirmed: true,
+      },
+      where: {
+        id: verificationToken.userId,
+      },
+    });
+
+    await this.verificationTokensService.revokeToken(dto.token);
+
+    return { username: user.username };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -96,10 +234,10 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const verificationToken =
-      await this.verificationTokensService.getTokenActive(dto.token);
-
-    const hashPassword = await this.hashPassword(dto.password);
+    const [verificationToken, hashPassword] = await Promise.all([
+      this.verificationTokensService.getTokenActive(dto.token),
+      this.hashPassword(dto.password),
+    ]);
 
     const user = await this.prisma.user.update({
       data: {
@@ -110,13 +248,16 @@ export class AuthService {
       },
     });
 
-    await this.verificationTokensService.revokeToken(dto.token);
+    await Promise.all([
+      this.updateSecurityStamp(user),
+      this.verificationTokensService.revokeToken(dto.token),
+    ]);
 
     return { username: user.username };
   }
 
   async generateAccessToken(
-    user: Awaited<ReturnType<UsersService['findByUnique']>>,
+    user: Awaited<ReturnType<UsersService['findByUniqueWithDetail']>>,
   ): Promise<string> {
     const payload = {
       sub: user.id,
@@ -125,6 +266,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       birthDate: user.birthDate,
+      securityStamp: user.securityStamp,
       salary: user.salary,
       roles: user.userRoles.map((userRole) => userRole.role.name),
       photoUrl: user.photoUrl,
@@ -178,7 +320,7 @@ export class AuthService {
   }
 
   async validateUser(username: string, password: string) {
-    const user = await this.usersService.findByUnique({ username });
+    const user = await this.usersService.findByUniqueWithDetail({ username });
     if (user && (await compare(password, user.password))) {
       return user;
     }
@@ -186,7 +328,7 @@ export class AuthService {
   }
 
   async login(
-    user: Awaited<ReturnType<UsersService['findByUnique']>>,
+    user: Awaited<ReturnType<UsersService['findByUniqueWithDetail']>>,
     ipAddress: string,
   ) {
     return {

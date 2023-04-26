@@ -5,7 +5,7 @@ import * as fs from 'fs/promises';
 import * as hbs from 'handlebars';
 import * as path from 'path';
 
-import { IForgotPasswordContext } from './interfaces';
+import { IConfirmEmailContext, IForgotPasswordContext } from './interfaces';
 
 @Injectable()
 export class SendgridService {
@@ -26,6 +26,10 @@ export class SendgridService {
     return transport;
   }
 
+  async renderTemplate(
+    name: 'confirm-email',
+    context: IConfirmEmailContext,
+  ): Promise<string>;
   async renderTemplate(
     name: 'forgot-password',
     context: IForgotPasswordContext,

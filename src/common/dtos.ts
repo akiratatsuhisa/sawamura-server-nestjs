@@ -11,12 +11,14 @@ import {
 
 export abstract class PaginationOffset {
   @Min(0)
+  @IsNumber()
   @IsOptional()
   @Type(() => Number)
   skip?: number;
 
   @Max(100)
   @Min(10)
+  @IsNumber()
   @IsOptional()
   @Type(() => Number)
   take?: number;

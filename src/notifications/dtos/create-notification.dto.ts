@@ -20,6 +20,7 @@ export class CreateNotificationDto {
 
   @IsUUID()
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   referenceId?: string;
 

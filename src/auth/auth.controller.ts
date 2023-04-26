@@ -27,6 +27,7 @@ import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { IdentityUser, User } from './decorators/users.decorator';
 import {
+  ConfirmEmailDto,
   ForgotPasswordDto,
   RefreshTokenDto,
   RegisterDto,
@@ -48,8 +49,14 @@ export class AuthController {
 
   @Post('register')
   @Public()
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('confirmEmail')
+  @Public()
+  async confirmEmail(@Body() dto: ConfirmEmailDto) {
+    return this.authService.confirmEmail(dto);
   }
 
   @Post('forgotPassword')
@@ -60,8 +67,8 @@ export class AuthController {
 
   @Post('resetPassword')
   @Public()
-  async resetPassword(@Body() registerDto: ResetPasswordDto) {
-    return this.authService.resetPassword(registerDto);
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   @Post('refreshToken')
@@ -78,11 +85,11 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async revokeRefreshToken(
     @Headers('refreshtoken') headerToken: string,
-    @Body() refreshTokenDto: RefreshTokenDto,
+    @Body() dto: RefreshTokenDto,
     @User('id') userId: string,
     @Ip() ip: string,
   ) {
-    const token = refreshTokenDto.value ?? headerToken;
+    const token = dto.value ?? headerToken;
 
     if (!token) {
       throw new AppError.Argument(`Not Found Token in header or body`);

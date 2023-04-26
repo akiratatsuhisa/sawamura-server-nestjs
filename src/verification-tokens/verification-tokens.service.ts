@@ -8,54 +8,50 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class VerificationTokensService {
   constructor(private prisma: PrismaService) {}
 
-  async generateToken(userId: string) {
+  async generateToken(userId: string, expires?: Date) {
     return this.prisma.verificationToken.create({
       data: {
         userId,
         type: VerificationTokenType.ResetPassword,
-        expires: moment().add(5, 'minutes').toDate(),
+        expires: expires ?? moment().add(5, 'minutes').toDate(),
       },
     });
   }
 
   async revokeToken(token: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const verificationToken = await tx.verificationToken.findFirst({
-        where: { token },
-      });
+    const verificationToken = await this.prisma.verificationToken.findFirst({
+      where: { token },
+    });
 
-      if (
-        !verificationToken ||
-        verificationToken.revoked ||
-        moment(verificationToken.expires).isSameOrBefore()
-      ) {
-        throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
-      }
+    if (
+      !verificationToken ||
+      verificationToken.revoked ||
+      moment(verificationToken.expires).isSameOrBefore()
+    ) {
+      throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
+    }
 
-      return tx.verificationToken.update({
-        data: { revoked: moment().toDate() },
-        where: {
-          id: verificationToken.id,
-        },
-      });
+    return this.prisma.verificationToken.update({
+      data: { revoked: moment().toDate() },
+      where: {
+        id: verificationToken.id,
+      },
     });
   }
 
   async getTokenActive(token: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const verificationToken = await tx.verificationToken.findFirst({
-        where: { token },
-      });
-
-      if (
-        !verificationToken ||
-        verificationToken.revoked ||
-        moment(verificationToken.expires).isSameOrBefore()
-      ) {
-        throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
-      }
-
-      return verificationToken;
+    const verificationToken = await this.prisma.verificationToken.findFirst({
+      where: { token },
     });
+
+    if (
+      !verificationToken ||
+      verificationToken.revoked ||
+      moment(verificationToken.expires).isSameOrBefore()
+    ) {
+      throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
+    }
+
+    return verificationToken;
   }
 }

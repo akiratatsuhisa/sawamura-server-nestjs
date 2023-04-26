@@ -12,6 +12,7 @@ export class IdentityUser {
   public roles: Array<string>;
   public photoUrl: string;
   public coverUrl: string;
+  public securityStamp: string;
 
   constructor(payload?: Record<string, any>) {
     this.id = Jwt.get(payload, 'sub');
@@ -24,6 +25,7 @@ export class IdentityUser {
     this.roles = Jwt.getAll(payload, 'roles');
     this.photoUrl = Jwt.get(payload, 'photoUrl');
     this.coverUrl = Jwt.get(payload, 'coverUrl');
+    this.securityStamp = Jwt.get(payload, 'securityStamp');
   }
 }
 

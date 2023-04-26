@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import { SearchUsersDto } from './dtos';
-import { userSelect } from './users.type';
+import { userProfileSelect, userSelect } from './users.factory';
 
 @Injectable()
 export class UsersService {
@@ -31,10 +31,17 @@ export class UsersService {
     });
   }
 
+  async findByUniqueWithDetail(idOrUsername: Prisma.UserWhereUniqueInput) {
+    return this.prisma.user.findUnique({
+      select: userProfileSelect,
+      where: idOrUsername,
+    });
+  }
+
   async findByRefreshToken(token: string) {
     return this.prisma.user.findFirst({
       where: { refreshTokens: { some: { token } } },
-      select: userSelect,
+      select: userProfileSelect,
     });
   }
 }

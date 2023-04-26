@@ -26,6 +26,7 @@ import { EmitId, SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 import { EVENTS, PREFIXES } from './constants';
 import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
 import { WsRolesGuard } from './guards/ws-roles.guard';
+import { WsSecurityGuard } from './guards/ws-security.guard';
 import {
   ISendToCallerOptions,
   ISendToUsersOptions,
@@ -34,7 +35,7 @@ import {
 import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
 
-@UseGuards(WsJwtAuthGuard, WsRolesGuard)
+@UseGuards(WsJwtAuthGuard, WsSecurityGuard, WsRolesGuard)
 @UsePipes(
   new ValidationPipe({
     transform: true,

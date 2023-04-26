@@ -14,6 +14,7 @@ export class CreateTodoDto {
 
   @MaxLength(450)
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   description?: string;
 

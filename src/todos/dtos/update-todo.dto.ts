@@ -21,6 +21,7 @@ export class UpdateTodoDto {
 
   @MaxLength(450)
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   description?: string;
 

@@ -22,6 +22,7 @@ export class UpdateMemberDto {
 
   @MaxLength(255)
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   nickName?: string;
 

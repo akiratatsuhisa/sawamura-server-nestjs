@@ -15,6 +15,7 @@ export class SearchMessagesDto extends PaginationCursor {
 
   @IsUUID()
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   cursor?: string;
 }

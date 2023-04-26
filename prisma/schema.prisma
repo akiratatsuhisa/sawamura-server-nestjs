@@ -12,14 +12,16 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid()) @db.Uuid
-  username  String    @unique @db.VarChar(255)
-  password  String    @db.VarChar(255)
-  email     String?   @db.VarChar(450)
-  firstName String?   @map("first_name") @db.VarChar(255)
-  lastName  String?   @map("last_name") @db.VarChar(255)
-  birthDate DateTime? @map("birth_date") @db.Date
-  salary    Decimal?  @db.Decimal(12, 3)
+  id             String    @id @default(uuid()) @db.Uuid
+  username       String    @unique @db.VarChar(255)
+  password       String    @db.VarChar(255)
+  email          String?   @db.VarChar(450)
+  emailConfirmed Boolean   @default(false) @map("email_confirmed")
+  firstName      String?   @map("first_name") @db.VarChar(255)
+  lastName       String?   @map("last_name") @db.VarChar(255)
+  birthDate      DateTime? @map("birth_date") @db.Date
+  salary         Decimal?  @db.Decimal(12, 3)
+  securityStamp  String    @map("security_stamp") @db.VarChar(128)
 
   photoUrl String? @map("photo_url") @db.VarChar(450)
   coverUrl String? @map("cover_url") @db.VarChar(450)
