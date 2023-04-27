@@ -17,7 +17,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Namespace, Server } from 'socket.io';
 import { GlobalWsExceptionsFilter } from 'src/validations/global-ws-exceptions.filter';
 import { exceptionFactory } from 'src/validations/validation.factory';

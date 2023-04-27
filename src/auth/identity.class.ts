@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Jwt } from 'src/helpers/jwt.helper';
 
 export class IdentityUser {

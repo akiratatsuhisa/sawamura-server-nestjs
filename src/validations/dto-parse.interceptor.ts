@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observable } from 'rxjs';
 
 import {

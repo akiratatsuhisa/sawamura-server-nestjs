@@ -1,4 +1,4 @@
-import * as path from 'path';
+import path from 'path';
 
 export { IFile } from 'src/helpers/file.interface';
 

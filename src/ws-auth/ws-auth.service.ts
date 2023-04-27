@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as jwt from 'jsonwebtoken';
-import * as _ from 'lodash';
-import * as moment from 'moment';
+import jwt from 'jsonwebtoken';
+import _ from 'lodash';
+import moment from 'moment';
 import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
 import { RedisService } from 'src/redis/redis.service';
 

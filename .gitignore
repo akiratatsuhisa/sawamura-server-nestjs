@@ -1,6 +1,7 @@
 # environment
 *.env
 temp
+prisma/data.ts
 
 # compiled output
 /dist

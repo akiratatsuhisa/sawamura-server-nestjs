@@ -7,7 +7,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { RoomMemberRole, RoomMessageType } from '@prisma/client';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { AppError } from 'src/common/errors';
 import { IFile } from 'src/helpers/file.interface';
 import { NotificationsService } from 'src/notifications/notifications.service';

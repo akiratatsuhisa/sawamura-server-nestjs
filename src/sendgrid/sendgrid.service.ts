@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as sendgridMail from '@sendgrid/mail';
-import * as fs from 'fs/promises';
-import * as hbs from 'handlebars';
-import * as path from 'path';
+import sendgridMail from '@sendgrid/mail';
+import fs from 'fs/promises';
+import hbs from 'handlebars';
+import path from 'path';
 
 import { IConfirmEmailContext, IForgotPasswordContext } from './interfaces';
 

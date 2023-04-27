@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
 import { compare, genSalt, hash } from 'bcrypt';
-import * as crypto from 'crypto';
-import * as moment from 'moment';
-import * as path from 'path';
+import crypto from 'crypto';
+import moment from 'moment';
+import path from 'path';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
@@ -195,14 +195,12 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.usersService.findByUnique({
+    const user = await this.usersService.findByUniqueWithDetail({
       username: dto.username,
     });
 
-    if (!user || !user.email) {
-      throw new AppError.Argument(
-        'Not found username or account not have an email.',
-      );
+    if (!user || !user.emailConfirmed) {
+      throw new AppError.Argument(AppError.Messages.InvalidForgotPassword);
     }
 
     const { token } = await this.verificationTokensService.generateToken(

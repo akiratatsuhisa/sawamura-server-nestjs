@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "migrate:dev": "prisma generate && prisma migrate dev",
+    "db:seed": "prisma db seed",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -88,6 +89,9 @@
     "ts-node": "^10.0.0",
     "tsconfig-paths": "4.1.1",
     "typescript": "^4.7.4"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

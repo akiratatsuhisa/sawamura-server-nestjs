@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
-import * as _ from 'lodash';
-import * as path from 'path';
+import _ from 'lodash';
+import path from 'path';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';

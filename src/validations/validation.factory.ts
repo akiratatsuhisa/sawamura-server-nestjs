@@ -1,5 +1,5 @@
 import { ValidationError } from '@nestjs/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { AppError } from 'src/common/errors';
 
 export function parseErrorsDetail(errors: Array<ValidationError>) {

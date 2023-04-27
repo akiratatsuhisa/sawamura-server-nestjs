@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RoomMessageType } from '@prisma/client';
-import * as _ from 'lodash';
-import * as moment from 'moment';
+import _ from 'lodash';
+import moment from 'moment';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';

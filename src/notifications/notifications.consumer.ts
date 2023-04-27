@@ -8,7 +8,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { NotificationEntityName, NotificationStatus } from '@prisma/client';
 import { Job } from 'bull';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PREFIXES } from 'src/ws-auth/constants';
 

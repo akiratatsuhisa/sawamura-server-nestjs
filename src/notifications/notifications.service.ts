@@ -2,7 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { NotificationEntityName, NotificationStatus } from '@prisma/client';
 import { Queue } from 'bull';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';

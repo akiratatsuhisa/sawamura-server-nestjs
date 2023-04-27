@@ -10,7 +10,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export class CreateNotificationDto {
   @IsIn(_.values(NotificationEntityName))
