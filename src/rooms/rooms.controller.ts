@@ -87,11 +87,11 @@ export class RoomsController {
   @Get(':roomId/:name')
   async getFile(
     @Query() dto: SearchMessageFileDto,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @User() user: IdentityUser,
   ) {
     const { buffer } = await this.roomsService.getFile(dto, user);
 
-    return res.send(buffer);
+    return new StreamableFile(buffer);
   }
 }

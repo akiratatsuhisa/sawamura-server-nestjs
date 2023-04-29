@@ -159,4 +159,19 @@ export class AuthController {
       await unlink();
     }
   }
+
+  @Get('profile/pdf')
+  async profilePdf(
+    @Res({ passthrough: true }) res: Response,
+    @User() user: IdentityUser,
+  ): Promise<StreamableFile> {
+    const buffer = await this.authService.profilePdf(user.username);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="profile.pdf"`,
+    });
+
+    return new StreamableFile(buffer);
+  }
 }

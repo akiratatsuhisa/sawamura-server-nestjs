@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { MulterModule } from '@nestjs/platform-express';
 import { DropboxModule } from 'src/dropbox/dropbox.module';
+import { FileUtilsModule } from 'src/file-utils/file-utils.module';
 import { Multer } from 'src/helpers/multer.helper';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { UsersModule } from 'src/users/users.module';
@@ -18,6 +19,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 @Module({
   imports: [
     SendgridModule,
+    FileUtilsModule,
     DropboxModule,
     PassportModule,
     UsersModule,

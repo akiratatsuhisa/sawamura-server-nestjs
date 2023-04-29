@@ -4,11 +4,13 @@ import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
 import { compare, genSalt, hash } from 'bcrypt';
 import crypto from 'crypto';
+import _ from 'lodash';
 import moment from 'moment';
 import path from 'path';
 import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
+import { FileUtilsService } from 'src/file-utils/file-utils.service';
 import { IFile } from 'src/helpers/file.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -33,6 +35,7 @@ export class AuthService {
     private configService: ConfigService,
     private sendgridService: SendgridService,
     private dropboxService: DropboxService,
+    private fileUtilsService: FileUtilsService,
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
   ) {}
@@ -124,7 +127,7 @@ export class AuthService {
 
     const html = await this.sendgridService.renderTemplate('confirm-email', {
       username: user.username,
-      expires: expires.format('YYYY-MM-DD HH:mm:ss'),
+      expires: expires.utc().format('YYYY-MM-DD HH:mm:ss'),
       confirmationLink: confirmationLink.toString(),
       userEmail: to,
       supportEmail: from,
@@ -426,5 +429,67 @@ export class AuthService {
         id: user.id,
       },
     });
+  }
+
+  async profilePdf(username: string): Promise<Buffer> {
+    const [
+      {
+        id,
+        email,
+        emailConfirmed,
+        userRoles,
+        createdAt,
+        updatedAt,
+        firstName,
+        lastName,
+        birthDate,
+        salary,
+      },
+      photoResult,
+      coverResult,
+    ] = await Promise.all([
+      this.usersService.findByUniqueWithDetail({
+        username,
+      }),
+      this.getImage('photoUrl', username).catch(() => Promise.resolve(null)),
+      this.getImage('coverUrl', username).catch(() => Promise.resolve(null)),
+    ]);
+
+    const prefix = `data:image/png;base64,`;
+
+    const photoSrc = _.isNull(photoResult)
+      ? null
+      : `${prefix}${photoResult.buffer.toString('base64')}`;
+
+    const coverSrc = _.isNull(photoResult)
+      ? null
+      : `${prefix}${coverResult.buffer.toString('base64')}`;
+
+    const html = await this.fileUtilsService.renderPdf('profile', {
+      exportDate: `${moment().utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      id,
+      username,
+      email,
+      emailConfirmed,
+      userRoles,
+      photoSrc,
+      createdAt: `${moment(createdAt)
+        .utc()
+        .format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      updatedAt: `${moment(updatedAt)
+        .utc()
+        .format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      coverSrc,
+      firstName,
+      lastName,
+      birthDate: _.isNull(birthDate)
+        ? null
+        : `${moment(birthDate).utc().format('YYYY-MM-DD')}`,
+      salary: _.isNull(salary) ? null : salary.toFixed(),
+      supportUrl: this.configService.get<string>('SUPPORT_URL'),
+      supportEmail: this.configService.get<string>('SENDGRID_SENDER'),
+    });
+
+    return this.fileUtilsService.exportPdf(html);
   }
 }

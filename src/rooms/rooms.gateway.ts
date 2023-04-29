@@ -276,6 +276,10 @@ export class RoomsGateway extends WsAuthGateway {
     await filesByType.reduce(async (promise, { files, type }) => {
       await promise;
 
+      if (!files) {
+        return;
+      }
+
       const message = await this.roomsService.createMessageFiles(
         {
           roomId: dto.roomId,

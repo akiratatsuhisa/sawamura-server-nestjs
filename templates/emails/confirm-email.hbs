@@ -1,87 +1,94 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Confirm your email</title>
-    <style>
-        body {
-            background-color: #f7f7f7;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            color: #444444;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm your email</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        .wrapper {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-        }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1;
+      color: #333333;
+      background-color: #f7f7f7;
+    }
 
-        .header {
-            background-color: #ffffff;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid #e6e6e6;
-        }
+    .wrapper {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+    }
 
-        .content {
-            background-color: #ffffff;
-            padding: 20px;
-            border-bottom: 1px solid #e6e6e6;
-        }
+    .header {
+      text-align: center;
+      padding: 20px;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e6e6e6;
+    }
 
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #6750a4;
-            color: #ffffff !important;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-        }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+    }
 
-        .button:hover {
-            background-color: #7058b3;
-        }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-top: 1px solid #e6e6e6;
+    }
 
-        .footer {
-            background-color: #ffffff;
-            padding: 20px;
-            border-top: 1px solid #e6e6e6;
-            text-align: center;
-            font-size: 14px;
-        }
-    </style>
+    .button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #8b5e83;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    a.link {
+      text-decoration: none;
+      color: #8b5e83;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="header">
-            <h1>Confirm your email address</h1>
-        </div>
-        <div class="content">
-            <p>Hi {{username}},</p>
-            <p>
-                Please click the button below to confirm your email address. This confirmation link will expire in 7
-                days, on {{expires}} (UTC).
-            </p>
-            <p>
-                <a href="{{confirmationLink}}" class="button">Confirm email address</a>
-            </p>
-        </div>
-        <div class="footer">
-            <p>
-                This email was sent to {{userEmail}}. If you believe you received this email in error, please
-                contact our support team immediately at
-                <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
-            </p>
-        </div>
+  <div class="wrapper">
+    <div class="header">
+      <h1>Confirm your email address</h1>
     </div>
+    <div class="content">
+      <p>Hi {{username}},</p>
+      <p>
+        Please click the button below to confirm your email address. This
+        confirmation link will expire in 7 days, on
+        {{expires}}
+        (UTC).
+      </p>
+      <p>
+        <a href="{{confirmationLink}}" class="button">Confirm email address</a>
+      </p>
+    </div>
+    <div class="footer">
+      <p>
+        This email was sent to
+        <a class="link" href="mailto:{{userEmail}}">{{userEmail}}</a>.
+        If you believe you received this email in error, please contact our support team immediately at
+        <a class="link" href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+      </p>
+    </div>
+  </div>
 </body>
 
 </html>

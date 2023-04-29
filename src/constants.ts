@@ -14,7 +14,7 @@ export namespace MESSAGE_FILE {
   export const WPS_MIME_TYPES =
     /(application\/(vnd\.ms-word\.document\.macroEnabled\.12|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)|application\/(vnd\.ms-excel\.sheet\.macroEnabled\.12|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)|application\/(vnd\.ms-powerpoint\.presentation\.macroEnabled\.12|vnd\.openxmlformats-officedocument\.presentationml\.presentation))/;
   export const OTHER_MIME_TYPES =
-    /(application\/pdf|application\/rtf|text\/plain|text\/html|application\/xml|application\/json)/;
+    /(application\/pdf|application\/rtf|text\/plain|text\/csv|text\/html|application\/xml|application\/json)/;
 
   export const OFFICE_MIME_TYPES = new RegExp(
     [
@@ -44,5 +44,5 @@ export namespace COMMON_FILE {
   export const IMAGE_MIME_TYPES = /image\/(jpe?g|png)/;
 
   export const OFFICE_MIME_TYPES =
-    /(application\/pdf|application\/rtf|text\/plain|text\/html|application\/xml|application\/json)/;
+    /(application\/pdf|application\/rtf|text\/plain|text\/csv|text\/html|application\/xml|application\/json)/;
 }
