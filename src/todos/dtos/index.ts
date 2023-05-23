@@ -1,4 +1,4 @@
-export { CreateTodoDto } from './create-todo.dto';
-export { DeleteTodoDto } from './delete-todo.dto';
-export { SortTodoDto } from './sort-todo.dto';
-export { UpdateTodoDto } from './update-todo.dto';
+export * from './create-todo.dto';
+export * from './delete-todo.dto';
+export * from './sort-todo.dto';
+export * from './update-todo.dto';

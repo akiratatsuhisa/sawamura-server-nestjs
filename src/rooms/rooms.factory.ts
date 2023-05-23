@@ -22,6 +22,9 @@ export const roomSelect = Prisma.validator<Prisma.RoomSelect>()({
     select: roomMemberSelect,
   },
   photoUrl: true,
+  coverUrl: true,
+  themeSource: true,
+  themeStyle: true,
   lastActivatedAt: true,
   createdAt: true,
 });

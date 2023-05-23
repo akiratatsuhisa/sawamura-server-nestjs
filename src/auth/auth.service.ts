@@ -3,15 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
 import { compare, genSalt, hash } from 'bcrypt';
-import crypto from 'crypto';
+import { randomBytes } from 'crypto';
 import _ from 'lodash';
 import moment from 'moment';
 import path from 'path';
-import { IdentityUser } from 'src/auth/decorators/users.decorator';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileUtilsService } from 'src/file-utils/file-utils.service';
 import { IFile } from 'src/helpers/file.interface';
+import { MaterialDesignService } from 'src/material-design/material-design.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
@@ -19,11 +19,15 @@ import { UsersService } from 'src/users/users.service';
 import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
 import { SECURITY_STAMPS_REDIS_KEY } from './constants';
+import { IdentityUser } from './decorators';
 import {
   ConfirmEmailDto,
   ForgotPasswordDto,
   RegisterDto,
   ResetPasswordDto,
+  SearchImageDto,
+  UpdateImageDto,
+  UpdateThemeDto,
 } from './dtos';
 
 @Injectable()
@@ -36,16 +40,17 @@ export class AuthService {
     private sendgridService: SendgridService,
     private dropboxService: DropboxService,
     private fileUtilsService: FileUtilsService,
+    private materialDesignService: MaterialDesignService,
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
   ) {}
 
   private generateSecurityStamp() {
-    const randomBytes = crypto.randomBytes(16).toString('hex');
+    const randomHex = randomBytes(16).toString('hex');
 
     const date = new Date().getTime().toString().padStart(16, '0');
 
-    return `${date}${randomBytes}`.slice(0, 128);
+    return `${date}${randomHex}`.slice(0, 128);
   }
 
   async updateSecurityStamp(
@@ -264,14 +269,17 @@ export class AuthService {
       sub: user.id,
       username: user.username,
       email: user.email,
+      emailConfirmed: user.emailConfirmed,
       firstName: user.firstName,
       lastName: user.lastName,
       birthDate: user.birthDate,
-      securityStamp: user.securityStamp,
       salary: user.salary,
       roles: user.userRoles.map((userRole) => userRole.role.name),
       photoUrl: user.photoUrl,
       coverUrl: user.coverUrl,
+      themeSource: user.themeSource,
+      themeStyle: user.themeStyle,
+      securityStamp: user.securityStamp,
     };
 
     return this.jwtService.signAsync(payload);
@@ -285,7 +293,7 @@ export class AuthService {
       data: {
         expires: moment()
           .add(
-            this.configService.get<number>('REFRESH_TOKEN_EXPIRES') || 2592000,
+            this.configService.get<number>('REFRESH_TOKEN_EXPIRES', 2592000),
             'seconds',
           )
           .toDate(),
@@ -396,34 +404,54 @@ export class AuthService {
     });
   }
 
-  async getImage(fieldName: 'photoUrl' | 'coverUrl', username: string) {
-    const user = await this.usersService.findByUnique({ username });
+  async getImage(dto: SearchImageDto) {
+    const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
+
+    const user = await this.usersService.findByUnique({
+      username: dto.username,
+    });
 
     if (!user) {
       throw new AppError.NotFound();
     }
 
-    const { buffer } = await this.dropboxService.fileDownload(
-      user[fieldName]?.substring(1),
-    );
+    const { buffer } = await this.dropboxService.fileDownload(user[fieldName]);
     const mimeType = 'image/' + path.extname(user[fieldName])?.substring(1);
 
     return { mimeType, buffer };
   }
 
-  async updateImage(
-    fieldName: 'photoUrl' | 'coverUrl',
-    image: IFile,
-    user: IdentityUser,
-  ) {
+  async updateImage(image: IFile, dto: UpdateImageDto, user: IdentityUser) {
+    const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
+
     const result = await this.dropboxService.fileUpload(image, {
       path: user.id,
       mode: { '.tag': 'overwrite' },
     });
 
+    const theme = dto.theme
+      ? await this.materialDesignService.generateThemeFromImage(image)
+      : {};
+
     await this.prisma.user.update({
       data: {
         [fieldName]: result.pathDisplay,
+        ...theme,
+      },
+      where: {
+        id: user.id,
+      },
+    });
+  }
+
+  async updateTheme(dto: UpdateThemeDto, user: IdentityUser) {
+    const theme = !_.isNil(dto.source)
+      ? await this.materialDesignService.generateThemeFromSource(dto.source)
+      : { themeSource: null, themeStyle: null };
+
+    await this.prisma.user.update({
+      data: {
+        ...theme,
       },
       where: {
         id: user.id,
@@ -451,8 +479,12 @@ export class AuthService {
       this.usersService.findByUniqueWithDetail({
         username,
       }),
-      this.getImage('photoUrl', username).catch(() => Promise.resolve(null)),
-      this.getImage('coverUrl', username).catch(() => Promise.resolve(null)),
+      this.getImage({ username, type: 'photo' }).catch(() =>
+        Promise.resolve(null),
+      ),
+      this.getImage({ username, type: 'cover' }).catch(() =>
+        Promise.resolve(null),
+      ),
     ]);
 
     const prefix = `data:image/png;base64,`;

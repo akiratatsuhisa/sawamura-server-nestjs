@@ -3,11 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { NotificationEntityName, NotificationStatus } from '@prisma/client';
 import { Queue } from 'bull';
 import _ from 'lodash';
-import { IdentityUser } from 'src/auth/identity.class';
+import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RoomsService } from 'src/rooms/rooms.service';
-import { ISocketUser } from 'src/ws-auth/interfaces/send-to-options.interface';
+import { ISocketUser } from 'src/ws-auth/interfaces';
 
 import { NAME, SOCKET_NOTIFICATION_EVENTS } from './constants';
 import {

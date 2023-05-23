@@ -7,7 +7,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { IdentityUser, User } from 'src/auth/decorators/users.decorator';
+import { IdentityUser, User } from 'src/auth/decorators';
 
 import {
   CreateTodoDto,

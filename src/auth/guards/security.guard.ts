@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { AppError } from 'src/common/errors';
 
 import { AuthService } from '../auth.service';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../decorators';
 
 @Injectable()
 export class SecurityGuard implements CanActivate {

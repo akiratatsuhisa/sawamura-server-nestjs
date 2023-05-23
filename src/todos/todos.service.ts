@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Todo } from '@prisma/client';
-import { IdentityUser } from 'src/auth/decorators/users.decorator';
+import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 

@@ -5,6 +5,7 @@ export class IdentityUser {
   public id: string;
   public username: string;
   public email: string;
+  public emailConfirmed: string;
   public firstName: string;
   public lastName: string;
   public birthDate: string;
@@ -12,12 +13,15 @@ export class IdentityUser {
   public roles: Array<string>;
   public photoUrl: string;
   public coverUrl: string;
+  public themeSource: string;
+  public themeStyle: string;
   public securityStamp: string;
 
   constructor(payload?: Record<string, any>) {
     this.id = Jwt.get(payload, 'sub');
     this.username = Jwt.get(payload, 'username');
     this.email = Jwt.get(payload, 'email');
+    this.emailConfirmed = Jwt.get(payload, 'emailConfirmed', 'boolean');
     this.firstName = Jwt.get(payload, 'firstName');
     this.lastName = Jwt.get(payload, 'lastName');
     this.birthDate = Jwt.get(payload, 'birthDate');
@@ -25,6 +29,8 @@ export class IdentityUser {
     this.roles = Jwt.getAll(payload, 'roles');
     this.photoUrl = Jwt.get(payload, 'photoUrl');
     this.coverUrl = Jwt.get(payload, 'coverUrl');
+    this.themeSource = Jwt.get(payload, 'themeSource');
+    this.themeStyle = Jwt.get(payload, 'themeStyle');
     this.securityStamp = Jwt.get(payload, 'securityStamp');
   }
 }

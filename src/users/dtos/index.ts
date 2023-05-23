@@ -1,1 +1,1 @@
-export { SearchUsersDto } from './search-users.dto';
+export * from './search-users.dto';

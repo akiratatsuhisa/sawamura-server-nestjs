@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
+import { IdentityPrincipal, IdentityUser } from 'src/auth/decorators';
 
-import { SocketWithAuth } from './ws-auth.types';
+import { SocketWithAuth } from '../ws-auth.types';
 
 export { IdentityPrincipal, IdentityUser };
 

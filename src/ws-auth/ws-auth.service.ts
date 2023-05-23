@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
+import { JwtPayload, verify } from 'jsonwebtoken';
 import _ from 'lodash';
 import moment from 'moment';
-import { IdentityPrincipal, IdentityUser } from 'src/auth/identity.class';
+import { IdentityPrincipal, IdentityUser } from 'src/auth/decorators';
 import { RedisService } from 'src/redis/redis.service';
 
 import { PREFIXES } from './constants';
-import { IAuthOptions } from './interfaces/auth-options.interface';
+import { IAuthOptions } from './interfaces';
 import { SocketWithAuth } from './ws-auth.types';
 
 @Injectable()
@@ -15,10 +15,10 @@ export class WsAuthService {
   private secret: string;
 
   constructor(
-    private config: ConfigService,
+    private configService: ConfigService,
     private redisService: RedisService,
   ) {
-    this.secret = this.config.get<string>('SECRET');
+    this.secret = this.configService.get<string>('SECRET');
   }
 
   init(socket: SocketWithAuth) {
@@ -49,9 +49,9 @@ export class WsAuthService {
         socket.handshake.auth.token ??
         socket.handshake.headers.authorization.split(' ')[1];
 
-      const payload = jwt.verify(token, this.secret, {
+      const payload = verify(token, this.secret, {
         ignoreExpiration: false,
-      }) as jwt.JwtPayload;
+      }) as JwtPayload;
 
       socket.user = new IdentityUser(payload);
       socket.expires = _.isNumber(payload.exp)

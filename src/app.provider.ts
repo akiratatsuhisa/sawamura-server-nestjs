@@ -1,10 +1,7 @@
-import { Provider } from '@nestjs/common';
-import { ValidationPipe } from '@nestjs/common/pipes';
+import { Provider, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { RolesGuard } from './auth/guards/roles.guard';
-import { SecurityGuard } from './auth/guards/security.guard';
+import { JwtAuthGuard, RolesGuard, SecurityGuard } from './auth/guards';
 import { DtoParseInterceptor } from './validations/dto-parse.interceptor';
 import { GlobalExceptionsFilter } from './validations/global-exceptions.filter';
 import { exceptionFactory } from './validations/validation.factory';

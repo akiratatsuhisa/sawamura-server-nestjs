@@ -1,3 +1,3 @@
-export { CreateMessageDto } from './create.dto';
-export { DeleteMessageDto } from './delete.dto';
-export { UpdateMessageDto } from './update.dto';
+export * from './create.dto';
+export * from './delete.dto';
+export * from './update.dto';

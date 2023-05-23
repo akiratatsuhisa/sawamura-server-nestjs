@@ -6,14 +6,14 @@ import { MulterModule } from '@nestjs/platform-express';
 import { DropboxModule } from 'src/dropbox/dropbox.module';
 import { FileUtilsModule } from 'src/file-utils/file-utils.module';
 import { Multer } from 'src/helpers/multer.helper';
+import { MaterialDesignModule } from 'src/material-design/material-design.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { UsersModule } from 'src/users/users.module';
 import { VerificationTokensModule } from 'src/verification-tokens/verification-tokens.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
+import { JwtStrategy, LocalStrategy } from './strategies';
 
 @Global()
 @Module({
@@ -36,6 +36,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     MulterModule.register({
       storage: Multer.declareStorageEngine(),
     }),
+    MaterialDesignModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],

@@ -9,7 +9,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/auth/decorators';
 import { SearchRoomDto } from 'src/rooms/dtos';
 
 import {

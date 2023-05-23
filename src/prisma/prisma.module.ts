@@ -7,4 +7,12 @@ import { PrismaService } from './prisma.service';
   providers: [PrismaService],
   exports: [PrismaService],
 })
-export class PrismaModule {}
+export class PrismaModule {
+  constructor() {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: Unreachable code error
+    BigInt.prototype.toJSON = function (): string {
+      return this.toString();
+    };
+  }
+}

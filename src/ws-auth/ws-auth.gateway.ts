@@ -2,10 +2,10 @@ import {
   Logger,
   UseFilters,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { UseInterceptors } from '@nestjs/common/decorators/core/use-interceptors.decorator';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import {
@@ -24,14 +24,12 @@ import { exceptionFactory } from 'src/validations/validation.factory';
 import { EmitId, SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
 import { EVENTS, PREFIXES } from './constants';
-import { WsJwtAuthGuard } from './guards/ws-jwt-auth.guard';
-import { WsRolesGuard } from './guards/ws-roles.guard';
-import { WsSecurityGuard } from './guards/ws-security.guard';
+import { WsJwtAuthGuard, WsRolesGuard, WsSecurityGuard } from './guards';
 import {
   ISendToCallerOptions,
   ISendToUsersOptions,
   ISocketUser,
-} from './interfaces/send-to-options.interface';
+} from './interfaces';
 import { WsAuthInterceptor } from './ws-auth.interceptor';
 import { WsAuthService } from './ws-auth.service';
 
@@ -62,12 +60,12 @@ export class WsAuthGateway
     protected configService: ConfigService,
     protected wsAuthService: WsAuthService,
   ) {
-    this.socketOffset =
-      Number(this.configService.get<number>('REFRESH_TOKEN_SOCKET_OFFSET')) ??
-      60000;
-    this.wsAuthOffset =
-      Number(this.configService.get<number>('REFRESH_TOKEN_WSAUTH_OFFSET')) ??
-      1500;
+    this.socketOffset = Number(
+      this.configService.get<number>('REFRESH_TOKEN_SOCKET_OFFSET', 60000),
+    );
+    this.wsAuthOffset = Number(
+      this.configService.get<number>('REFRESH_TOKEN_WSAUTH_OFFSET', 1500),
+    );
   }
 
   afterInit(serverOrNamespace: unknown): void {

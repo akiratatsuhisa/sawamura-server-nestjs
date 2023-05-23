@@ -6,9 +6,9 @@ import {
   WebSocketGateway,
   WsResponse,
 } from '@nestjs/websockets';
+import { IdentityUser, User } from 'src/ws-auth/decorators';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
-import { IdentityUser, User } from 'src/ws-auth/ws-users.decorator';
 
 import { SortTodoDto } from './dtos';
 import { TodosService } from './todos.service';

@@ -6,9 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Ip,
-  Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -24,8 +24,7 @@ import { COMMON_FILE } from 'src/constants';
 import { Multer } from 'src/helpers/multer.helper';
 
 import { AuthService } from './auth.service';
-import { Public } from './decorators/public.decorator';
-import { IdentityUser, User } from './decorators/users.decorator';
+import { IdentityUser, Public, User } from './decorators';
 import {
   ConfirmEmailDto,
   ForgotPasswordDto,
@@ -33,8 +32,10 @@ import {
   RegisterDto,
   ResetPasswordDto,
   SearchImageDto,
+  UpdateImageDto,
+  UpdateThemeDto,
 } from './dtos';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { LocalAuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
@@ -73,7 +74,10 @@ export class AuthController {
 
   @Post('refreshToken')
   @Public()
-  async refreshToken(@Headers('refreshtoken') token: string, @Ip() ip: string) {
+  async refreshToken(
+    @Headers('Refresh-Token') token: string,
+    @Ip() ip: string,
+  ) {
     if (!token) {
       throw new AppError.Argument(`Not Found Token in header`);
     }
@@ -84,7 +88,7 @@ export class AuthController {
   @Patch('refreshToken')
   @HttpCode(HttpStatus.NO_CONTENT)
   async revokeRefreshToken(
-    @Headers('refreshtoken') headerToken: string,
+    @Headers('Refresh-Token') headerToken: string,
     @Body() dto: RefreshTokenDto,
     @User('id') userId: string,
     @Ip() ip: string,
@@ -102,13 +106,9 @@ export class AuthController {
   @Public()
   async getImage(
     @Query() dto: SearchImageDto,
-    @Param('type') type: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const { mimeType, buffer } = await this.authService.getImage(
-      type === 'cover' ? 'coverUrl' : 'photoUrl',
-      dto.username,
-    );
+    const { mimeType, buffer } = await this.authService.getImage(dto);
 
     res.set({
       'Content-Type': mimeType,
@@ -116,16 +116,16 @@ export class AuthController {
     return new StreamableFile(buffer);
   }
 
-  @Patch(':type(photo|cover)')
+  @Put(':type(photo|cover)')
   @UseInterceptors(FileInterceptor('image'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateImage(
-    @Param('type') type: string,
+    @Query() dto: UpdateImageDto,
     @UploadedFile()
     file: Express.Multer.File,
     @User() user: IdentityUser,
   ) {
-    const isCover = type === 'cover';
+    const isCover = dto.type === 'cover';
 
     const { unlink } = Multer.validateFiles(file, {
       fileSize: isCover
@@ -149,15 +149,21 @@ export class AuthController {
 
     try {
       await this.authService.updateImage(
-        isCover ? 'coverUrl' : 'photoUrl',
         Multer.convertToIFile(file, {
           fileName: isCover ? 'background' : 'avatar',
         }),
+        dto,
         user,
       );
     } finally {
       await unlink();
     }
+  }
+
+  @Patch('theme')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateTheme(@Body() dto: UpdateThemeDto, @User() user: IdentityUser) {
+    await this.authService.updateTheme(dto, user);
   }
 
   @Get('profile/pdf')

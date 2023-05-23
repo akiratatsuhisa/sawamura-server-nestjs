@@ -5,7 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/auth/decorators';
 import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';

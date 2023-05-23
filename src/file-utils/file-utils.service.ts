@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import fs from 'fs/promises';
-import hbs from 'handlebars';
+import { readFile } from 'fs/promises';
+import { compile } from 'handlebars';
 import path from 'path';
-import puppeteer from 'puppeteer';
+import { launch } from 'puppeteer';
 
 import { IProfileContext } from './interfaces';
 
 @Injectable()
 export class FileUtilsService {
   async exportPdf(html: string): Promise<Buffer> {
-    const browser = await puppeteer.launch({ headless: 'new' });
+    const browser = await launch({ headless: 'new' });
     const page = await browser.newPage();
 
     await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -32,12 +32,12 @@ export class FileUtilsService {
 
   async renderPdf(name: 'profile', context: IProfileContext): Promise<string>;
   async renderPdf(name: string, context: object): Promise<string> {
-    const input = await fs.readFile(
+    const input = await readFile(
       path.join(__dirname, '..', '..', 'templates', 'pdfs', `${name}.hbs`),
       'utf-8',
     );
 
-    const template = hbs.compile(input);
+    const template = compile(input);
 
     return template(context);
   }

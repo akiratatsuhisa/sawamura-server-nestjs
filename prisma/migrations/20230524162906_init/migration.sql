@@ -27,6 +27,8 @@ CREATE TABLE "users" (
     "security_stamp" VARCHAR(128) NOT NULL,
     "photo_url" VARCHAR(450),
     "cover_url" VARCHAR(450),
+    "theme_source" BIGINT,
+    "theme_style" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -117,6 +119,9 @@ CREATE TABLE "rooms" (
     "name" VARCHAR(255) NOT NULL,
     "is_group" BOOLEAN NOT NULL DEFAULT false,
     "photo_url" VARCHAR(450),
+    "cover_url" VARCHAR(450),
+    "theme_source" BIGINT,
+    "theme_style" TEXT,
     "last_activated_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

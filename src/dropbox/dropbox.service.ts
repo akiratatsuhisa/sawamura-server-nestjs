@@ -18,11 +18,11 @@ export class DropboxService {
   public dbxAuth: DropboxAuth;
   public dbx: Dropbox;
 
-  constructor(private config: ConfigService) {
+  constructor(private configService: ConfigService) {
     this.dbxAuth = new DropboxAuth({
-      clientId: this.config.get<string>('DROPBOX_CLIENT_ID'),
-      clientSecret: this.config.get<string>('DROPBOX_CLIENT_SECRET'),
-      refreshToken: this.config.get<string>('DROPBOX_REFRESH_TOKEN'),
+      clientId: this.configService.get<string>('DROPBOX_CLIENT_ID'),
+      clientSecret: this.configService.get<string>('DROPBOX_CLIENT_SECRET'),
+      refreshToken: this.configService.get<string>('DROPBOX_REFRESH_TOKEN'),
     });
 
     this.dbx = new Dropbox({
@@ -101,7 +101,7 @@ export class DropboxService {
   }
 
   private getPath(name: string, prefix?: string) {
-    return '/' + (prefix ? `${prefix}/${name}` : name);
+    return prefix ? `/${prefix}/${name}` : name;
   }
 
   async fileDownload(name: string, prefix?: string) {
@@ -119,7 +119,7 @@ export class DropboxService {
     }
   }
 
-  async fileRemove(name: string, prefix?: string) {
+  async fileDelete(name: string, prefix?: string) {
     const path = this.getPath(name, prefix);
 
     try {

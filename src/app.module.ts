@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DropboxModule } from './dropbox/dropbox.module';
 import { FileUtilsModule } from './file-utils/file-utils.module';
+import { MaterialDesignModule } from './material-design/material-design.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -41,6 +42,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     DropboxModule,
     SendgridModule,
     FileUtilsModule,
+    MaterialDesignModule,
     UsersModule,
     RolesModule,
     VerificationTokensModule,

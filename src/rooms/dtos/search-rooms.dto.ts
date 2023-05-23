@@ -22,11 +22,15 @@ export class SearchRoomsDto extends PaginationExcludeIds {
   excludeIds?: Array<string>;
 }
 
-export class SearchRoomPhotoDto {
+export class SearchImageDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
   id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  type: 'photo' | 'cover';
 }
 
 export class TypingRoomDto {

@@ -81,6 +81,7 @@ Next, create an `.env` file with the following contents:
 | SUPPORT_URL                 | The client's URL used for render email or pdf.                                                                                                                                                                                                                               | http://localhost:3000                                       |
 | RESET_PASSWORD_URL          | The URL used for resetting the user's password.                                                                                                                                                                                                                              | http://localhost:3000/resetPassword                         |
 | CONFIRM_EMAIL_URL           | The URL used for confirming the user's email.                                                                                                                                                                                                                                | http://localhost:3000/confirmEmail                          |
+| MATERIAL_COLORS_UTILS_URL   | The URL used for generating material's themes.                                                                                                                                                                                                                               | http://localhost:3500                                       |
 
 ## Running the app
 

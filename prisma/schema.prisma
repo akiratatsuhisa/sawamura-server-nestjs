@@ -23,8 +23,10 @@ model User {
   salary         Decimal?  @db.Decimal(12, 3)
   securityStamp  String    @map("security_stamp") @db.VarChar(128)
 
-  photoUrl String? @map("photo_url") @db.VarChar(450)
-  coverUrl String? @map("cover_url") @db.VarChar(450)
+  photoUrl    String? @map("photo_url") @db.VarChar(450)
+  coverUrl    String? @map("cover_url") @db.VarChar(450)
+  themeSource BigInt? @map("theme_source")
+  themeStyle  String? @map("theme_style") @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -153,7 +155,10 @@ model Room {
   name    String  @db.VarChar(255)
   isGroup Boolean @default(false) @map("is_group")
 
-  photoUrl String? @map("photo_url") @db.VarChar(450)
+  photoUrl    String? @map("photo_url") @db.VarChar(450)
+  coverUrl    String? @map("cover_url") @db.VarChar(450)
+  themeSource BigInt? @map("theme_source")
+  themeStyle  String? @map("theme_style") @db.Text
 
   lastActivatedAt DateTime? @map("last_activated_at")
 

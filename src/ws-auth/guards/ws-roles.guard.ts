@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from 'src/auth/decorators/roles.decorator';
+import { ROLES_KEY } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 
 import { SocketWithAuth } from '../ws-auth.types';

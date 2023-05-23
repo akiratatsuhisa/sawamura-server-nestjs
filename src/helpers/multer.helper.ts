@@ -1,5 +1,5 @@
 import { unlink } from 'fs/promises';
-import sizeOf from 'image-size';
+import { imageSize } from 'image-size';
 import _ from 'lodash';
 import { diskStorage } from 'multer';
 import path from 'path';
@@ -71,7 +71,7 @@ export namespace Multer {
         );
       } else if (options.dimensions) {
         const { equal, width, height } = options.dimensions;
-        const dimensions = sizeOf(file.path);
+        const dimensions = imageSize(file.path);
         if (
           equal
             ? width !== dimensions.width || height !== dimensions.height

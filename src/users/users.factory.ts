@@ -8,6 +8,8 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
   lastName: true,
   photoUrl: true,
   coverUrl: true,
+  themeSource: true,
+  themeStyle: true,
   createdAt: true,
   updatedAt: true,
   userRoles: {
@@ -33,6 +35,8 @@ export const userProfileSelect = Prisma.validator<Prisma.UserSelect>()({
   salary: true,
   photoUrl: true,
   coverUrl: true,
+  themeSource: true,
+  themeStyle: true,
   createdAt: true,
   updatedAt: true,
   securityStamp: true,

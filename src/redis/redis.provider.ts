@@ -10,11 +10,11 @@ export const redisProviders: Array<Provider> = [
   {
     provide: REDIS,
     inject: [ConfigService],
-    async useFactory(config: ConfigService): Promise<RedisClientType> {
+    async useFactory(configService: ConfigService): Promise<RedisClientType> {
       const logger = new Logger('RedisProvider');
 
       const client: RedisClientType = createClient({
-        url: config.get<string>('REDIS_URL'),
+        url: configService.get<string>('REDIS_URL'),
       });
 
       client.on('connect', () => logger.log('Connected to redis'));

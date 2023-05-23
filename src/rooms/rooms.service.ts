@@ -1,8 +1,10 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
+import { Queue } from 'bull';
 import _ from 'lodash';
 import path from 'path';
-import { IdentityUser } from 'src/auth/identity.class';
+import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
 import { MESSAGE_FILE } from 'src/constants';
@@ -14,25 +16,29 @@ import {
 } from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+import { NAME, QUEUE_ROOM_EVENTS } from './constants';
 import {
+  CreateFileMessageDto,
   CreateMemberDto,
   CreateMessageDto,
   CreateRoomDto,
   DeleteMemberDto,
   DeleteMessageDto,
   DeleteRoomDto,
+  DeleteRoomImageDto,
+  SearchImageDto,
   SearchMembersDto,
   SearchMessageDto,
   SearchMessageFileDto,
   SearchMessagesDto,
   SearchRoomDto,
-  SearchRoomPhotoDto,
   SearchRoomsDto,
   UpdateMemberDto,
   UpdateMessageDto,
   UpdateRoomDto,
+  UpdateRoomImageDto,
+  UpdateRoomThemeDto,
 } from './dtos';
-import { CreateFileMessageDto } from './dtos/message/create.dto';
 import {
   roomMemberSelect,
   roomMessageSelect,
@@ -44,6 +50,7 @@ export class RoomsService extends PaginationService {
   constructor(
     private prisma: PrismaService,
     private dropboxService: DropboxService,
+    @InjectQueue(NAME) private roomsQueue: Queue,
   ) {
     super();
   }
@@ -223,33 +230,31 @@ export class RoomsService extends PaginationService {
     });
   }
 
-  async getRoomPhoto(dto: SearchRoomPhotoDto) {
+  async getImage(dto: SearchImageDto) {
+    const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
+
     const room = await this.getRoomById({ id: dto.id });
     if (!room) {
       throw new AppError.NotFound();
     }
 
-    const { buffer } = await this.dropboxService.fileDownload(
-      room.photoUrl?.substring(1),
-    );
+    const { buffer } = await this.dropboxService.fileDownload(room[fieldName]);
 
-    const mimeType = 'image/' + path.extname(room.photoUrl)?.substring(1);
+    const mimeType = 'image/' + path.extname(room[fieldName])?.substring(1);
 
     return { mimeType, buffer };
   }
 
-  async updateRoomPhoto(
-    image: IFile,
-    dto: SearchRoomPhotoDto,
-    user: IdentityUser,
-  ) {
+  async updateImage(image: IFile, dto: UpdateRoomImageDto, user: IdentityUser) {
+    const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
+
     const room = await this.getRoomById({ id: dto.id });
     if (!room) {
       throw new AppError.NotFound();
     }
 
     if (
-      !room.isGroup ||
+      (!room.isGroup && dto.type === 'photo') ||
       !this.isRoomMember(
         room.roomMembers,
         user.id,
@@ -260,20 +265,71 @@ export class RoomsService extends PaginationService {
       throw new AppError.AccessDenied();
     }
 
-    const result = await this.dropboxService.fileUpload(image, {
-      path: room.id,
-      mode: { '.tag': 'overwrite' },
-    });
+    this.roomsQueue.add(
+      QUEUE_ROOM_EVENTS.UPDATE_ROOM_IMAGE,
+      { fieldName, room, dto, image },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    );
+  }
 
-    return this.prisma.room.update({
-      data: {
-        photoUrl: result.pathDisplay,
+  async deleteImage(dto: DeleteRoomImageDto, user: IdentityUser) {
+    const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
+
+    const room = await this.getRoomById({ id: dto.id });
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    if (
+      (!room.isGroup && dto.type === 'photo') ||
+      !this.isRoomMember(
+        room.roomMembers,
+        user.id,
+        RoomMemberRole.Admin,
+        RoomMemberRole.Moderator,
+      )
+    ) {
+      throw new AppError.AccessDenied();
+    }
+
+    this.roomsQueue.add(
+      QUEUE_ROOM_EVENTS.DELETE_ROOM_IMAGE,
+      { fieldName, room, dto },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
       },
-      where: {
-        id: dto.id,
+    );
+  }
+
+  async updateTheme(dto: UpdateRoomThemeDto, user: IdentityUser) {
+    const room = await this.getRoomById({ id: dto.id });
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    if (
+      !this.isRoomMember(
+        room.roomMembers,
+        user.id,
+        RoomMemberRole.Admin,
+        RoomMemberRole.Moderator,
+      )
+    ) {
+      throw new AppError.AccessDenied();
+    }
+
+    this.roomsQueue.add(
+      QUEUE_ROOM_EVENTS.UPDATE_ROOM_THEME,
+      { room, dto },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
       },
-      select: roomSelect,
-    });
+    );
   }
 
   async createMember(dto: CreateMemberDto, user: IdentityUser) {

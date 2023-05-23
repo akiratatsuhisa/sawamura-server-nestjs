@@ -1,9 +1,12 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Patch,
+  Put,
   Query,
   Res,
   StreamableFile,
@@ -12,30 +15,30 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { IdentityUser, User } from 'src/auth/decorators/users.decorator';
+import { IdentityUser, Public, User } from 'src/auth/decorators';
 import { COMMON_FILE } from 'src/constants';
 import { Multer } from 'src/helpers/multer.helper';
 
-import { SOCKET_ROOM_EVENTS } from './constants';
-import { SearchMessageFileDto, SearchRoomPhotoDto } from './dtos';
-import { RoomsGateway } from './rooms.gateway';
+import {
+  DeleteRoomImageDto,
+  SearchImageDto,
+  SearchMessageFileDto,
+  UpdateRoomImageDto,
+  UpdateRoomThemeDto,
+} from './dtos';
 import { RoomsService } from './rooms.service';
 
 @Controller('rooms')
 export class RoomsController {
-  constructor(
-    private roomsService: RoomsService,
-    private roomsGateway: RoomsGateway,
-  ) {}
+  constructor(private roomsService: RoomsService) {}
 
-  @Get(':id/photo')
+  @Get(':id/:type(photo|cover)')
   @Public()
   async getImage(
-    @Query() dto: SearchRoomPhotoDto,
+    @Query() dto: SearchImageDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const { mimeType, buffer } = await this.roomsService.getRoomPhoto(dto);
+    const { mimeType, buffer } = await this.roomsService.getImage(dto);
 
     res.set({
       'Content-Type': mimeType,
@@ -43,45 +46,59 @@ export class RoomsController {
     return new StreamableFile(buffer);
   }
 
-  @Patch(':id/photo')
+  @Put(':id/:type(photo|cover)')
   @UseInterceptors(FileInterceptor('image'))
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateImage(
     @UploadedFile()
     file: Express.Multer.File,
-    @Query() dto: SearchRoomPhotoDto,
+    @Query() dto: UpdateRoomImageDto,
     @User() user: IdentityUser,
   ) {
+    const isCover = dto.type === 'cover';
+
     const { unlink } = Multer.validateFiles(file, {
       fileSize: COMMON_FILE.IMAGE_MAX_FILE_SIZE,
       mimeTypeRegex: COMMON_FILE.IMAGE_MIME_TYPES,
       required: true,
-      dimensions: {
-        equal: true,
-
-        width: 1024,
-        height: 1024,
-      },
+      dimensions: isCover
+        ? undefined
+        : {
+            equal: true,
+            width: 1024,
+            height: 1024,
+          },
     });
 
     try {
-      const room = await this.roomsService.updateRoomPhoto(
+      await this.roomsService.updateImage(
         Multer.convertToIFile(file, {
-          fileName: 'photo',
+          fileName: dto.type,
         }),
         dto,
         user,
       );
-
-      this.roomsGateway.sendToUsers({
-        event: SOCKET_ROOM_EVENTS.UPDATE_ROOM_PHOTO,
-        dto,
-        data: room,
-        userIds: this.roomsGateway.mapSendToRoomMembers(room),
-      });
-    } finally {
+    } catch {
       await unlink();
     }
+  }
+
+  @Delete(':id/:type(photo|cover)')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteImage(
+    @Query() dto: DeleteRoomImageDto,
+    @User() user: IdentityUser,
+  ) {
+    await this.roomsService.deleteImage(dto, user);
+  }
+
+  @Patch(':id/theme')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateTheme(
+    @Body() dto: UpdateRoomThemeDto,
+    @User() user: IdentityUser,
+  ) {
+    await this.roomsService.updateTheme(dto, user);
   }
 
   @Get(':roomId/:name')
