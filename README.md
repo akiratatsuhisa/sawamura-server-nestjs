@@ -52,7 +52,7 @@ See the [official redis installation documentation](https://redis.io/docs/gettin
 To install the application, clone the repository and install the required dependencies:
 
 ```bash
-$ git clone https://github.com/akiratatsuhisa/first-nestjs-app.git
+$ git clone https://github.com/akiratatsuhisa/sawamura-server-nestjs.git
 ```
 
 Install Dependencies for server app, open new terminal.
