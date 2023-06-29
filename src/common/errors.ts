@@ -82,6 +82,15 @@ export namespace AppError {
     }
   }
 
+  export class OauthError extends BasicError {
+    constructor(
+      message: string = AppError.Messages.UnauthenticatedError,
+      title: string = AppError.Messages.UnauthenticatedError,
+    ) {
+      super(HttpStatus.UNAUTHORIZED, message, title);
+    }
+  }
+
   export class NotFound extends BasicError {
     constructor(
       message: string = AppError.Messages.NotFoundError,

@@ -13,6 +13,7 @@ import { DropboxModule } from './dropbox/dropbox.module';
 import { FileUtilsModule } from './file-utils/file-utils.module';
 import { MaterialDesignModule } from './material-design/material-design.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { OauthModule } from './oauth/oauth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { RolesModule } from './roles/roles.module';
@@ -50,6 +51,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     RoomsModule,
     NotificationsModule,
     TodosModule,
+    OauthModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService, AppGateway],

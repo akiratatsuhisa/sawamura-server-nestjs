@@ -8,19 +8,23 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class VerificationTokensService {
   constructor(private prisma: PrismaService) {}
 
-  async generateToken(userId: string, expires?: Date) {
+  async generateToken(
+    userId: string,
+    type: VerificationTokenType,
+    expires?: Date,
+  ) {
     return this.prisma.verificationToken.create({
       data: {
         userId,
-        type: VerificationTokenType.ResetPassword,
+        type,
         expires: expires ?? moment().add(5, 'minutes').toDate(),
       },
     });
   }
 
-  async revokeToken(token: string) {
+  async revokeToken(token: string, type: VerificationTokenType) {
     const verificationToken = await this.prisma.verificationToken.findFirst({
-      where: { token },
+      where: { token, type },
     });
 
     if (
@@ -39,9 +43,9 @@ export class VerificationTokensService {
     });
   }
 
-  async getTokenActive(token: string) {
+  async getTokenActive(token: string, type: VerificationTokenType) {
     const verificationToken = await this.prisma.verificationToken.findFirst({
-      where: { token },
+      where: { token, type },
     });
 
     if (

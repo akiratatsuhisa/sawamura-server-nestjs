@@ -38,6 +38,17 @@ export class UsersService {
     });
   }
 
+  async findByProvider(provider: string, sub: string) {
+    const userLogin = await this.prisma.userLogins.findUnique({
+      select: { user: { select: userProfileSelect } },
+      where: {
+        providerName_providerKey: { providerName: provider, providerKey: sub },
+      },
+    });
+
+    return !userLogin ? null : userLogin.user;
+  }
+
   async findByRefreshToken(token: string) {
     return this.prisma.user.findFirst({
       where: { refreshTokens: { some: { token } } },

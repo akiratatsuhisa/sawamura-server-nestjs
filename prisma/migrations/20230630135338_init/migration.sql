@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "verification_token_type" AS ENUM ('reset_password', 'verify_email');
+CREATE TYPE "verification_token_type" AS ENUM ('reset_password', 'verify_email', 'link_provider_login');
 
 -- CreateEnum
 CREATE TYPE "room_member_role" AS ENUM ('admin', 'moderator', 'member', 'none');
@@ -17,7 +17,7 @@ CREATE TYPE "notification_status" AS ENUM ('queued', 'sent', 'delivered', 'viewe
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
     "username" VARCHAR(255) NOT NULL,
-    "password" VARCHAR(255) NOT NULL,
+    "password" VARCHAR(255),
     "email" VARCHAR(450),
     "email_confirmed" BOOLEAN NOT NULL DEFAULT false,
     "first_name" VARCHAR(255),
@@ -56,6 +56,18 @@ CREATE TABLE "user_roles" (
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "user_roles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_logins" (
+    "id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "provider_name" VARCHAR(255) NOT NULL,
+    "provider_key" VARCHAR(450) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_logins_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -183,6 +195,12 @@ CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
 CREATE UNIQUE INDEX "user_roles_user_id_role_id_key" ON "user_roles"("user_id", "role_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "user_logins_user_id_provider_name_key" ON "user_logins"("user_id", "provider_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_logins_provider_name_provider_key_key" ON "user_logins"("provider_name", "provider_key");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "relationships_follower_id_followee_id_key" ON "relationships"("follower_id", "followee_id");
 
 -- CreateIndex
@@ -205,6 +223,9 @@ ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_logins" ADD CONSTRAINT "user_logins_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "relationships" ADD CONSTRAINT "relationships_follower_id_fkey" FOREIGN KEY ("follower_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

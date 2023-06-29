@@ -1,0 +1,208 @@
+import { Injectable } from '@nestjs/common';
+import { VerificationTokenType } from '@prisma/client';
+import { randomBytes } from 'crypto';
+import querystring from 'querystring';
+import { AuthService } from 'src/auth/auth.service';
+import { IdentityUser } from 'src/auth/identity.class';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { userProfileSelect } from 'src/users/users.factory';
+import { UsersService } from 'src/users/users.service';
+import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
+
+import { LinkProviderDto, UnlinkProviderDto } from './dtos';
+import { IGithubProfile, IGoogleProfile } from './interfaces';
+
+@Injectable()
+export class OauthService {
+  constructor(
+    private prisma: PrismaService,
+    private usersService: UsersService,
+    private authService: AuthService,
+    private verificationTokensService: VerificationTokensService,
+  ) {}
+
+  async findProviders(user: IdentityUser) {
+    return this.prisma.userLogins.findMany({
+      select: {
+        providerName: true,
+      },
+      where: {
+        userId: user.id,
+      },
+    });
+  }
+
+  async login(
+    user: Awaited<ReturnType<UsersService['findByUniqueWithDetail']>>,
+    ipAddress: string,
+    redirectUrl?: string,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.login(
+      user,
+      ipAddress,
+    );
+
+    return `${
+      process.env.OAUTH_CLIENT_URL
+    }/oauth/callback?${querystring.stringify({
+      accessToken,
+      refreshToken,
+      redirectUrl,
+    })}`;
+  }
+
+  async validateGoogleProvider(profile: IGoogleProfile, token?: string) {
+    const provider = 'google';
+
+    if (token) {
+      await this.linkProvider({
+        token,
+        providerName: provider,
+        providerKey: profile.id,
+      });
+    }
+
+    const user = await this.usersService.findByProvider(provider, profile.id);
+
+    if (token && !user) {
+      throw 'Internal server error, cannot link provider';
+    }
+
+    if (user) {
+      return user;
+    }
+
+    const email = profile.emails.at(0);
+
+    return this.prisma.user.create({
+      data: {
+        username: `user-oauth:${randomBytes(6).toString('base64')}`,
+        email: email.value,
+        emailConfirmed: email.verified,
+        firstName: profile?.name?.givenName,
+        lastName: profile?.name?.familyName,
+        userRoles: {
+          create: [
+            {
+              role: {
+                connect: { name: 'User' },
+              },
+            },
+          ],
+        },
+        userLogins: {
+          create: [
+            {
+              providerName: provider,
+              providerKey: profile.id,
+            },
+          ],
+        },
+        securityStamp: this.authService.generateSecurityStamp(),
+      },
+      select: userProfileSelect,
+    });
+  }
+
+  async validateGithubProvider(profile: IGithubProfile, token?: string) {
+    const provider = 'github';
+
+    if (token) {
+      await this.linkProvider({
+        token,
+        providerName: provider,
+        providerKey: profile.id,
+      });
+    }
+
+    const user = await this.usersService.findByProvider(provider, profile.id);
+
+    if (token && !user) {
+      throw 'Internal server error, cannot link provider';
+    }
+
+    if (user) {
+      return user;
+    }
+
+    return this.prisma.user.create({
+      data: {
+        username: `user-oauth:${randomBytes(6).toString('base64')}`,
+        userRoles: {
+          create: [
+            {
+              role: {
+                connect: { name: 'User' },
+              },
+            },
+          ],
+        },
+        userLogins: {
+          create: [
+            {
+              providerName: provider,
+              providerKey: profile.id,
+            },
+          ],
+        },
+        securityStamp: this.authService.generateSecurityStamp(),
+      },
+      select: userProfileSelect,
+    });
+  }
+
+  async generateToken(user: IdentityUser) {
+    const verificationToken =
+      await this.verificationTokensService.generateToken(
+        user.id,
+        VerificationTokenType.LinkProviderLogin,
+      );
+
+    return {
+      token: verificationToken.token,
+    };
+  }
+
+  async linkProvider(dto: LinkProviderDto) {
+    const verificationToken =
+      await this.verificationTokensService.getTokenActive(
+        dto.token,
+        VerificationTokenType.LinkProviderLogin,
+      );
+
+    const countDupplicate = await this.prisma.userLogins.count({
+      where: {
+        providerName: dto.providerName,
+        providerKey: dto.providerKey,
+      },
+    });
+
+    if (countDupplicate) {
+      throw 'Already linked provider';
+    }
+
+    await this.prisma.userLogins.create({
+      data: {
+        providerName: dto.providerName,
+        providerKey: dto.providerKey,
+        userId: verificationToken.userId,
+      },
+    });
+
+    await this.verificationTokensService.revokeToken(
+      dto.token,
+      VerificationTokenType.LinkProviderLogin,
+    );
+  }
+
+  async unlinkProvider(dto: UnlinkProviderDto, user: IdentityUser) {
+    await this.prisma.userLogins.delete({
+      where: {
+        userId_providerName: {
+          providerName: dto.provider,
+          userId: user.id,
+        },
+      },
+    });
+  }
+}

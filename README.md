@@ -83,6 +83,18 @@ Next, create an `.env` file with the following contents:
 | CONFIRM_EMAIL_URL           | The URL used for confirming the user's email.                                                                                                                                                                                                                                | http://localhost:3000/confirmEmail                          |
 | MATERIAL_COLORS_UTILS_URL   | The URL used for generating material's themes.                                                                                                                                                                                                                               | http://localhost:3500                                       |
 
+OAuth2 variables:
+
+| KEY                  | DESCRIPTION                                                        | EXAMPLE VALUE                      |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| GOOGLE_CLIENT_ID     | Client ID provided by Google for OAuth2 authentication.            |                                    |
+| GOOGLE_CLIENT_SECRET | Client secret provided by Google for OAuth2 authentication.        |                                    |
+| GOOGLE_CALLBACK_URL  | The callback URL registered with Google for OAuth2 authentication. | http://localhost:4000/oauth/google |
+| GITHUB_CLIENT_ID     | Client ID provided by GitHub for OAuth2 authentication.            |                                    |
+| GITHUB_CLIENT_SECRET | Client secret provided by GitHub for OAuth2 authentication.        |                                    |
+| GITHUB_CALLBACK_URL  | The callback URL registered with GitHub for OAuth2 authentication. | http://localhost:4000/oauth/github |
+| OUATH_CLIENT_URL     | The URL of the client application used for OAuth2 authentication.  | http://localhost:3000              |
+
 ## Running the app
 
 ```bash

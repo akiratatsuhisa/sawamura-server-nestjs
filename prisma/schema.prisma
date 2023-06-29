@@ -14,7 +14,7 @@ datasource db {
 model User {
   id             String    @id @default(uuid()) @db.Uuid
   username       String    @unique @db.VarChar(255)
-  password       String    @db.VarChar(255)
+  password       String?   @db.VarChar(255)
   email          String?   @db.VarChar(450)
   emailConfirmed Boolean   @default(false) @map("email_confirmed")
   firstName      String?   @map("first_name") @db.VarChar(255)
@@ -32,6 +32,7 @@ model User {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   userRoles          UserRole[]
+  userLogins         UserLogins[]
   refreshTokens      RefreshToken[]
   verificationTokens VerificationToken[]
 
@@ -77,6 +78,21 @@ model UserRole {
   @@map("user_roles")
 }
 
+model UserLogins {
+  id           String @id @default(uuid()) @db.Uuid
+  userId       String @map("user_id") @db.Uuid
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  providerName String @map("provider_name") @db.VarChar(255)
+  providerKey  String @map("provider_key") @db.VarChar(450)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([userId, providerName])
+  @@unique([providerName, providerKey])
+  @@map("user_logins")
+}
+
 model Relationship {
   id String @id @default(uuid()) @db.Uuid
 
@@ -111,8 +127,9 @@ model RefreshToken {
 }
 
 enum VerificationTokenType {
-  ResetPassword @map("reset_password")
-  VerifyEmail   @map("verify_email")
+  ResetPassword     @map("reset_password")
+  VerifyEmail       @map("verify_email")
+  LinkProviderLogin @map("link_provider_login")
 
   @@map("verification_token_type")
 }

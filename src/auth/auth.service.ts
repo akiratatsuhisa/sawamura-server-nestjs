@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
+import { VerificationTokenType } from '@prisma/client';
 import { compare, genSalt, hash } from 'bcrypt';
 import { randomBytes } from 'crypto';
 import _ from 'lodash';
@@ -45,7 +46,7 @@ export class AuthService {
     private verificationTokensService: VerificationTokensService,
   ) {}
 
-  private generateSecurityStamp() {
+  generateSecurityStamp() {
     const randomHex = randomBytes(16).toString('hex');
 
     const date = new Date().getTime().toString().padStart(16, '0');
@@ -119,6 +120,7 @@ export class AuthService {
 
     const { token } = await this.verificationTokensService.generateToken(
       user.id,
+      VerificationTokenType.VerifyEmail,
       expires.toDate(),
     );
 
@@ -186,7 +188,10 @@ export class AuthService {
 
   async confirmEmail(dto: ConfirmEmailDto) {
     const verificationToken =
-      await this.verificationTokensService.getTokenActive(dto.token);
+      await this.verificationTokensService.getTokenActive(
+        dto.token,
+        VerificationTokenType.VerifyEmail,
+      );
 
     const user = await this.prisma.user.update({
       data: {
@@ -197,7 +202,10 @@ export class AuthService {
       },
     });
 
-    await this.verificationTokensService.revokeToken(dto.token);
+    await this.verificationTokensService.revokeToken(
+      dto.token,
+      VerificationTokenType.VerifyEmail,
+    );
 
     return { username: user.username };
   }
@@ -213,6 +221,7 @@ export class AuthService {
 
     const { token } = await this.verificationTokensService.generateToken(
       user.id,
+      VerificationTokenType.ResetPassword,
     );
 
     const from = this.sendgridService.sender;
@@ -241,7 +250,10 @@ export class AuthService {
 
   async resetPassword(dto: ResetPasswordDto) {
     const [verificationToken, hashPassword] = await Promise.all([
-      this.verificationTokensService.getTokenActive(dto.token),
+      this.verificationTokensService.getTokenActive(
+        dto.token,
+        VerificationTokenType.ResetPassword,
+      ),
       this.hashPassword(dto.password),
     ]);
 
@@ -256,7 +268,10 @@ export class AuthService {
 
     await Promise.all([
       this.updateSecurityStamp(user),
-      this.verificationTokensService.revokeToken(dto.token),
+      this.verificationTokensService.revokeToken(
+        dto.token,
+        VerificationTokenType.ResetPassword,
+      ),
     ]);
 
     return { username: user.username };
@@ -330,10 +345,11 @@ export class AuthService {
 
   async validateUser(username: string, password: string) {
     const user = await this.usersService.findByUniqueWithDetail({ username });
-    if (user && (await compare(password, user.password))) {
-      return user;
+    if (!user?.password || !(await compare(password, user.password))) {
+      return null;
     }
-    return null;
+
+    return user;
   }
 
   async login(

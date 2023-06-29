@@ -18,7 +18,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AppError } from 'src/common/errors';
 import { COMMON_FILE } from 'src/constants';
 import { Multer } from 'src/helpers/multer.helper';
@@ -44,8 +44,8 @@ export class AuthController {
   @Post('login')
   @Public()
   @UseGuards(LocalAuthGuard)
-  async login(@Req() req, @Ip() ip: string) {
-    return this.authService.login(req.user, ip);
+  async login(@Req() req: Request, @Ip() ip: string) {
+    return this.authService.login(req.user as any, ip);
   }
 
   @Post('register')
