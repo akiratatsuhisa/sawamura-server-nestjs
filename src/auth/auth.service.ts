@@ -27,7 +27,9 @@ import {
   RegisterDto,
   ResetPasswordDto,
   SearchImageDto,
+  UpdateEmailDto,
   UpdateImageDto,
+  UpdatePasswordDto,
   UpdateThemeDto,
 } from './dtos';
 
@@ -283,6 +285,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
+      hasPassword: !!user.password,
       email: user.email,
       emailConfirmed: user.emailConfirmed,
       firstName: user.firstName,
@@ -472,6 +475,80 @@ export class AuthService {
       where: {
         id: user.id,
       },
+    });
+  }
+
+  async updatePassword(
+    dto: UpdatePasswordDto,
+    userId: string,
+    ipAddress: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      select: { password: true, securityStamp: true },
+      where: { id: userId },
+    });
+
+    const hasPassword = !!user.password;
+
+    if (
+      hasPassword &&
+      (!dto.currentPassword ||
+        !(await compare(dto.currentPassword, user.password)))
+    ) {
+      throw new AppError.Argument(AppError.Messages.InvalidCurrentPassword);
+    }
+
+    await this.prisma.user.update({
+      data: {
+        password: await this.hashPassword(dto.newPassword),
+        securityStamp: this.generateSecurityStamp(),
+      },
+      where: { id: userId },
+    });
+
+    await this.redisService.db.zRem(
+      SECURITY_STAMPS_REDIS_KEY,
+      user.securityStamp,
+    );
+
+    return this.login(
+      await this.usersService.findByUniqueWithDetail({ id: userId }),
+      ipAddress,
+    );
+  }
+
+  async requestVerifyEmail(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      select: { id: true, username: true, email: true, emailConfirmed: true },
+      where: { id: userId },
+    });
+
+    if (!user.email || user.emailConfirmed) {
+      throw new AppError.Argument(AppError.Messages.InvalidRequestVeriyEmail);
+    }
+
+    await this.sendConfirmEmail(user);
+  }
+
+  async updateEmail(dto: UpdateEmailDto, userId: string) {
+    const user = await this.prisma.user.findUnique({
+      select: { id: true, username: true, email: true },
+      where: { id: userId },
+    });
+
+    if (dto.email === user.email) {
+      throw new AppError.Argument(AppError.Messages.SameEmailAddressProvided);
+    }
+
+    await this.prisma.user.update({
+      data: { email: dto.email, emailConfirmed: false },
+      where: { id: user.id },
+    });
+
+    await this.sendConfirmEmail({
+      id: user.id,
+      username: user.username,
+      email: dto.email,
     });
   }
 

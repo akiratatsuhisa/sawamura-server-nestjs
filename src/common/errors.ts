@@ -182,6 +182,14 @@ export namespace AppError {
       'This verification token is invalid or has already been used. Please request a new one if you need to verify your account again',
     InvalidForgotPassword:
       "Not found username or account's email isn't verified.",
+    SameEmailAddressProvided: 'Same email address provided',
+    InvalidRequestVeriyEmail:
+      'The account do not have an email or it already verification',
+    InvalidCurrentPassword:
+      'Current password does not match. Please enter the correct password',
+    // Oauth Messages
+    OauthServerError: 'Unable to link provider',
+    ProviderAlreadyLinked: 'This provider is already linked',
     // Room Messages
     NotRoomMember: (username: string) => `user(${username}) not in room`,
     InvalidPrivateRoom: 'invalid private room declare',

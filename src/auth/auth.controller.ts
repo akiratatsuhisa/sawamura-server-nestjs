@@ -32,7 +32,9 @@ import {
   RegisterDto,
   ResetPasswordDto,
   SearchImageDto,
+  UpdateEmailDto,
   UpdateImageDto,
+  UpdatePasswordDto,
   UpdateThemeDto,
 } from './dtos';
 import { LocalAuthGuard } from './guards';
@@ -164,6 +166,26 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateTheme(@Body() dto: UpdateThemeDto, @User() user: IdentityUser) {
     await this.authService.updateTheme(dto, user);
+  }
+
+  @Patch('password')
+  async updatePassword(
+    @Body() dto: UpdatePasswordDto,
+    @User('id') userId: string,
+    @Ip() ip: string,
+  ) {
+    return this.authService.updatePassword(dto, userId, ip);
+  }
+
+  @Post('verifyEmail')
+  async verifyEmail(@User('id') userId: string) {
+    await this.authService.requestVerifyEmail(userId);
+  }
+
+  @Patch('email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateEmail(@Body() dto: UpdateEmailDto, @User('id') userId: string) {
+    await this.authService.updateEmail(dto, userId);
   }
 
   @Get('profile/pdf')

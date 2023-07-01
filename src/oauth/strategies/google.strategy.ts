@@ -44,12 +44,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       );
 
       if (!user) {
-        throw 'not found';
+        throw AppError.Messages.NotFoundError;
       }
 
       done(null, user);
-    } catch {
-      return done(new AppError.OauthError() as any, false);
+    } catch (error: unknown) {
+      throw new AppError.OauthError(
+        typeof error === 'string' ? error : undefined,
+      );
     }
   }
 }

@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
 import { IdentityUser } from 'src/auth/identity.class';
+import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { userProfileSelect } from 'src/users/users.factory';
 import { UsersService } from 'src/users/users.service';
@@ -65,7 +66,7 @@ export class OauthService {
     const user = await this.usersService.findByProvider(provider, profile.id);
 
     if (token && !user) {
-      throw 'Internal server error, cannot link provider';
+      throw AppError.Messages.OauthServerError;
     }
 
     if (user) {
@@ -118,7 +119,7 @@ export class OauthService {
     const user = await this.usersService.findByProvider(provider, profile.id);
 
     if (token && !user) {
-      throw 'Internal server error, cannot link provider';
+      throw AppError.Messages.OauthServerError;
     }
 
     if (user) {
@@ -178,7 +179,7 @@ export class OauthService {
     });
 
     if (countDupplicate) {
-      throw 'Already linked provider';
+      throw AppError.Messages.ProviderAlreadyLinked;
     }
 
     await this.prisma.userLogins.create({

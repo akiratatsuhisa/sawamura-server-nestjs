@@ -40,12 +40,14 @@ export class GithubStrategy extends PassportStrategy(Strategy) {
       );
 
       if (!user) {
-        throw 'not found';
+        throw AppError.Messages.NotFoundError;
       }
 
       return user;
-    } catch {
-      throw new AppError.OauthError();
+    } catch (error: unknown) {
+      throw new AppError.OauthError(
+        typeof error === 'string' ? error : undefined,
+      );
     }
   }
 }
