@@ -188,6 +188,14 @@ export class AuthService {
     return result;
   }
 
+  async deleteAccount(user: IdentityUser) {
+    await this.prisma.room.deleteMany({
+      where: { isGroup: false, roomMembers: { some: { memberId: user.id } } },
+    });
+
+    await this.prisma.user.delete({ where: { id: user.id } });
+  }
+
   async confirmEmail(dto: ConfirmEmailDto) {
     const verificationToken =
       await this.verificationTokensService.getTokenActive(

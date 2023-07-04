@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -54,6 +55,11 @@ export class AuthController {
   @Public()
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Delete('delete')
+  async deleteAccount(@User() user: IdentityUser) {
+    return this.authService.deleteAccount(user);
   }
 
   @Post('confirmEmail')
