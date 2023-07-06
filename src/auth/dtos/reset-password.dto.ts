@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+import { AUTH_REGEX } from '../constants';
 
 export class ResetPasswordDto {
   @MaxLength(255)
@@ -6,7 +14,8 @@ export class ResetPasswordDto {
   @IsNotEmpty()
   token: string;
 
-  @MaxLength(255)
+  @Matches(AUTH_REGEX.PASSWORD)
+  @MaxLength(64)
   @MinLength(3)
   @IsString()
   @IsNotEmpty()

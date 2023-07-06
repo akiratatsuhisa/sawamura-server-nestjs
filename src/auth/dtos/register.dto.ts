@@ -8,8 +8,10 @@ import {
   MinLength,
 } from 'class-validator';
 
+import { AUTH_REGEX } from '../constants';
+
 export class RegisterDto {
-  @Matches(/^[a-zA-Z]([a-zA-Z0-9])*$/)
+  @Matches(AUTH_REGEX.USERNAME)
   @MaxLength(255)
   @MinLength(3)
   @IsString()
@@ -23,7 +25,8 @@ export class RegisterDto {
   @IsOptional()
   email?: string;
 
-  @MaxLength(255)
+  @Matches(AUTH_REGEX.PASSWORD)
+  @MaxLength(64)
   @MinLength(3)
   @IsString()
   @IsNotEmpty()
