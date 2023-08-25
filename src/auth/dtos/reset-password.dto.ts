@@ -16,7 +16,7 @@ export class ResetPasswordDto {
 
   @Matches(AUTH_REGEX.PASSWORD)
   @MaxLength(64)
-  @MinLength(3)
+  @MinLength(8)
   @IsString()
   @IsNotEmpty()
   password: string;
