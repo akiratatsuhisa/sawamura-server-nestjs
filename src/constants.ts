@@ -1,10 +1,20 @@
 export namespace MESSAGE_FILE {
+  // 3 hours as milliseconds
+  export const CACHE_TIME = 10_800_000;
+
   // 25 MiB
   export const MAX_FILE_SIZE = 26_214_400;
 
-  // MEDIA MIME TYPES
+  // IMAGE MIME TYPES
   export const IMAGE_MIME_TYPES =
     /image\/(jpe?g|png|gif|bmp|webp|svg\+xml|tiff)/;
+
+  // AUDIO MIME TYPES
+  export const AUDIO_MIME_TYPES =
+    /audio\/(aac|((x-)?midi)|mp3|mpeg|ogg|opus|wav|webm|3gpp2?)/;
+
+  // VIDEO MIME TYPES
+  export const VIDEO_MIME_TYPES = /video\/(x-msvideo|mp4|mpeg|ogg|webm|3gpp2?)/;
 
   // OFFICE MIME TYPES
   export const MICROSOFT_MIME_TYPES =
@@ -28,6 +38,8 @@ export namespace MESSAGE_FILE {
   // ALL MIME TYPES
   export const ALL_MIME_TYPES = new RegExp(
     [
+      MESSAGE_FILE.AUDIO_MIME_TYPES.source,
+      MESSAGE_FILE.VIDEO_MIME_TYPES.source,
       MESSAGE_FILE.IMAGE_MIME_TYPES.source,
       MESSAGE_FILE.OFFICE_MIME_TYPES.source,
     ].join('|'),

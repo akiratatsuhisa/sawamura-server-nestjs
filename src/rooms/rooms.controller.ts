@@ -37,7 +37,7 @@ export class RoomsController {
   async getImage(
     @Query() dto: SearchImageDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
+  ) {
     const { mimeType, buffer } = await this.roomsService.getImage(dto);
 
     res.set({
@@ -101,7 +101,13 @@ export class RoomsController {
     await this.roomsService.updateTheme(dto, user);
   }
 
-  @Get(':roomId/:name')
+  /**
+   *  @deprecated
+   * To cache files, use the getFileLink method
+   *
+   * @Get(':roomId/:name')
+   */
+  @Get(':roomId/files/:name')
   async getFile(
     @Query() dto: SearchMessageFileDto,
     @Res({ passthrough: true }) res: Response,
@@ -110,5 +116,13 @@ export class RoomsController {
     const { buffer } = await this.roomsService.getFile(dto, user);
 
     return new StreamableFile(buffer);
+  }
+
+  @Get(':roomId/:name')
+  async getFileLink(
+    @Query() dto: SearchMessageFileDto,
+    @User() user: IdentityUser,
+  ) {
+    return this.roomsService.getFileLink(dto, user);
   }
 }

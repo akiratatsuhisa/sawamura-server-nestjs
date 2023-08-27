@@ -26,7 +26,11 @@ export class UpdateMemberDto {
   @IsOptional()
   nickName?: string;
 
-  @IsIn([RoomMemberRole.Admin, RoomMemberRole.Member, RoomMemberRole.Moderator])
+  @IsIn([
+    RoomMemberRole.Administrator,
+    RoomMemberRole.Member,
+    RoomMemberRole.Moderator,
+  ])
   @IsString()
   @ValidateIf((object, value) => value !== undefined)
   role?: RoomMemberRole;

@@ -16,11 +16,15 @@ export async function importFileType() {
   };
 }
 
+export function getFileExtension(fileName) {
+  return path.extname(fileName)?.substring(1) || 'txt';
+}
+
 /**
  * file-type package is for detecting binary-based file formats, not text-based formats like .txt, .csv, .svg, etc.
  */
 export function getMimeTypeFromExtension(fileName: string) {
-  const extension = path.extname(fileName)?.substring(1) || 'txt';
+  const extension = getFileExtension(fileName);
 
   switch (extension) {
     case 'svg':

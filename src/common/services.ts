@@ -2,8 +2,8 @@ import _ from 'lodash';
 
 import { PaginationCursor, PaginationOffset } from './dtos';
 
-export abstract class PaginationService {
-  makePaginationOffset<Q extends PaginationOffset>(
+export namespace PaginationService {
+  export function makePaginationOffset<Q extends PaginationOffset>(
     query: Q,
   ): {
     take?: number;
@@ -15,7 +15,9 @@ export abstract class PaginationService {
     };
   }
 
-  makePaginationCursor<Q extends PaginationCursor<string | number>>(
+  export function makePaginationCursor<
+    Q extends PaginationCursor<string | number>,
+  >(
     query: Q,
   ): {
     take?: number;

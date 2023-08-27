@@ -189,10 +189,10 @@ model Room {
 }
 
 enum RoomMemberRole {
-  Admin     @map("admin")
-  Moderator @map("moderator")
-  Member    @map("member")
-  None      @map("none")
+  Administrator @map("administrator")
+  Moderator     @map("moderator")
+  Member        @map("member")
+  None          @map("none")
 
   @@map("room_member_role")
 }
@@ -222,7 +222,7 @@ enum RoomMessageType {
   Images @map("images")
   Files  @map("files")
   Audios @map("audios")
-  Medias @map("medias")
+  Videos @map("videos")
   None   @map("none")
 
   @@map("room_message_type")

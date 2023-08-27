@@ -2,10 +2,10 @@
 CREATE TYPE "verification_token_type" AS ENUM ('reset_password', 'verify_email', 'link_provider_login');
 
 -- CreateEnum
-CREATE TYPE "room_member_role" AS ENUM ('admin', 'moderator', 'member', 'none');
+CREATE TYPE "room_member_role" AS ENUM ('administrator', 'moderator', 'member', 'none');
 
 -- CreateEnum
-CREATE TYPE "room_message_type" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images', 'files', 'audios', 'medias', 'none');
+CREATE TYPE "room_message_type" AS ENUM ('text', 'icon', 'icons', 'link', 'image', 'images', 'files', 'audios', 'videos', 'none');
 
 -- CreateEnum
 CREATE TYPE "notification_entity_name" AS ENUM ('user', 'room', 'roomMessage', 'roomMember', 'none');

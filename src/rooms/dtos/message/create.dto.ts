@@ -19,6 +19,11 @@ export class CreateFileMessageDto {
   @IsNotEmpty()
   name: string;
 
+  @MaxLength(16)
+  @IsString()
+  @IsNotEmpty()
+  type: string;
+
   @IsFileMime(MESSAGE_FILE.ALL_MIME_TYPES)
   @MaxFileSize(MESSAGE_FILE.MAX_FILE_SIZE)
   @IsFile()

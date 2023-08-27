@@ -115,7 +115,7 @@ export class AuthController {
   async getImage(
     @Query() dto: SearchImageDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
+  ) {
     const { mimeType, buffer } = await this.authService.getImage(dto);
 
     res.set({
@@ -198,7 +198,7 @@ export class AuthController {
   async profilePdf(
     @Res({ passthrough: true }) res: Response,
     @User() user: IdentityUser,
-  ): Promise<StreamableFile> {
+  ) {
     const buffer = await this.authService.profilePdf(user.username);
 
     res.set({

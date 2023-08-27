@@ -1,7 +1,9 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
 import { Queue } from 'bull';
+import { Cache } from 'cache-manager';
 import _ from 'lodash';
 import path from 'path';
 import { IdentityUser } from 'src/auth/decorators';
@@ -9,11 +11,7 @@ import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
 import { MESSAGE_FILE } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
-import {
-  getMimeTypeFromExtension,
-  IFile,
-  importFileType,
-} from 'src/helpers/file-type.helper';
+import { getFileExtension, IFile } from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import { NAME, QUEUE_ROOM_EVENTS } from './constants';
@@ -46,14 +44,13 @@ import {
 } from './rooms.factory';
 
 @Injectable()
-export class RoomsService extends PaginationService {
+export class RoomsService {
   constructor(
     private prisma: PrismaService,
     private dropboxService: DropboxService,
     @InjectQueue(NAME) private roomsQueue: Queue,
-  ) {
-    super();
-  }
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   private isRoomMember(
     roomMembers: Awaited<
@@ -122,7 +119,7 @@ export class RoomsService extends PaginationService {
         },
       },
       orderBy: { createdAt: 'desc' },
-      ...this.makePaginationCursor(query),
+      ...PaginationService.makePaginationCursor(query),
     });
   }
 
@@ -135,7 +132,10 @@ export class RoomsService extends PaginationService {
 
     if (
       dto.isGroup &&
-      (!_.some(dto.members, (member) => member.role === RoomMemberRole.Admin) ||
+      (!_.some(
+        dto.members,
+        (member) => member.role === RoomMemberRole.Administrator,
+      ) ||
         _.size(dto.members) < 2)
     ) {
       throw new AppError.Argument(AppError.Messages.InvalidGroupRoom);
@@ -195,7 +195,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           room.roomMembers,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
         )
       ) {
@@ -219,7 +219,13 @@ export class RoomsService extends PaginationService {
         throw new AppError.NotFound();
       }
 
-      if (!this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.Admin)) {
+      if (
+        !this.isRoomMember(
+          room.roomMembers,
+          user.id,
+          RoomMemberRole.Administrator,
+        )
+      ) {
         throw new AppError.AccessDenied();
       }
 
@@ -258,7 +264,7 @@ export class RoomsService extends PaginationService {
       !this.isRoomMember(
         room.roomMembers,
         user.id,
-        RoomMemberRole.Admin,
+        RoomMemberRole.Administrator,
         RoomMemberRole.Moderator,
       )
     ) {
@@ -288,7 +294,7 @@ export class RoomsService extends PaginationService {
       !this.isRoomMember(
         room.roomMembers,
         user.id,
-        RoomMemberRole.Admin,
+        RoomMemberRole.Administrator,
         RoomMemberRole.Moderator,
       )
     ) {
@@ -315,7 +321,7 @@ export class RoomsService extends PaginationService {
       !this.isRoomMember(
         room.roomMembers,
         user.id,
-        RoomMemberRole.Admin,
+        RoomMemberRole.Administrator,
         RoomMemberRole.Moderator,
       )
     ) {
@@ -345,7 +351,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           room.roomMembers,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
         )
       ) {
@@ -390,7 +396,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           room.roomMembers,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
         ) ||
         this.isRoomMember(
@@ -401,9 +407,9 @@ export class RoomsService extends PaginationService {
         ((this.isRoomMember(
           room.roomMembers,
           dto.memberId,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
         ) ||
-          dto.role === RoomMemberRole.Admin) &&
+          dto.role === RoomMemberRole.Administrator) &&
           this.isRoomMember(
             room.roomMembers,
             user.id,
@@ -442,7 +448,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           room.roomMembers,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
         ) ||
@@ -455,7 +461,7 @@ export class RoomsService extends PaginationService {
         (this.isRoomMember(
           room.roomMembers,
           dto.memberId,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
         ) &&
           this.isRoomMember(
             room.roomMembers,
@@ -511,7 +517,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           members,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
         )
@@ -547,7 +553,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           await this.getMembersByRoomId({ roomId: message.room.id }),
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
         )
@@ -565,15 +571,23 @@ export class RoomsService extends PaginationService {
   async deleteMessage(dto: DeleteMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
       const message = await this.getMessageById({ id: dto.id });
+      if (!message || message.type === RoomMessageType.None) {
+        throw new AppError.NotFound();
+      }
+
+      const members = await this.getMembersByRoomId({
+        roomId: message.room.id,
+      });
       if (
-        !message ||
-        message.type === RoomMessageType.None ||
-        !this.isRoomMember(
-          await this.getMembersByRoomId({ roomId: message.room.id }),
-          user.id,
-          RoomMemberRole.Admin,
-          RoomMemberRole.Moderator,
-          RoomMemberRole.Member,
+        !(
+          this.isRoomMember(
+            members,
+            user.id,
+            RoomMemberRole.Administrator,
+            RoomMemberRole.Moderator,
+          ) ||
+          (this.isRoomMember(members, user.id, RoomMemberRole.Member) &&
+            message.user.id === user.id)
         )
       ) {
         throw new AppError.AccessDenied();
@@ -600,7 +614,7 @@ export class RoomsService extends PaginationService {
         !this.isRoomMember(
           members,
           user.id,
-          RoomMemberRole.Admin,
+          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
         )
@@ -658,19 +672,43 @@ export class RoomsService extends PaginationService {
     return { buffer };
   }
 
-  async partitionFiles(files: Array<CreateFileMessageDto>) {
-    const { fileTypeFromBuffer } = await importFileType();
+  async getFileLink(dto: SearchMessageFileDto, user: IdentityUser) {
+    const room = await this.getRoomById({ id: dto.roomId });
 
+    if (!room) {
+      throw new AppError.NotFound();
+    }
+
+    if (
+      !room.isGroup ||
+      this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)
+    ) {
+      throw new AppError.AccessDenied();
+    }
+
+    const cacheKey = `room:${dto.roomId}|file:${dto.name}`;
+    return this.cacheManager.wrap(
+      cacheKey,
+      () => this.dropboxService.getTemporaryLink(dto.name, dto.roomId),
+      MESSAGE_FILE.CACHE_TIME,
+    );
+  }
+
+  async partitionFiles(files: Array<CreateFileMessageDto>) {
     const filesWithDetail = await Promise.all(
-      files.map(async ({ data, name }) => {
-        const { ext: extension, mime } =
-          (await fileTypeFromBuffer(data)) ?? getMimeTypeFromExtension(name);
+      files.map(async ({ name, type, data }) => {
+        const mime = type;
+        const extension = getFileExtension(name);
 
         return {
           name,
           buffer: data,
           type: (MESSAGE_FILE.IMAGE_MIME_TYPES.test(mime)
             ? RoomMessageType.Images
+            : MESSAGE_FILE.AUDIO_MIME_TYPES.test(mime)
+            ? RoomMessageType.Audios
+            : MESSAGE_FILE.VIDEO_MIME_TYPES.test(mime)
+            ? RoomMessageType.Videos
             : MESSAGE_FILE.OFFICE_MIME_TYPES.test(mime)
             ? RoomMessageType.Files
             : RoomMessageType.None) as RoomMessageType,
@@ -688,7 +726,7 @@ export class RoomsService extends PaginationService {
     RoomMessageType.Images,
     RoomMessageType.Image,
     RoomMessageType.Audios,
-    RoomMessageType.Medias,
+    RoomMessageType.Videos,
     RoomMessageType,
   ];
 

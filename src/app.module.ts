@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bull';
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -42,6 +42,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     WsAuthModule,
     DropboxModule,
     SendgridModule,
+    CacheModule.register({ isGlobal: true }),
     FileUtilsModule,
     MaterialDesignModule,
     UsersModule,

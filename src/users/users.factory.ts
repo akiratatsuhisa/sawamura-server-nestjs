@@ -22,6 +22,30 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
     },
   },
 });
+export const userAdvancedSelect = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  username: true,
+  email: true,
+  emailConfirmed: true,
+  firstName: true,
+  lastName: true,
+  birthDate: true,
+  salary: true,
+  photoUrl: true,
+  coverUrl: true,
+  createdAt: true,
+  updatedAt: true,
+  userRoles: {
+    select: {
+      role: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: { role: { sort: 'asc' } },
+  },
+});
 
 export const userProfileSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,

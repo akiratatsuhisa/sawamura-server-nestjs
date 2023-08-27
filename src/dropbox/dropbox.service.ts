@@ -41,6 +41,22 @@ export class DropboxService {
     };
   }
 
+  private getPath(name: string, prefix?: string) {
+    return prefix ? `/${prefix}/${name}` : name;
+  }
+
+  async getTemporaryLink(name: string, prefix?: string) {
+    const path = this.getPath(name, prefix);
+
+    try {
+      const response = await this.dbx.filesGetTemporaryLink({ path });
+
+      return response.result.link;
+    } catch {
+      throw new AppError.Argument(AppError.Messages.FilesDownloadFailed);
+    }
+  }
+
   async filesUpload(
     files: Array<IFile>,
     arg: Omit<filesType.UploadArg, 'contents'>,
@@ -98,10 +114,6 @@ export class DropboxService {
       pathDisplay: response.result.path_display,
       ..._.pick(file, 'mime', 'extension'),
     };
-  }
-
-  private getPath(name: string, prefix?: string) {
-    return prefix ? `/${prefix}/${name}` : name;
   }
 
   async fileDownload(name: string, prefix?: string) {

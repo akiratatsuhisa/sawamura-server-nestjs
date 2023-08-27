@@ -256,6 +256,8 @@ export class RoomsGateway extends WsAuthGateway {
 
     const {
       [RoomMessageType.Images]: imageFiles,
+      [RoomMessageType.Audios]: audioFiles,
+      [RoomMessageType.Videos]: videoFiles,
       [RoomMessageType.Files]: officeFiles,
     } = await this.roomsService.partitionFiles(dto.files);
 
@@ -266,6 +268,14 @@ export class RoomsGateway extends WsAuthGateway {
           _.size(imageFiles) === 1
             ? RoomMessageType.Image
             : RoomMessageType.Images,
+      },
+      {
+        files: audioFiles,
+        type: RoomMessageType.Audios,
+      },
+      {
+        files: videoFiles,
+        type: RoomMessageType.Videos,
       },
       {
         files: officeFiles,

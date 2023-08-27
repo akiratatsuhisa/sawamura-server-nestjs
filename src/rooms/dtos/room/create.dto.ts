@@ -20,7 +20,11 @@ class CreateRoomMemberDto {
   @IsNotEmpty()
   memberId: string;
 
-  @IsIn([RoomMemberRole.Admin, RoomMemberRole.Moderator, RoomMemberRole.Member])
+  @IsIn([
+    RoomMemberRole.Administrator,
+    RoomMemberRole.Moderator,
+    RoomMemberRole.Member,
+  ])
   @IsString()
   @IsNotEmpty()
   role: RoomMemberRole;
