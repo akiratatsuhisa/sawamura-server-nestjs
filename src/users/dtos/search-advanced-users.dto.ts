@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsIn,
@@ -13,7 +14,7 @@ import {
 } from 'class-validator';
 import _ from 'lodash';
 import { PaginationOffset } from 'src/common/dtos';
-import { EmailState } from 'src/common/enum';
+import { EmailState, SearchMatch } from 'src/common/enum';
 
 export const SearchAdvancedUsersSort = {
   username: 'username',
@@ -67,11 +68,17 @@ export class SearchAdvancedUsersDto extends PaginationOffset {
   emailStates?: Array<EmailState>;
 
   @ArrayUnique()
+  @ArrayMaxSize(10)
   @IsString({ each: true })
   @IsArray()
   @IsNotEmpty({ each: true })
   @IsOptional()
   roleIds?: Array<string>;
+
+  @IsIn(_.values(SearchMatch))
+  @IsString()
+  @IsOptional()
+  roleMode?: SearchMatch;
 
   @ValidateNested()
   @IsObject()

@@ -4,7 +4,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
 import { VerificationTokenType } from '@prisma/client';
 import { compare, genSalt, hash } from 'bcrypt';
-import { randomBytes } from 'crypto';
 import _ from 'lodash';
 import moment from 'moment';
 import path from 'path';
@@ -12,6 +11,7 @@ import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileUtilsService } from 'src/file-utils/file-utils.service';
 import { IFile } from 'src/helpers/file.interface';
+import { Security } from 'src/helpers/security.helper';
 import { MaterialDesignService } from 'src/material-design/material-design.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -48,14 +48,6 @@ export class AuthService {
     private verificationTokensService: VerificationTokensService,
   ) {}
 
-  generateSecurityStamp() {
-    const randomHex = randomBytes(16).toString('hex');
-
-    const date = new Date().getTime().toString().padStart(16, '0');
-
-    return `${date}${randomHex}`.slice(0, 128);
-  }
-
   async updateSecurityStamp(
     userOrUserId: string | { id: string; securityStamp: string },
   ) {
@@ -73,7 +65,7 @@ export class AuthService {
       where: {
         id: typeof userOrUserId === 'string' ? userOrUserId : userOrUserId.id,
       },
-      data: { securityStamp: this.generateSecurityStamp() },
+      data: { securityStamp: Security.generateSecurityStamp() },
       select: { id: true },
     });
   }
@@ -172,7 +164,7 @@ export class AuthService {
             },
           ],
         },
-        securityStamp: this.generateSecurityStamp(),
+        securityStamp: Security.generateSecurityStamp(),
       },
       select: {
         id: true,
@@ -509,7 +501,7 @@ export class AuthService {
     await this.prisma.user.update({
       data: {
         password: await this.hashPassword(dto.newPassword),
-        securityStamp: this.generateSecurityStamp(),
+        securityStamp: Security.generateSecurityStamp(),
       },
       where: { id: userId },
     });

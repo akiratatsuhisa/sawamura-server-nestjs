@@ -187,6 +187,7 @@ export namespace AppError {
       'The account do not have an email or it already verification',
     InvalidCurrentPassword:
       'Current password does not match. Please enter the correct password',
+    InvalidChangeUserRoles: 'Invalid input role Ids',
     // Oauth Messages
     OauthServerError: 'Unable to link provider',
     ProviderAlreadyLinked: 'This provider is already linked',

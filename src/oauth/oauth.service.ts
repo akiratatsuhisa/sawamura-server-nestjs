@@ -5,6 +5,7 @@ import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
+import { Security } from 'src/helpers/security.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { userProfileSelect } from 'src/users/users.factory';
 import { UsersService } from 'src/users/users.service';
@@ -99,7 +100,7 @@ export class OauthService {
             },
           ],
         },
-        securityStamp: this.authService.generateSecurityStamp(),
+        securityStamp: Security.generateSecurityStamp(),
       },
       select: userProfileSelect,
     });
@@ -146,7 +147,7 @@ export class OauthService {
             },
           ],
         },
-        securityStamp: this.authService.generateSecurityStamp(),
+        securityStamp: Security.generateSecurityStamp(),
       },
       select: userProfileSelect,
     });

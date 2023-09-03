@@ -6,6 +6,11 @@ export enum EmailState {
   Verified = 'verified',
 }
 
+export enum SearchMatch {
+  All = 'all',
+  Any = 'any',
+}
+
 export enum SearchFilter {
   Not = 'NOT',
   Or = 'OR',
