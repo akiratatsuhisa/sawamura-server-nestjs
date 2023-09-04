@@ -5,7 +5,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import _ from 'lodash';
+
 export class ChangeUserRolesDto {
   @IsUUID()
   @IsString()

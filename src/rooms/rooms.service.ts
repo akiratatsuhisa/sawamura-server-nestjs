@@ -13,6 +13,7 @@ import { MESSAGE_FILE } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { getFileExtension, IFile } from 'src/helpers/file-type.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { v4 as uuidv4 } from 'uuid';
 
 import { NAME, QUEUE_ROOM_EVENTS } from './constants';
 import {
@@ -30,6 +31,7 @@ import {
   SearchMessageFileDto,
   SearchMessagesDto,
   SearchRoomDto,
+  SearchRoomPrivateDto,
   SearchRoomsDto,
   UpdateMemberDto,
   UpdateMessageDto,
@@ -75,6 +77,44 @@ export class RoomsService {
         roomMembers: user
           ? { some: { memberId: user.id, role: { not: RoomMemberRole.None } } }
           : undefined,
+      },
+    });
+  }
+
+  async getRoomPrivate(query: SearchRoomPrivateDto, user?: IdentityUser) {
+    const room = await this.prisma.room.findFirst({
+      select: roomSelect,
+      where: {
+        isGroup: false,
+        AND: [
+          {
+            roomMembers: { some: { memberId: query.otherUserId } },
+          },
+          {
+            roomMembers: { some: { memberId: user.id } },
+          },
+        ],
+      },
+    });
+    if (room) {
+      return room;
+    }
+    return this.prisma.room.create({
+      data: {
+        name: uuidv4(),
+        isGroup: false,
+        roomMembers: {
+          create: [
+            {
+              memberId: user.id,
+              role: RoomMemberRole.Moderator,
+            },
+            {
+              memberId: query.otherUserId,
+              role: RoomMemberRole.Moderator,
+            },
+          ],
+        },
       },
     });
   }
@@ -173,7 +213,7 @@ export class RoomsService {
 
       return tx.room.create({
         data: {
-          name: dto.name,
+          name: dto.isGroup ? dto.name : uuidv4(),
           isGroup: dto.isGroup,
           roomMembers: {
             create: dto.members,
@@ -668,10 +708,7 @@ export class RoomsService {
       throw new AppError.NotFound();
     }
 
-    if (
-      !room.isGroup ||
-      this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)
-    ) {
+    if (this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)) {
       throw new AppError.AccessDenied();
     }
 
@@ -690,10 +727,7 @@ export class RoomsService {
       throw new AppError.NotFound();
     }
 
-    if (
-      !room.isGroup ||
-      this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)
-    ) {
+    if (this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)) {
       throw new AppError.AccessDenied();
     }
 

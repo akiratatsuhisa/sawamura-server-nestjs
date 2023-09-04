@@ -7,7 +7,7 @@ import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
 import { Security } from 'src/helpers/security.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { userProfileSelect } from 'src/users/users.factory';
+import { userDetailSelect } from 'src/users/users.factory';
 import { UsersService } from 'src/users/users.service';
 import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
@@ -53,6 +53,10 @@ export class OauthService {
     })}`;
   }
 
+  private generateUsername() {
+    return `user-oauth:${randomBytes(6).toString('base64')}`;
+  }
+
   async validateGoogleProvider(profile: IGoogleProfile, token?: string) {
     const provider = 'google';
 
@@ -74,11 +78,13 @@ export class OauthService {
       return user;
     }
 
+    const username = this.generateUsername();
     const email = profile.emails.at(0);
 
     return this.prisma.user.create({
       data: {
-        username: `user-oauth:${randomBytes(6).toString('base64')}`,
+        username: username,
+        displayName: profile?.displayName ?? username,
         email: email.value,
         emailConfirmed: email.verified,
         firstName: profile?.name?.givenName,
@@ -102,7 +108,7 @@ export class OauthService {
         },
         securityStamp: Security.generateSecurityStamp(),
       },
-      select: userProfileSelect,
+      select: userDetailSelect,
     });
   }
 
@@ -127,9 +133,12 @@ export class OauthService {
       return user;
     }
 
+    const username = this.generateUsername();
+
     return this.prisma.user.create({
       data: {
-        username: `user-oauth:${randomBytes(6).toString('base64')}`,
+        username: username,
+        displayName: profile?.displayName ?? username,
         userRoles: {
           create: [
             {
@@ -149,7 +158,7 @@ export class OauthService {
         },
         securityStamp: Security.generateSecurityStamp(),
       },
-      select: userProfileSelect,
+      select: userDetailSelect,
     });
   }
 

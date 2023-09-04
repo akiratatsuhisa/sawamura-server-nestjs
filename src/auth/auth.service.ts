@@ -153,6 +153,7 @@ export class AuthService {
     const result = await this.prisma.user.create({
       data: {
         username: dto.username,
+        displayName: dto.displayName,
         email: dto.email,
         password: hashPassword,
         userRoles: {
@@ -285,6 +286,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
+      displayName: user.displayName,
       hasPassword: !!user.password,
       email: user.email,
       emailConfirmed: user.emailConfirmed,

@@ -4,6 +4,7 @@ import { Jwt } from 'src/helpers/jwt.helper';
 export class IdentityUser {
   public id: string;
   public username: string;
+  public displayName: string;
   public hasPassword: boolean;
   public email: string;
   public emailConfirmed: boolean;
@@ -21,6 +22,7 @@ export class IdentityUser {
   constructor(payload?: Record<string, any>) {
     this.id = Jwt.get(payload, 'sub');
     this.username = Jwt.get(payload, 'username');
+    this.displayName = Jwt.get(payload, 'displayName');
     this.hasPassword = Jwt.get(payload, 'hasPassword', 'boolean');
     this.email = Jwt.get(payload, 'email');
     this.emailConfirmed = Jwt.get(payload, 'emailConfirmed', 'boolean');

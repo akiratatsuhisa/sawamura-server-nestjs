@@ -25,6 +25,7 @@ import {
   DeleteRoomDto,
   SearchMessagesDto,
   SearchRoomDto,
+  SearchRoomPrivateDto,
   SearchRoomsDto,
   TypingRoomDto,
   UpdateMemberDto,
@@ -105,6 +106,21 @@ export class RoomsGateway extends WsAuthGateway {
     this.sendToCaller({
       socket: client,
       event: SOCKET_ROOM_EVENTS.READ_ROOM,
+      dto,
+      data: room,
+    });
+  }
+
+  @SubscribeMessage(SOCKET_ROOM_EVENTS.READ_ROOM_PRIVATE)
+  async getRoomPrivate(
+    @ConnectedSocket() client: SocketWithAuth,
+    @MessageBody() dto: SearchRoomPrivateDto,
+  ) {
+    const room = await this.roomsService.getRoomPrivate(dto, client.user);
+
+    this.sendToCaller({
+      socket: client,
+      event: SOCKET_ROOM_EVENTS.READ_ROOM_PRIVATE,
       dto,
       data: room,
     });

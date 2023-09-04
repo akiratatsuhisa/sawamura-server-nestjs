@@ -14,6 +14,13 @@ export class SearchRoomDto {
   id: string;
 }
 
+export class SearchRoomPrivateDto {
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  otherUserId: string;
+}
+
 export class SearchRoomsDto extends PaginationExcludeIds {
   @IsUUID('all', { each: true })
   @IsString({ each: true })

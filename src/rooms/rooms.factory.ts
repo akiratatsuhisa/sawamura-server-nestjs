@@ -8,6 +8,7 @@ export const roomMemberSelect = Prisma.validator<Prisma.RoomMemberSelect>()({
     select: {
       id: true,
       username: true,
+      displayName: true,
       photoUrl: true,
     },
   },
@@ -36,6 +37,7 @@ export const roomSelect = Prisma.validator<Prisma.RoomSelect>()({
         select: {
           id: true,
           username: true,
+          displayName: true,
           photoUrl: true,
         },
       },
@@ -57,6 +59,7 @@ export const roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({
     select: {
       id: true,
       username: true,
+      displayName: true,
       photoUrl: true,
     },
   },

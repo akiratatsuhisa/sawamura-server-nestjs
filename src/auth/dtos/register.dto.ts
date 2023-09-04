@@ -18,6 +18,12 @@ export class RegisterDto {
   @IsNotEmpty()
   username: string;
 
+  @Matches(AUTH_REGEX.DISPLAY_NAME)
+  @MaxLength(128)
+  @IsString()
+  @IsNotEmpty()
+  displayName: string;
+
   @IsEmail()
   @MaxLength(255)
   @IsString()
