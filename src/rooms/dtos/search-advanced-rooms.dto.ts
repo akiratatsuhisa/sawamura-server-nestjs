@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class SearchAdvancedUsersDto {
+export class SearchAdvancedRoomsDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()

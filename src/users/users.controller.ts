@@ -15,9 +15,19 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Roles('Administrator')
-  @Get('advanced')
-  async searchAdvanced(@Query() dto: SearchAdvancedUsersDto) {
-    return this.usersService.searchAdvanced(dto);
+  @Get()
+  async getAll(@Query() dto: SearchUsersDto) {
+    return this.usersService.findAll(dto);
+  }
+
+  @Roles('Administrator')
+  @Get(':id')
+  async getById(@Param() dto: FindOneParams.Uuid) {
+    const result = await this.usersService.findByUnique({ id: dto.id });
+    if (!result) {
+      throw new AppError.NotFound();
+    }
+    return result;
   }
 
   @Roles('Administrator')
@@ -26,14 +36,14 @@ export class UsersController {
     return this.usersService.changeRoles(dto);
   }
 
-  @Get()
-  async getAll(@Query() dto: SearchUsersDto) {
-    return this.usersService.findAll(dto);
+  @Get('advanced')
+  async searchAdvanced(@Query() dto: SearchAdvancedUsersDto) {
+    return this.usersService.searchAdvanced(dto);
   }
 
-  @Get(':id')
-  async getById(@Param() dto: FindOneParams.Uuid) {
-    const result = await this.usersService.findByUnique({ id: dto.id });
+  @Get('page/:username')
+  async searchByUsername(@Param('username') username: string) {
+    const result = await this.usersService.searchAdvancedUnique({ username });
     if (!result) {
       throw new AppError.NotFound();
     }

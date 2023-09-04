@@ -27,6 +27,23 @@ export const roomSelect = Prisma.validator<Prisma.RoomSelect>()({
   themeStyle: true,
   lastActivatedAt: true,
   createdAt: true,
+  roomMessages: {
+    select: {
+      id: true,
+      type: true,
+      content: true,
+      user: {
+        select: {
+          id: true,
+          username: true,
+          photoUrl: true,
+        },
+      },
+      createdAt: true,
+    },
+    take: 1,
+    orderBy: { createdAt: 'desc' },
+  },
 });
 
 export const roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({

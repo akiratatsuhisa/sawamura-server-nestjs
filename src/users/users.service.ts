@@ -28,6 +28,28 @@ export class UsersService {
   ) {}
 
   async searchAdvanced(dto: SearchAdvancedUsersDto) {
+    return this.prisma.user.findMany({
+      select: userAdvancedSelect,
+      where: {
+        OR: dto.search
+          ? [
+              { username: { contains: dto.search } },
+              { firstName: { contains: dto.search } },
+              { lastName: { contains: dto.search } },
+            ]
+          : undefined,
+      },
+    });
+  }
+
+  async searchAdvancedUnique(idOrUsername: Prisma.UserWhereUniqueInput) {
+    return this.prisma.user.findUnique({
+      select: userAdvancedSelect,
+      where: idOrUsername,
+    });
+  }
+
+  async findAll(dto: SearchUsersDto) {
     const AND: Array<Prisma.UserWhereInput> = [];
 
     if (!_.isNil(dto.username)) {
@@ -80,7 +102,7 @@ export class UsersService {
 
     const [records, totalCount] = await this.prisma.$transaction([
       this.prisma.user.findMany({
-        select: userAdvancedSelect,
+        select: userSelect,
         where: { AND },
         ...PaginationService.makePaginationOffset(dto),
         orderBy: { [dto.sort.field]: dto.sort.order },
@@ -89,6 +111,20 @@ export class UsersService {
     ]);
 
     return { records, count: records.length, totalCount };
+  }
+
+  async findByUnique(idOrUsername: Prisma.UserWhereUniqueInput) {
+    return this.prisma.user.findUnique({
+      select: userSelect,
+      where: idOrUsername,
+    });
+  }
+
+  async findByUniqueWithDetail(idOrUsername: Prisma.UserWhereUniqueInput) {
+    return this.prisma.user.findUnique({
+      select: userProfileSelect,
+      where: idOrUsername,
+    });
   }
 
   async changeRoles(dto: ChangeUserRolesDto) {
@@ -132,35 +168,6 @@ export class UsersService {
         },
         data: { securityStamp: Security.generateSecurityStamp() },
       });
-    });
-  }
-
-  async findAll(dto: SearchUsersDto) {
-    return this.prisma.user.findMany({
-      select: userSelect,
-      where: {
-        OR: dto.search
-          ? [
-              { username: { contains: dto.search } },
-              { firstName: { contains: dto.search } },
-              { lastName: { contains: dto.search } },
-            ]
-          : undefined,
-      },
-    });
-  }
-
-  async findByUnique(idOrUsername: Prisma.UserWhereUniqueInput) {
-    return this.prisma.user.findUnique({
-      select: userSelect,
-      where: idOrUsername,
-    });
-  }
-
-  async findByUniqueWithDetail(idOrUsername: Prisma.UserWhereUniqueInput) {
-    return this.prisma.user.findUnique({
-      select: userProfileSelect,
-      where: idOrUsername,
     });
   }
 

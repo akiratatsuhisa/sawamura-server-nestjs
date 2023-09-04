@@ -392,33 +392,39 @@ export class RoomsService {
       }
 
       if (
-        (!room.isGroup && dto.role) ||
-        !this.isRoomMember(
-          room.roomMembers,
-          user.id,
-          RoomMemberRole.Administrator,
-          RoomMemberRole.Moderator,
-        ) ||
-        this.isRoomMember(
-          room.roomMembers,
-          dto.memberId,
-          RoomMemberRole.None,
-        ) ||
-        ((this.isRoomMember(
-          room.roomMembers,
-          dto.memberId,
-          RoomMemberRole.Administrator,
-        ) ||
-          dto.role === RoomMemberRole.Administrator) &&
-          this.isRoomMember(
-            room.roomMembers,
-            user.id,
-            RoomMemberRole.Moderator,
-            RoomMemberRole.Member,
-            RoomMemberRole.None,
-          ))
+        this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None) ||
+        this.isRoomMember(room.roomMembers, dto.memberId, RoomMemberRole.None)
       ) {
         throw new AppError.AccessDenied();
+      }
+      if (dto.role) {
+        if (
+          !room.isGroup ||
+          !this.isRoomMember(
+            room.roomMembers,
+            user.id,
+            RoomMemberRole.Administrator,
+            RoomMemberRole.Moderator,
+          )
+        ) {
+          throw new AppError.AccessDenied();
+        }
+        if (
+          dto.role === RoomMemberRole.Administrator &&
+          user.id !== dto.memberId &&
+          this.isRoomMember(
+            room.roomMembers,
+            dto.memberId,
+            RoomMemberRole.Administrator,
+          ) &&
+          !this.isRoomMember(
+            room.roomMembers,
+            user.id,
+            RoomMemberRole.Administrator,
+          )
+        ) {
+          throw new AppError.AccessDenied();
+        }
       }
 
       await tx.roomMember.update({
@@ -445,31 +451,36 @@ export class RoomsService {
 
       if (
         !room.isGroup ||
-        !this.isRoomMember(
+        this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None) ||
+        this.isRoomMember(room.roomMembers, dto.memberId, RoomMemberRole.None)
+      ) {
+        throw new AppError.AccessDenied();
+      }
+      if (
+        this.isRoomMember(
           room.roomMembers,
           user.id,
-          RoomMemberRole.Administrator,
           RoomMemberRole.Moderator,
           RoomMemberRole.Member,
-        ) ||
-        (dto.memberId !== user.id &&
-          this.isRoomMember(
-            room.roomMembers,
-            user.id,
-            RoomMemberRole.Member,
-          )) ||
-        (this.isRoomMember(
+        ) &&
+        this.isRoomMember(
           room.roomMembers,
           dto.memberId,
           RoomMemberRole.Administrator,
-        ) &&
-          this.isRoomMember(
-            room.roomMembers,
-            user.id,
-            RoomMemberRole.Moderator,
-            RoomMemberRole.Member,
-            RoomMemberRole.None,
-          ))
+        )
+      ) {
+        throw new AppError.AccessDenied();
+      }
+      if (
+        this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.Member) &&
+        user.id !== dto.memberId &&
+        this.isRoomMember(
+          room.roomMembers,
+          dto.memberId,
+          RoomMemberRole.Administrator,
+          RoomMemberRole.Moderator,
+          RoomMemberRole.Moderator,
+        )
       ) {
         throw new AppError.AccessDenied();
       }

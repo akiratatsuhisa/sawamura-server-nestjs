@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 
-export const userSelect = Prisma.validator<Prisma.UserSelect>()({
+export const userAdvancedSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
   username: true,
   email: true,
@@ -12,17 +12,9 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
   themeStyle: true,
   createdAt: true,
   updatedAt: true,
-  userRoles: {
-    select: {
-      role: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  },
 });
-export const userAdvancedSelect = Prisma.validator<Prisma.UserSelect>()({
+
+export const userSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
   username: true,
   email: true,
