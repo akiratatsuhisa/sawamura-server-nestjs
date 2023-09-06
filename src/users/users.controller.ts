@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Query,
@@ -48,11 +50,12 @@ export class UsersController {
   }
 
   @Patch('profile/:username/relationship')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async changeRelationship(
     @Body() dto: ChangeUserRelationshipDto,
     @User() user: IdentityUser,
   ) {
-    return this.usersService.changeRelationship(dto, user);
+    await this.usersService.changeRelationship(dto, user);
   }
 
   @Roles('Administrator')
@@ -73,7 +76,8 @@ export class UsersController {
 
   @Roles('Administrator')
   @Patch(':id/roles')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async changeRoles(@Body() dto: ChangeUserRolesDto) {
-    return this.usersService.changeRoles(dto);
+    await this.usersService.changeRoles(dto);
   }
 }

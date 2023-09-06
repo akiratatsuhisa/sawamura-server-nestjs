@@ -19,15 +19,15 @@ export const roomSelect = Prisma.validator<Prisma.RoomSelect>()({
   id: true,
   name: true,
   isGroup: true,
-  roomMembers: {
-    select: roomMemberSelect,
-  },
   photoUrl: true,
   coverUrl: true,
   themeSource: true,
   themeStyle: true,
   lastActivatedAt: true,
   createdAt: true,
+  roomMembers: {
+    select: roomMemberSelect,
+  },
   roomMessages: {
     select: {
       id: true,
@@ -64,4 +64,34 @@ export const roomMessageSelect = Prisma.validator<Prisma.RoomMessageSelect>()({
     },
   },
   createdAt: true,
+});
+
+export const roomAdvancedSelect = Prisma.validator<Prisma.RoomSelect>()({
+  id: true,
+  name: true,
+  isGroup: true,
+  photoUrl: true,
+  lastActivatedAt: true,
+  createdAt: true,
+  roomMembers: {
+    select: roomMemberSelect,
+  },
+  roomMessages: {
+    select: {
+      id: true,
+      type: true,
+      content: true,
+      user: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          photoUrl: true,
+        },
+      },
+      createdAt: true,
+    },
+    take: 1,
+    orderBy: { createdAt: 'desc' },
+  },
 });

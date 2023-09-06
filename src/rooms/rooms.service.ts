@@ -25,6 +25,7 @@ import {
   DeleteMessageDto,
   DeleteRoomDto,
   DeleteRoomImageDto,
+  SearchAdvancedRoomsDto,
   SearchImageDto,
   SearchMembersDto,
   SearchMessageDto,
@@ -40,6 +41,7 @@ import {
   UpdateRoomThemeDto,
 } from './dtos';
 import {
+  roomAdvancedSelect,
   roomMemberSelect,
   roomMessageSelect,
   roomSelect,
@@ -53,6 +55,69 @@ export class RoomsService {
     @InjectQueue(NAME) private roomsQueue: Queue,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  async searchAdvanced(dto: SearchAdvancedRoomsDto, user: IdentityUser) {
+    const matchPrivateTargetMember: Array<Prisma.RoomWhereInput> = [
+      { roomMembers: { some: { memberId: user.id } } },
+      {
+        isGroup: false,
+        roomMembers: {
+          some: {
+            OR: [
+              {
+                member: {
+                  id: { not: user.id },
+                  displayName: { contains: dto.search },
+                },
+              },
+              {
+                member: {
+                  id: { not: user.id },
+                },
+                nickName: { contains: dto.search },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const matchGroupName: Array<Prisma.RoomWhereInput> = [
+      { roomMembers: { some: { memberId: user.id } } },
+      { isGroup: true, name: { contains: dto.search } },
+    ];
+
+    const [rooms1, rooms2] = await Promise.all([
+      this.prisma.room.findMany({
+        select: roomAdvancedSelect,
+        where: {
+          AND: matchPrivateTargetMember,
+        },
+        take: 5,
+        ...(dto.privateRoomId
+          ? { cursor: { id: dto.privateRoomId }, skip: 1 }
+          : {}),
+        orderBy: {
+          lastActivatedAt: 'desc',
+        },
+      }),
+      this.prisma.room.findMany({
+        select: roomAdvancedSelect,
+        where: {
+          AND: matchGroupName,
+        },
+        take: 5,
+        ...(dto.groupRoomId
+          ? { cursor: { id: dto.groupRoomId }, skip: 1 }
+          : {}),
+        orderBy: {
+          lastActivatedAt: 'desc',
+        },
+      }),
+    ]);
+
+    return _.sortBy([...rooms1, ...rooms2], ['lastActivatedAt'], ['desc']);
+  }
 
   private isRoomMember(
     roomMembers: Awaited<
@@ -625,21 +690,31 @@ export class RoomsService {
       if (!message || message.type === RoomMessageType.None) {
         throw new AppError.NotFound();
       }
+      if (!message.room.isGroup && message.user.id !== user.id) {
+        throw new AppError.AccessDenied();
+      }
 
       const members = await this.getMembersByRoomId({
         roomId: message.room.id,
       });
       if (
-        !(
+        (message.room.isGroup &&
+          !(
+            this.isRoomMember(
+              members,
+              user.id,
+              RoomMemberRole.Administrator,
+              RoomMemberRole.Moderator,
+            ) ||
+            (this.isRoomMember(members, user.id, RoomMemberRole.Member) &&
+              message.user.id === user.id)
+          )) ||
+        (this.isRoomMember(members, user.id, RoomMemberRole.Moderator) &&
           this.isRoomMember(
             members,
-            user.id,
+            message.user.id,
             RoomMemberRole.Administrator,
-            RoomMemberRole.Moderator,
-          ) ||
-          (this.isRoomMember(members, user.id, RoomMemberRole.Member) &&
-            message.user.id === user.id)
-        )
+          ))
       ) {
         throw new AppError.AccessDenied();
       }
@@ -772,7 +847,6 @@ export class RoomsService {
     RoomMessageType.Image,
     RoomMessageType.Audios,
     RoomMessageType.Videos,
-    RoomMessageType,
   ];
 
   isRoomMessageFileTypes(type: RoomMessageType) {

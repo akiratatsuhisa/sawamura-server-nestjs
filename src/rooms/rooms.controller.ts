@@ -21,6 +21,7 @@ import { Multer } from 'src/helpers/multer.helper';
 
 import {
   DeleteRoomImageDto,
+  SearchAdvancedRoomsDto,
   SearchImageDto,
   SearchMessageFileDto,
   UpdateRoomImageDto,
@@ -31,6 +32,14 @@ import { RoomsService } from './rooms.service';
 @Controller('rooms')
 export class RoomsController {
   constructor(private roomsService: RoomsService) {}
+
+  @Get('advanced')
+  async searchAdvanced(
+    @Query() dto: SearchAdvancedRoomsDto,
+    @User() user: IdentityUser,
+  ) {
+    return this.roomsService.searchAdvanced(dto, user);
+  }
 
   @Get(':id/:type(photo|cover)')
   @Public()

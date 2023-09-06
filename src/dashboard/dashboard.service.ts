@@ -89,13 +89,13 @@ export class DashboardService {
         ({ type }) => this.roomsService.isRoomMessageFileTypes(type),
       );
 
-      const countFiles = _.reduce(
-        dataFiles,
-        (count, data) => {
+      const otherCounts = _(dataFiles)
+        .map((data) => {
           if (!_.isArray(data.content) || !data.content.length) {
-            return count;
+            return { type: data.type, count: 0 };
           }
-          const length = _(data.content)
+
+          const count = _(data.content)
             .filter(
               (o) =>
                 _.isObject(o) &&
@@ -104,16 +104,38 @@ export class DashboardService {
             )
             .value().length;
 
-          return count + length;
-        },
-        0,
-      );
+          return { type: data.type, count };
+        })
+        .groupBy((data) =>
+          data.type === RoomMessageType.Image ||
+          data.type === RoomMessageType.Images
+            ? RoomMessageType.Images
+            : data.type,
+        )
+        .map((values, key) => [
+          `count${key}`,
+          _.reduce(
+            values,
+            (total, value) => total + (value as { count: number }).count,
+            0,
+          ),
+        ])
+        .fromPairs()
+        .value();
 
       return {
         label: date.format('YYYY-MM'),
         value: date.valueOf(),
         countMessages: dataMessages.length,
-        countFiles,
+        ...Object.assign(
+          {
+            [`count${RoomMessageType.Images}`]: 0,
+            [`count${RoomMessageType.Audios}`]: 0,
+            [`count${RoomMessageType.Videos}`]: 0,
+            [`count${RoomMessageType.Files}`]: 0,
+          },
+          otherCounts,
+        ),
       };
     }).reverse();
   }

@@ -3,7 +3,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["orderByNulls"]
+  previewFeatures = ["fullTextSearch", "orderByNulls"]
 }
 
 datasource db {

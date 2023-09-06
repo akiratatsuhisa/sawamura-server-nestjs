@@ -1,8 +1,19 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class SearchAdvancedRoomsDto {
   @IsString()
   @IsNotEmpty()
+  search: string;
+
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   @IsOptional()
-  search?: string;
+  privateRoomId?: string;
+
+  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  groupRoomId?: string;
 }
