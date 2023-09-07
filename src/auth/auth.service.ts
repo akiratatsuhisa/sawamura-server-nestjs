@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
 import { VerificationTokenType } from '@prisma/client';
 import { compare, genSalt, hash } from 'bcrypt';
+import { Cache } from 'cache-manager';
 import _ from 'lodash';
 import moment from 'moment';
-import path from 'path';
 import { AppError } from 'src/common/errors';
+import { AUTH_CONTANTS } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileUtilsService } from 'src/file-utils/file-utils.service';
 import { IFile } from 'src/helpers/file.interface';
@@ -46,6 +47,7 @@ export class AuthService {
     private materialDesignService: MaterialDesignService,
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async updateSecurityStamp(
@@ -425,7 +427,11 @@ export class AuthService {
     });
   }
 
-  async getImage(dto: SearchImageDto) {
+  private getImageCacheKey(username: string, type: 'photo' | 'cover') {
+    return `user:${username}:${type}`;
+  }
+
+  async getImageLink(dto: SearchImageDto) {
     const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
 
     const user = await this.usersService.findByUnique({
@@ -436,10 +442,11 @@ export class AuthService {
       throw new AppError.NotFound();
     }
 
-    const { buffer } = await this.dropboxService.fileDownload(user[fieldName]);
-    const mimeType = 'image/' + path.extname(user[fieldName])?.substring(1);
-
-    return { mimeType, buffer };
+    return this.cacheManager.wrap(
+      this.getImageCacheKey(dto.username, dto.type),
+      () => this.dropboxService.getTemporaryLink(user[fieldName]),
+      AUTH_CONTANTS.CACHE_TIME,
+    );
   }
 
   async updateImage(image: IFile, dto: UpdateImageDto, user: IdentityUser) {
@@ -449,6 +456,7 @@ export class AuthService {
       path: user.id,
       mode: { '.tag': 'overwrite' },
     });
+    await this.cacheManager.del(this.getImageCacheKey(user.username, dto.type));
 
     const theme = dto.theme
       ? await this.materialDesignService.generateThemeFromImage(image)
@@ -568,29 +576,31 @@ export class AuthService {
         birthDate,
         salary,
       },
-      photoResult,
-      coverResult,
+      photoSrc,
+      coverSrc,
     ] = await Promise.all([
       this.usersService.findByUniqueWithDetail({
         username,
       }),
-      this.getImage({ username, type: 'photo' }).catch(() =>
+      this.getImageLink({ username, type: 'photo' }).catch(() =>
         Promise.resolve(null),
       ),
-      this.getImage({ username, type: 'cover' }).catch(() =>
+      this.getImageLink({ username, type: 'cover' }).catch(() =>
         Promise.resolve(null),
       ),
     ]);
 
-    const prefix = `data:image/png;base64,`;
+    /**
+     * @deprecated old code for base64 downloadImage
+     */
+    // const prefix = `data:image/png;base64,`;
+    // const photoSrc = _.isNull(photoResult)
+    //   ? null
+    //   : `${prefix}${photoResult.buffer.toString('base64')}`;
 
-    const photoSrc = _.isNull(photoResult)
-      ? null
-      : `${prefix}${photoResult.buffer.toString('base64')}`;
-
-    const coverSrc = _.isNull(photoResult)
-      ? null
-      : `${prefix}${coverResult.buffer.toString('base64')}`;
+    // const coverSrc = _.isNull(photoResult)
+    //   ? null
+    //   : `${prefix}${coverResult.buffer.toString('base64')}`;
 
     const html = await this.fileUtilsService.renderPdf('profile', {
       exportDate: `${moment().utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,

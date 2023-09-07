@@ -4,8 +4,9 @@ import {
   Process,
   Processor,
 } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Logger } from '@nestjs/common';
 import { Job } from 'bull';
+import { Cache } from 'cache-manager';
 import { unlink } from 'fs/promises';
 import _ from 'lodash';
 import { DropboxService } from 'src/dropbox/dropbox.service';
@@ -32,6 +33,7 @@ export class RoomsConsumer {
     private dropboxService: DropboxService,
     private roomsGateway: RoomsGateway,
     private materialDesignService: MaterialDesignService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   @Process(QUEUE_ROOM_EVENTS.UPDATE_ROOM_IMAGE)
@@ -49,6 +51,7 @@ export class RoomsConsumer {
       path: room.id,
       mode: { '.tag': 'overwrite' },
     });
+    await this.cacheManager.del(`room:${dto.id}:${dto.type}`);
 
     const theme = dto.theme
       ? await this.materialDesignService.generateThemeFromImage(image)

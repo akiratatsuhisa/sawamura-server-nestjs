@@ -43,16 +43,8 @@ export class RoomsController {
 
   @Get(':id/:type(photo|cover)')
   @Public()
-  async getImage(
-    @Query() dto: SearchImageDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { mimeType, buffer } = await this.roomsService.getImage(dto);
-
-    res.set({
-      'Content-Type': mimeType,
-    });
-    return new StreamableFile(buffer);
+  async getImageLink(@Query() dto: SearchImageDto) {
+    return this.roomsService.getImageLink(dto);
   }
 
   @Put(':id/:type(photo|cover)')

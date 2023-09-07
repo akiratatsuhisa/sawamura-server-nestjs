@@ -5,7 +5,6 @@ import { Prisma, RoomMemberRole, RoomMessageType } from '@prisma/client';
 import { Queue } from 'bull';
 import { Cache } from 'cache-manager';
 import _ from 'lodash';
-import path from 'path';
 import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
@@ -341,7 +340,7 @@ export class RoomsService {
     });
   }
 
-  async getImage(dto: SearchImageDto) {
+  async getImageLink(dto: SearchImageDto) {
     const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
 
     const room = await this.getRoomById({ id: dto.id });
@@ -349,11 +348,11 @@ export class RoomsService {
       throw new AppError.NotFound();
     }
 
-    const { buffer } = await this.dropboxService.fileDownload(room[fieldName]);
-
-    const mimeType = 'image/' + path.extname(room[fieldName])?.substring(1);
-
-    return { mimeType, buffer };
+    return this.cacheManager.wrap(
+      `room:${dto.id}:${dto.type}`,
+      () => this.dropboxService.getTemporaryLink(room[fieldName]),
+      MESSAGE_FILE.CACHE_TIME,
+    );
   }
 
   async updateImage(image: IFile, dto: UpdateRoomImageDto, user: IdentityUser) {

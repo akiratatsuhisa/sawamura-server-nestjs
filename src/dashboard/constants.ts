@@ -1,6 +1,6 @@
 export const SOCKET_DASHBOARD_EVENTS = {
   READ_STORAGE_DROPBOX: 'read:storage:dropbox',
-  READ_STORAGE_CACHE: 'read:storage:cahe',
+  READ_STORAGE_CACHE: 'read:storage:cache',
 
   READ_COUNT_USERS: 'read:count:users',
   LIST_ROLE: 'list:role',

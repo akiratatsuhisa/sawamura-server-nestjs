@@ -112,16 +112,8 @@ export class AuthController {
 
   @Get(':type(photo|cover)')
   @Public()
-  async getImage(
-    @Query() dto: SearchImageDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { mimeType, buffer } = await this.authService.getImage(dto);
-
-    res.set({
-      'Content-Type': mimeType,
-    });
-    return new StreamableFile(buffer);
+  async getImageLink(@Query() dto: SearchImageDto) {
+    return this.authService.getImageLink(dto);
   }
 
   @Put(':type(photo|cover)')

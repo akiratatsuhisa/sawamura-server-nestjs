@@ -1,3 +1,8 @@
+export namespace AUTH_CONTANTS {
+  // 3 hours as milliseconds
+  export const CACHE_TIME = 10_800_000;
+}
+
 export namespace MESSAGE_FILE {
   // 3 hours as milliseconds
   export const CACHE_TIME = 10_800_000;
