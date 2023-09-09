@@ -15,6 +15,7 @@ import { MaterialDesignModule } from './material-design/material-design.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OauthModule } from './oauth/oauth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProfileUsersModule } from './profile-users/profile-users.module';
 import { RedisModule } from './redis/redis.module';
 import { RolesModule } from './roles/roles.module';
 import { RoomsModule } from './rooms/rooms.module';
@@ -39,6 +40,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     PrismaModule,
     RedisModule,
     AuthModule,
+    OauthModule,
     WsAuthModule,
     DropboxModule,
     SendgridModule,
@@ -52,7 +54,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     RoomsModule,
     NotificationsModule,
     TodosModule,
-    OauthModule,
+    ProfileUsersModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService, AppGateway],

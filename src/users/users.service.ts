@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import _ from 'lodash';
 import { SECURITY_STAMPS_REDIS_KEY } from 'src/auth/constants';
-import { IdentityUser } from 'src/auth/decorators';
 import { EmailState, makeHasState, SearchMatch } from 'src/common/enum';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
@@ -10,19 +9,8 @@ import { Security } from 'src/helpers/security.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
-import {
-  ChangeUserRelationshipDto,
-  ChangeUserRolesDto,
-  SearchAdvancedUsersDto,
-  SearchUsersDto,
-  UserRelationshipState,
-} from './dtos';
-import {
-  userAdvancedSelect,
-  userDetailSelect,
-  userProfileSelect,
-  userSelect,
-} from './users.factory';
+import { ChangeUserRolesDto, SearchUsersDto } from './dtos';
+import { userDetailSelect, userSelect } from './users.factory';
 
 @Injectable()
 export class UsersService {
@@ -30,79 +18,6 @@ export class UsersService {
     private prisma: PrismaService,
     private redisService: RedisService,
   ) {}
-
-  async searchAdvanced(dto: SearchAdvancedUsersDto) {
-    return this.prisma.user.findMany({
-      select: userAdvancedSelect,
-      where: {
-        OR: dto.search
-          ? [
-              { username: { contains: dto.search } },
-              { displayName: { contains: dto.search } },
-              { firstName: { contains: dto.search } },
-              { lastName: { contains: dto.search } },
-            ]
-          : undefined,
-      },
-    });
-  }
-
-  async searchProfileUnique(idOrUsername: Prisma.UserWhereUniqueInput) {
-    return this.prisma.user.findUnique({
-      select: userProfileSelect,
-      where: idOrUsername,
-    });
-  }
-
-  async isFollowingUser(
-    idOrUsername: Prisma.UserWhereUniqueInput,
-    user: IdentityUser,
-  ) {
-    const count = await this.prisma.relationship.count({
-      where: { follower: { id: user.id }, followee: idOrUsername },
-    });
-    return !!count;
-  }
-
-  async changeRelationship(dto: ChangeUserRelationshipDto, user: IdentityUser) {
-    if (dto.username === user.username) {
-      throw new AppError.BadDto();
-    }
-
-    const followee = await this.prisma.user.findUnique({
-      select: { id: true },
-      where: { username: dto.username },
-    });
-    if (!followee) {
-      return new AppError.BadDto();
-    }
-
-    const follower = user;
-    const relation = await this.prisma.relationship.findUnique({
-      select: { id: true },
-      where: {
-        followerId_followeeId: {
-          followerId: follower.id,
-          followeeId: followee.id,
-        },
-      },
-    });
-
-    if (
-      (relation && dto.relationshipState === UserRelationshipState.Follow) ||
-      (!relation && dto.relationshipState === UserRelationshipState.Unfollow)
-    ) {
-      throw new AppError.BadDto();
-    }
-
-    if (dto.relationshipState === UserRelationshipState.Unfollow) {
-      await this.prisma.relationship.delete({ where: { id: relation.id } });
-    } else {
-      await this.prisma.relationship.create({
-        data: { followerId: follower.id, followeeId: followee.id },
-      });
-    }
-  }
 
   async findAll(dto: SearchUsersDto) {
     const AND: Array<Prisma.UserWhereInput> = [];

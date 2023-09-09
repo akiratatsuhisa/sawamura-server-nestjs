@@ -431,20 +431,20 @@ export class AuthService {
     return `user:${username}:${type}`;
   }
 
-  async getImageLink(dto: SearchImageDto) {
+  async getImageLink(dto: SearchImageDto, user: IdentityUser) {
     const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
 
-    const user = await this.usersService.findByUnique({
-      username: dto.username,
+    const result = await this.usersService.findByUnique({
+      username: user.username,
     });
 
-    if (!user) {
+    if (!result) {
       throw new AppError.NotFound();
     }
 
     return this.cacheManager.wrap(
-      this.getImageCacheKey(dto.username, dto.type),
-      () => this.dropboxService.getTemporaryLink(user[fieldName]),
+      this.getImageCacheKey(user.username, dto.type),
+      () => this.dropboxService.getTemporaryLink(result[fieldName]),
       AUTH_CONTANTS.CACHE_TIME,
     );
   }
@@ -562,10 +562,11 @@ export class AuthService {
     });
   }
 
-  async profilePdf(username: string): Promise<Buffer> {
+  async profilePdf(user: IdentityUser): Promise<Buffer> {
     const [
       {
         id,
+        username,
         email,
         emailConfirmed,
         userRoles,
@@ -580,12 +581,12 @@ export class AuthService {
       coverSrc,
     ] = await Promise.all([
       this.usersService.findByUniqueWithDetail({
-        username,
+        username: user.username,
       }),
-      this.getImageLink({ username, type: 'photo' }).catch(() =>
+      this.getImageLink({ type: 'photo' }, user).catch(() =>
         Promise.resolve(null),
       ),
-      this.getImageLink({ username, type: 'cover' }).catch(() =>
+      this.getImageLink({ type: 'cover' }, user).catch(() =>
         Promise.resolve(null),
       ),
     ]);

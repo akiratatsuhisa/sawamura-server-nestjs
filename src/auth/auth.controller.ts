@@ -32,7 +32,6 @@ import {
   RefreshTokenDto,
   RegisterDto,
   ResetPasswordDto,
-  SearchImageDto,
   UpdateEmailDto,
   UpdateImageDto,
   UpdatePasswordDto,
@@ -110,12 +109,6 @@ export class AuthController {
     return this.authService.revoke(token, userId, ip);
   }
 
-  @Get(':type(photo|cover)')
-  @Public()
-  async getImageLink(@Query() dto: SearchImageDto) {
-    return this.authService.getImageLink(dto);
-  }
-
   @Put(':type(photo|cover)')
   @UseInterceptors(FileInterceptor('image'))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -191,7 +184,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @User() user: IdentityUser,
   ) {
-    const buffer = await this.authService.profilePdf(user.username);
+    const buffer = await this.authService.profilePdf(user);
 
     res.set({
       'Content-Type': 'application/pdf',
