@@ -4,6 +4,7 @@ import { Cache } from 'cache-manager';
 import _ from 'lodash';
 import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
+import { PaginationService } from 'src/common/services';
 import { AUTH_CONTANTS } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,9 +13,15 @@ import {
   ChangeUserRelationshipDto,
   SearchAdvancedUsersDto,
   SearchUserImageDto,
+  SearchUserRelationshipDto,
+  SearchUserRelationshipType,
   UserRelationshipState,
 } from './dtos';
-import { profileUserSelect, userAdvancedSelect } from './profile-users.factory';
+import {
+  profileUserRelationSelect,
+  profileUserSelect,
+  userAdvancedSelect,
+} from './profile-users.factory';
 
 @Injectable()
 export class ProfileUsersService {
@@ -73,6 +80,88 @@ export class ProfileUsersService {
       where: { follower: { id: user.id }, followee: idOrUsername },
     });
     return !!count;
+  }
+
+  private async mapRelationshipsAsUserWithState(
+    relationshipsAsUser: Array<{
+      id: string;
+      user: {
+        id: string;
+        username: string;
+        displayName: string;
+        biography: string;
+        photoUrl: string;
+      };
+    }>,
+    identityUser: IdentityUser,
+  ) {
+    const followingUserIds = _.map(
+      await this.prisma.relationship.findMany({
+        select: { followeeId: true },
+        where: {
+          followerId: identityUser.id,
+          followeeId: {
+            in: _.map(relationshipsAsUser, ({ user }) => user.id),
+          },
+        },
+      }),
+      'followeeId',
+    );
+
+    return _.map(relationshipsAsUser, ({ id, user }) => ({
+      id,
+      user,
+      state:
+        user.id === identityUser.id
+          ? 'none'
+          : _.some(followingUserIds, (id) => id === user.id)
+          ? 'following'
+          : 'noFollow',
+    }));
+  }
+
+  async searchRelationships(
+    dto: SearchUserRelationshipDto,
+    user: IdentityUser,
+  ) {
+    const where: Prisma.RelationshipWhereInput =
+      dto.type === SearchUserRelationshipType.Following
+        ? {
+            follower: { username: dto.username },
+          }
+        : dto.type === SearchUserRelationshipType.Followers
+        ? {
+            followee: { username: dto.username },
+          }
+        : {
+            follower: {
+              followees: {
+                some: {
+                  followerId: user.id,
+                },
+              },
+            },
+            followee: {
+              username: dto.username,
+            },
+          };
+
+    const relationships = await this.prisma.relationship.findMany({
+      select: profileUserRelationSelect,
+      where,
+      orderBy: { createdAt: 'desc' },
+      ...PaginationService.makePaginationCursor(dto),
+    });
+
+    const relationsAsUser = _.map(relationships, (relationship) => ({
+      id: relationship.id,
+      user:
+        dto.type === SearchUserRelationshipType.Following
+          ? relationship.followee
+          : relationship.follower,
+    }));
+
+    return this.mapRelationshipsAsUserWithState(relationsAsUser, user);
   }
 
   async changeRelationship(dto: ChangeUserRelationshipDto, user: IdentityUser) {

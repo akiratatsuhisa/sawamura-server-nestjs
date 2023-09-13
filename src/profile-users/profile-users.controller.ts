@@ -17,10 +17,12 @@ import {
   ChangeUserRelationshipDto,
   SearchAdvancedUsersDto,
   SearchUserImageDto,
+  SearchUserRelationshipDto,
+  SearchUserRelationshipType,
 } from './dtos';
 import { ProfileUsersService } from './profile-users.service';
 
-@Controller('users')
+@Controller('profileUsers')
 export class ProfileUsersController {
   constructor(private profileUsersService: ProfileUsersService) {}
 
@@ -29,7 +31,7 @@ export class ProfileUsersController {
     return this.profileUsersService.searchAdvanced(dto);
   }
 
-  @Get('profile/:username')
+  @Get(':username')
   async searchProfileByUsername(
     @Param('username') username: string,
     @Res({ passthrough: true }) res: Response,
@@ -49,13 +51,23 @@ export class ProfileUsersController {
     return result;
   }
 
-  @Get('profile/:username/:type(photo|cover)')
+  @Get(':username/:type(photo|cover)')
   @Public()
   async getImageLink(@Query() dto: SearchUserImageDto) {
     return this.profileUsersService.getImageLink(dto);
   }
 
-  @Patch('profile/:username/relationship')
+  @Get(
+    `:username/relationships/:type(${SearchUserRelationshipType.FollowersYouFollow}|${SearchUserRelationshipType.Followers}|${SearchUserRelationshipType.Following})`,
+  )
+  async searchRelationships(
+    @Query() dto: SearchUserRelationshipDto,
+    @User() user: IdentityUser,
+  ) {
+    return this.profileUsersService.searchRelationships(dto, user);
+  }
+
+  @Patch(':username/relationships')
   @HttpCode(HttpStatus.NO_CONTENT)
   async changeRelationship(
     @Body() dto: ChangeUserRelationshipDto,

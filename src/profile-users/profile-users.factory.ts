@@ -38,3 +38,26 @@ export const profileUserSelect = Prisma.validator<Prisma.UserSelect>()({
     },
   },
 });
+
+export const profileUserRelationSelect =
+  Prisma.validator<Prisma.RelationshipSelect>()({
+    id: true,
+    follower: {
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        biography: true,
+        photoUrl: true,
+      },
+    },
+    followee: {
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        biography: true,
+        photoUrl: true,
+      },
+    },
+  });
