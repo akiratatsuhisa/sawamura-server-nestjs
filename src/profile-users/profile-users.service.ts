@@ -1,3 +1,4 @@
+import { GraphService } from '@akiratatsuhisa/sawamura-graph-module';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -27,9 +28,10 @@ import {
 @Injectable()
 export class ProfileUsersService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prisma: PrismaService,
     private dropboxService: DropboxService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private graphService: GraphService,
   ) {}
 
   async searchAdvanced(dto: SearchAdvancedUsersDto) {
@@ -175,11 +177,11 @@ export class ProfileUsersService {
       where: { username: dto.username },
     });
     if (!followee) {
-      return new AppError.BadDto();
+      throw new AppError.BadDto();
     }
 
     const follower = user;
-    const relation = await this.prisma.relationship.findUnique({
+    const relationship = await this.prisma.relationship.findUnique({
       select: { id: true },
       where: {
         followerId_followeeId: {
@@ -190,18 +192,37 @@ export class ProfileUsersService {
     });
 
     if (
-      (relation && dto.relationshipState === UserRelationshipState.Follow) ||
-      (!relation && dto.relationshipState === UserRelationshipState.Unfollow)
+      (relationship &&
+        dto.relationshipState === UserRelationshipState.Follow) ||
+      (!relationship &&
+        dto.relationshipState === UserRelationshipState.Unfollow)
     ) {
       throw new AppError.BadDto();
     }
 
     if (dto.relationshipState === UserRelationshipState.Unfollow) {
-      await this.prisma.relationship.delete({ where: { id: relation.id } });
+      await this.prisma.relationship.delete({ where: { id: relationship.id } });
+      this.graphService.silentCall(() =>
+        this.graphService.user.deleteFollow({
+          followerId: follower.id,
+          followeeId: followee.id,
+        }),
+      );
     } else {
-      await this.prisma.relationship.create({
+      const relationship = await this.prisma.relationship.create({
         data: { followerId: follower.id, followeeId: followee.id },
       });
+      this.graphService.silentCall(() =>
+        this.graphService.user.upsertFollow({
+          followerId: follower.id,
+          followeeId: followee.id,
+          relationshipId: relationship.id,
+          relationship: {
+            createdAt: relationship.createdAt,
+            updatedAt: relationship.updatedAt,
+          },
+        }),
+      );
     }
   }
 }

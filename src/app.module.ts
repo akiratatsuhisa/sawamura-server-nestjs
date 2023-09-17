@@ -1,3 +1,4 @@
+import { GraphModule } from '@akiratatsuhisa/sawamura-graph-module';
 import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
@@ -40,6 +41,9 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     }),
     PrismaModule,
     RedisModule,
+    GraphModule.register({
+      isGlobal: true,
+    }),
     AuthModule,
     OauthModule,
     WsAuthModule,

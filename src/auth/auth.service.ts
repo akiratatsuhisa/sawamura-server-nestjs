@@ -1,3 +1,4 @@
+import { GraphService } from '@akiratatsuhisa/sawamura-graph-module';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -38,8 +39,10 @@ import {
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prisma: PrismaService,
     private redisService: RedisService,
+    private graphService: GraphService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private sendgridService: SendgridService,
@@ -48,7 +51,6 @@ export class AuthService {
     private materialDesignService: MaterialDesignService,
     private usersService: UsersService,
     private verificationTokensService: VerificationTokensService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async updateSecurityStamp(
@@ -173,13 +175,23 @@ export class AuthService {
       select: {
         id: true,
         username: true,
+        displayName: true,
         email: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
     if (dto.email) {
       await this.sendConfirmEmail(result);
     }
+
+    this.graphService.silentCall(() =>
+      this.graphService.user.upsert(
+        result.id,
+        _.pick(result, ['username', 'displayName', 'createdAt', 'updatedAt']),
+      ),
+    );
 
     return result;
   }
@@ -190,6 +202,7 @@ export class AuthService {
     });
 
     await this.prisma.user.delete({ where: { id: user.id } });
+    this.graphService.silentCall(() => this.graphService.user.delete(user.id));
   }
 
   async confirmEmail(dto: ConfirmEmailDto) {
