@@ -23,7 +23,7 @@ export const SearchUsersSort = {
 };
 
 export type SearchUsersSort =
-  typeof SearchUsersSort[keyof typeof SearchUsersSort];
+  (typeof SearchUsersSort)[keyof typeof SearchUsersSort];
 
 export class SearchUsersSortDto {
   @IsIn(_.values(SearchUsersSort))

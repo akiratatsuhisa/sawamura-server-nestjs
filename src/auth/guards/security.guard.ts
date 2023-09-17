@@ -7,7 +7,10 @@ import { IS_PUBLIC_KEY } from '../decorators';
 
 @Injectable()
 export class SecurityGuard implements CanActivate {
-  constructor(private reflector: Reflector, private authService: AuthService) {}
+  constructor(
+    private reflector: Reflector,
+    private authService: AuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { user } = context.switchToHttp().getRequest();
