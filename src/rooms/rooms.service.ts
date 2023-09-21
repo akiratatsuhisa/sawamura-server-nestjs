@@ -10,7 +10,7 @@ import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
 import { MESSAGE_FILE } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
-import { getFileExtension, IFile } from 'src/helpers/file-type.helper';
+import { FileType, IFile } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -817,7 +817,7 @@ export class RoomsService {
     const filesWithDetail = await Promise.all(
       files.map(async ({ name, type, data }) => {
         const mime = type;
-        const extension = getFileExtension(name);
+        const extension = FileType.getFileExtension(name);
 
         return {
           name,

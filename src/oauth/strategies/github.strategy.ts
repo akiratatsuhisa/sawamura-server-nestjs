@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport-github';
 import { AppError } from 'src/common/errors';
-import { Oauth } from 'src/helpers/oauth.helper';
+import { Oauth } from 'src/helpers';
 
 import { IGithubProfile } from '../interfaces';
 import { OauthService } from '../oauth.service';

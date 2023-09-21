@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Jwt } from 'src/helpers/jwt.helper';
+import { Jwt } from 'src/helpers';
 
 export class IdentityUser {
   public id: string;

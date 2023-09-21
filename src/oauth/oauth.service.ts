@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
-import { randomBytes } from 'crypto';
 import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
 import { IdentityUser } from 'src/auth/identity.class';
 import { AppError } from 'src/common/errors';
-import { Security } from 'src/helpers/security.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { userDetailSelect } from 'src/users/users.factory';
 import { UsersService } from 'src/users/users.service';
+import { Random } from 'src/utils';
 import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
 import { LinkProviderDto, UnlinkProviderDto } from './dtos';
@@ -54,7 +53,7 @@ export class OauthService {
   }
 
   private generateUsername() {
-    return `user-oauth:${randomBytes(6).toString('base64')}`;
+    return `oauth_${Random.generateWords(10, false)}`;
   }
 
   async validateGoogleProvider(profile: IGoogleProfile, token?: string) {
@@ -106,7 +105,7 @@ export class OauthService {
             },
           ],
         },
-        securityStamp: Security.generateSecurityStamp(),
+        securityStamp: Random.generateSecurityStamp(),
       },
       select: userDetailSelect,
     });
@@ -156,7 +155,7 @@ export class OauthService {
             },
           ],
         },
-        securityStamp: Security.generateSecurityStamp(),
+        securityStamp: Random.generateSecurityStamp(),
       },
       select: userDetailSelect,
     });

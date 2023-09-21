@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AppError } from 'src/common/errors';
-import { Oauth } from 'src/helpers/oauth.helper';
+import { Oauth } from 'src/helpers';
 
 import { IGoogleProfile } from '../interfaces';
 import { OauthService } from '../oauth.service';

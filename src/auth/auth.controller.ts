@@ -22,7 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 import { AppError } from 'src/common/errors';
 import { COMMON_FILE } from 'src/constants';
-import { Multer } from 'src/helpers/multer.helper';
+import { Multer } from 'src/helpers';
 
 import { AuthService } from './auth.service';
 import { IdentityUser, Public, User } from './decorators';

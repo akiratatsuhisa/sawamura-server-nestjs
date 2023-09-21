@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { diskStorage } from 'multer';
 import path from 'path';
 import { AppError } from 'src/common/errors';
-import { IFile } from 'src/helpers/file.interface';
+import { IFile } from 'src/helpers';
 import { v4 as uuidv4 } from 'uuid';
 
 export namespace Multer {

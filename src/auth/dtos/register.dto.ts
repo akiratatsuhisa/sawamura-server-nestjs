@@ -12,13 +12,13 @@ import { AUTH_REGEX } from '../constants';
 
 export class RegisterDto {
   @Matches(AUTH_REGEX.USERNAME)
-  @MaxLength(255)
-  @MinLength(3)
+  @MaxLength(16)
+  @MinLength(4)
   @IsString()
   @IsNotEmpty()
   username: string;
 
-  @MaxLength(128)
+  @MaxLength(64)
   @IsString()
   @IsNotEmpty()
   displayName: string;

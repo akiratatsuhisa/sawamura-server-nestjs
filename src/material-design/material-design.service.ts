@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AxiosInstance, create } from 'axios';
 import { readFile } from 'fs/promises';
-import { IFile } from 'src/helpers/file.interface';
+import { IFile } from 'src/helpers';
 
 import { ThemeResponse } from './material-design.interfaces';
 

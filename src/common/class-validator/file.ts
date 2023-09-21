@@ -1,5 +1,5 @@
 import { buildMessage, ValidateBy, ValidationOptions } from 'class-validator';
-import { importFileType } from 'src/helpers/file-type.helper';
+import { FileType } from 'src/helpers';
 
 export function isFile(value: unknown) {
   return Buffer.isBuffer(value);
@@ -54,7 +54,7 @@ export async function isFileMime(value: Buffer, mimeRegex: RegExp | string) {
     mimeRegex = new RegExp(mimeRegex, 'i');
   }
 
-  const { fileTypeFromBuffer } = await importFileType();
+  const { fileTypeFromBuffer } = await FileType.importFileType();
 
   const result = await fileTypeFromBuffer(value);
 

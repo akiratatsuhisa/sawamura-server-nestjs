@@ -5,9 +5,9 @@ import { SECURITY_STAMPS_REDIS_KEY } from 'src/auth/constants';
 import { EmailState, makeHasState, SearchMatch } from 'src/common/enum';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
-import { Security } from 'src/helpers/security.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
+import { Random } from 'src/utils';
 
 import { ChangeUserRolesDto, SearchUsersDto } from './dtos';
 import { userDetailSelect, userSelect } from './users.factory';
@@ -136,7 +136,7 @@ export class UsersService {
         where: {
           id: user.id,
         },
-        data: { securityStamp: Security.generateSecurityStamp() },
+        data: { securityStamp: Random.generateSecurityStamp() },
       });
     });
   }

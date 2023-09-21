@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { DropboxModule } from 'src/dropbox/dropbox.module';
-import { Multer } from 'src/helpers/multer.helper';
+import { Multer } from 'src/helpers';
 import { MaterialDesignModule } from 'src/material-design/material-design.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 

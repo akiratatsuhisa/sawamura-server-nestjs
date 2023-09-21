@@ -17,7 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { IdentityUser, Public, User } from 'src/auth/decorators';
 import { COMMON_FILE } from 'src/constants';
-import { Multer } from 'src/helpers/multer.helper';
+import { Multer } from 'src/helpers';
 
 import {
   DeleteRoomImageDto,

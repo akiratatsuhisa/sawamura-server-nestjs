@@ -13,13 +13,13 @@ import { AppError } from 'src/common/errors';
 import { AUTH_CONTANTS } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileUtilsService } from 'src/file-utils/file-utils.service';
-import { IFile } from 'src/helpers/file.interface';
-import { Security } from 'src/helpers/security.helper';
+import { IFile } from 'src/helpers';
 import { MaterialDesignService } from 'src/material-design/material-design.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { UsersService } from 'src/users/users.service';
+import { Random } from 'src/utils';
 import { VerificationTokensService } from 'src/verification-tokens/verification-tokens.service';
 
 import { SECURITY_STAMPS_REDIS_KEY } from './constants';
@@ -70,7 +70,7 @@ export class AuthService {
       where: {
         id: typeof userOrUserId === 'string' ? userOrUserId : userOrUserId.id,
       },
-      data: { securityStamp: Security.generateSecurityStamp() },
+      data: { securityStamp: Random.generateSecurityStamp() },
       select: { id: true },
     });
   }
@@ -170,7 +170,7 @@ export class AuthService {
             },
           ],
         },
-        securityStamp: Security.generateSecurityStamp(),
+        securityStamp: Random.generateSecurityStamp(),
       },
       select: {
         id: true,
@@ -525,7 +525,7 @@ export class AuthService {
     await this.prisma.user.update({
       data: {
         password: await this.hashPassword(dto.newPassword),
-        securityStamp: Security.generateSecurityStamp(),
+        securityStamp: Random.generateSecurityStamp(),
       },
       where: { id: userId },
     });

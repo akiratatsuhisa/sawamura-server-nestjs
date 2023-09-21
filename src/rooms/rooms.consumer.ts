@@ -11,7 +11,7 @@ import { Cache } from 'cache-manager';
 import { unlink } from 'fs/promises';
 import _ from 'lodash';
 import { DropboxService } from 'src/dropbox/dropbox.service';
-import { IFile } from 'src/helpers/file.interface';
+import { IFile } from 'src/helpers';
 import { MaterialDesignService } from 'src/material-design/material-design.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
