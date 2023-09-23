@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import {
   Body,
   Controller,
@@ -86,7 +87,7 @@ export class AuthController {
     @Ip() ip: string,
   ) {
     if (!token) {
-      throw new AppError.Argument(`Not Found Token in header`);
+      throw new AppError.Argument(messages.error.notFoundToken);
     }
 
     return this.authService.refreshToken(token, ip);
@@ -103,7 +104,7 @@ export class AuthController {
     const token = dto.value ?? headerToken;
 
     if (!token) {
-      throw new AppError.Argument(`Not Found Token in header or body`);
+      throw new AppError.Argument(messages.error.notFoundToken);
     }
 
     return this.authService.revoke(token, userId, ip);

@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -40,7 +41,7 @@ export class GithubStrategy extends PassportStrategy(Strategy) {
       );
 
       if (!user) {
-        throw AppError.Messages.NotFoundError;
+        throw messages.error.notFound;
       }
 
       return user;

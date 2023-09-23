@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
 import moment from 'moment';
@@ -32,7 +33,7 @@ export class VerificationTokensService {
       verificationToken.revoked ||
       moment(verificationToken.expires).isSameOrBefore()
     ) {
-      throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
+      throw new AppError.Argument(messages.error.verificationToken);
     }
 
     return this.prisma.verificationToken.update({
@@ -53,7 +54,7 @@ export class VerificationTokensService {
       verificationToken.revoked ||
       moment(verificationToken.expires).isSameOrBefore()
     ) {
-      throw new AppError.Argument(AppError.Messages.InvalidVerificationToken);
+      throw new AppError.Argument(messages.error.verificationToken);
     }
 
     return verificationToken;

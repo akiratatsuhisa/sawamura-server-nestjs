@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { HttpStatus } from '@nestjs/common';
 import { EVENTS } from 'src/ws-auth/constants';
 
@@ -6,17 +7,26 @@ export namespace AppError {
     protected _isDetail = true;
     protected _event = EVENTS.EXCEPTION;
 
-    data?: Record<string, unknown> | Array<unknown>;
-    errors?: Record<string, unknown> | Array<unknown>;
+    // localization message params
+    private params?: Record<string, unknown> | Array<unknown>;
+    // request data
+    private data?: Record<string, unknown> | Array<unknown>;
+    // error;
+    private errors?: Record<string, unknown> | Array<unknown>;
 
     constructor(
       public readonly statusCode: number,
-      public message: string = AppError.Messages.UnknownError,
-      public title: string = AppError.Messages.UnknownError,
+      public message: string = messages.error.unknown,
+      public title: string = messages.error.unknown,
     ) {}
 
     setShowDetail(active: boolean) {
       this._isDetail = active;
+      return this;
+    }
+
+    setParams(params: Record<string, unknown> | Array<unknown>) {
+      this.params = params;
       return this;
     }
 
@@ -48,8 +58,9 @@ export namespace AppError {
       body.statusCode = this._isDetail ? this.statusCode : undefined;
       body.title = this._isDetail ? this.title : undefined;
       body.message = this.message;
-      body.data = this._isDetail ? this.data : undefined;
+      body.params = this.params;
       body.errors = this.errors;
+      body.data = this._isDetail ? this.data : undefined;
 
       return body;
     }
@@ -57,8 +68,8 @@ export namespace AppError {
 
   export class Unauthenticated extends BasicError {
     constructor(
-      message: string = AppError.Messages.UnauthenticatedError,
-      title: string = AppError.Messages.UnauthenticatedError,
+      message: string = messages.error.unauthenticated,
+      title: string = messages.error.unauthenticated,
     ) {
       super(HttpStatus.UNAUTHORIZED, message, title);
     }
@@ -66,8 +77,8 @@ export namespace AppError {
 
   export class Unauthorized extends BasicError {
     constructor(
-      message: string = AppError.Messages.UnauthorizedError,
-      title: string = AppError.Messages.UnauthorizedError,
+      message: string = messages.error.unauthorized,
+      title: string = messages.error.unauthorized,
     ) {
       super(HttpStatus.FORBIDDEN, message, title);
     }
@@ -75,8 +86,8 @@ export namespace AppError {
 
   export class AccessDenied extends BasicError {
     constructor(
-      message: string = AppError.Messages.AccessDeninedError,
-      title: string = AppError.Messages.UnauthorizedError,
+      message: string = messages.error.accessDenined,
+      title: string = messages.error.accessDenined,
     ) {
       super(HttpStatus.FORBIDDEN, message, title);
     }
@@ -84,8 +95,8 @@ export namespace AppError {
 
   export class OauthError extends BasicError {
     constructor(
-      message: string = AppError.Messages.UnauthenticatedError,
-      title: string = AppError.Messages.UnauthenticatedError,
+      message: string = messages.error.unauthenticated,
+      title: string = messages.error.unauthenticated,
     ) {
       super(HttpStatus.UNAUTHORIZED, message, title);
     }
@@ -93,8 +104,8 @@ export namespace AppError {
 
   export class NotFound extends BasicError {
     constructor(
-      message: string = AppError.Messages.NotFoundError,
-      title: string = AppError.Messages.NotFoundError,
+      message: string = messages.error.notFound,
+      title: string = messages.error.notFound,
     ) {
       super(HttpStatus.NOT_FOUND, message, title);
     }
@@ -102,8 +113,8 @@ export namespace AppError {
 
   export class BadQuery extends BasicError {
     constructor(
-      message: string = AppError.Messages.BadQueryError,
-      title: string = AppError.Messages.BadQueryError,
+      message: string = messages.error.badQuery,
+      title: string = messages.error.badQuery,
     ) {
       super(HttpStatus.BAD_REQUEST, message, title);
     }
@@ -111,8 +122,8 @@ export namespace AppError {
 
   export class BadDto extends BasicError {
     constructor(
-      message: string = AppError.Messages.BadDtoError,
-      title: string = AppError.Messages.BadDtoError,
+      message: string = messages.error.badDto,
+      title: string = messages.error.badDto,
     ) {
       super(HttpStatus.BAD_REQUEST, message, title);
     }
@@ -120,8 +131,8 @@ export namespace AppError {
 
   export class Argument extends BasicError {
     constructor(
-      message: string = AppError.Messages.ArgumentError,
-      title: string = AppError.Messages.ArgumentError,
+      message: string = messages.error.argument,
+      title: string = messages.error.argument,
     ) {
       super(HttpStatus.BAD_REQUEST, message, title);
     }
@@ -129,34 +140,14 @@ export namespace AppError {
 
   export class Prisma extends BasicError {
     constructor(
-      message: string = AppError.Messages.PrismaError,
-      title: string = AppError.Messages.PrismaError,
+      message: string = messages.error.prisma,
+      title: string = messages.error.prisma,
     ) {
       super(HttpStatus.INTERNAL_SERVER_ERROR, message, title);
     }
   }
 
   export const Messages = {
-    // Common Messages
-    UnknownError: 'Unknown error',
-    NotFoundError: 'Not found',
-    NotFoundEntityError: (entity: string, id: any) =>
-      `Not found ${entity}(${id})`,
-    UnauthenticatedError: 'Unauthenticated',
-    UnauthorizedError: 'Unauthorized',
-    AccessDeninedError: 'Access Denined',
-    DefaultDataError: 'Default Data',
-    BadQueryError: 'Bad Request Query',
-    BadDtoError: 'Bad Request Data',
-    ArgumentError: 'Bad Argument',
-    PrismaError: 'Database Storage Error',
-    InvalidDateFromTo: 'The field from date must less than or equal to date',
-    // Storage Messages
-    FilesUploadFailed:
-      'file(s) upload has failed. Please review the uploaded file(s) or try again',
-    FilesDownloadFailed:
-      'file(s) download has failed. Please review the downloaded file(s) or try again',
-    FilesDeleteFailed: 'file(s) delete has failed. Please try again',
     FilesRequired: 'file(s) is required',
     OverMaxFileSize: (name: string, size: string | number) =>
       `file(${name}) size must be less than or equal ${size}`,
@@ -175,25 +166,5 @@ export namespace AppError {
           ? `width equal ${dimensions.width}, height equal ${dimensions.height}`
           : `width less than or equal ${dimensions.width}, height  less than or equal ${dimensions.height}`
       })`,
-    //Auth Messages
-    InvalidRefreshToken:
-      'The refresh token provided is invalid or has expired. Please log in again to generate a new refresh token',
-    InvalidVerificationToken:
-      'This verification token is invalid or has already been used. Please request a new one if you need to verify your account again',
-    InvalidForgotPassword:
-      "Not found username or account's email isn't verified.",
-    SameEmailAddressProvided: 'Same email address provided',
-    InvalidRequestVeriyEmail:
-      'The account do not have an email or it already verification',
-    InvalidCurrentPassword:
-      'Current password does not match. Please enter the correct password',
-    InvalidChangeUserRoles: 'Invalid input role Ids',
-    // Oauth Messages
-    OauthServerError: 'Unable to link provider',
-    ProviderAlreadyLinked: 'This provider is already linked',
-    // Room Messages
-    NotRoomMember: (username: string) => `user(${username}) not in room`,
-    InvalidPrivateRoom: 'invalid private room declare',
-    InvalidGroupRoom: 'invalid group room declare',
   };
 }

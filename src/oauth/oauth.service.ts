@@ -1,9 +1,9 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
 import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
 import { IdentityUser } from 'src/auth/identity.class';
-import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { userDetailSelect } from 'src/users/users.factory';
 import { UsersService } from 'src/users/users.service';
@@ -70,7 +70,7 @@ export class OauthService {
     const user = await this.usersService.findByProvider(provider, profile.id);
 
     if (token && !user) {
-      throw AppError.Messages.OauthServerError;
+      throw messages.error.oauthServer;
     }
 
     if (user) {
@@ -125,7 +125,7 @@ export class OauthService {
     const user = await this.usersService.findByProvider(provider, profile.id);
 
     if (token && !user) {
-      throw AppError.Messages.OauthServerError;
+      throw messages.error.oauthServer;
     }
 
     if (user) {
@@ -188,7 +188,7 @@ export class OauthService {
     });
 
     if (countDupplicate) {
-      throw AppError.Messages.ProviderAlreadyLinked;
+      throw messages.error.providerAlreadyLinked;
     }
 
     await this.prisma.userLogins.create({

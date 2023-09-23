@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -53,7 +54,7 @@ export class DropboxService {
 
       return response.result.link;
     } catch {
-      throw new AppError.Argument(AppError.Messages.FilesDownloadFailed);
+      throw new AppError.Argument(messages.error.filesDownload);
     }
   }
 
@@ -94,7 +95,7 @@ export class DropboxService {
     const result = _.filter(responses, (r) => !_.isNull(r));
 
     if (!_.size(result)) {
-      throw new AppError.Argument(AppError.Messages.FilesUploadFailed);
+      throw new AppError.Argument(messages.error.filesUpload);
     }
 
     return result;
@@ -127,7 +128,7 @@ export class DropboxService {
         buffer: (response.result as any).fileBinary as Buffer,
       };
     } catch {
-      throw new AppError.Argument(AppError.Messages.FilesDownloadFailed);
+      throw new AppError.Argument(messages.error.filesDownload);
     }
   }
 
@@ -139,7 +140,7 @@ export class DropboxService {
 
       return { name, path };
     } catch {
-      throw new AppError.Argument(AppError.Messages.FilesDeleteFailed);
+      throw new AppError.Argument(messages.error.filesDelete);
     }
   }
 }

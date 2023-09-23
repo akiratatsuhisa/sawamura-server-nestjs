@@ -1,3 +1,4 @@
+import { messages as commonMessages } from '@akiratatsuhisa/sawamura-utils';
 import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
@@ -229,9 +230,7 @@ export class RoomsService {
 
   async createRoom(dto: CreateRoomDto, user: IdentityUser) {
     if (!_.some(dto.members, (member) => member.memberId === user.id)) {
-      throw new AppError.Argument(
-        AppError.Messages.NotRoomMember(user.username),
-      );
+      throw new AppError.Argument(commonMessages.error.notRoomMember);
     }
 
     if (
@@ -242,7 +241,7 @@ export class RoomsService {
       ) ||
         _.size(dto.members) < 2)
     ) {
-      throw new AppError.Argument(AppError.Messages.InvalidGroupRoom);
+      throw new AppError.Argument(commonMessages.error.groupRoomDeclare);
     }
 
     if (
@@ -253,7 +252,7 @@ export class RoomsService {
           (member) => member.role !== RoomMemberRole.Moderator,
         ))
     ) {
-      throw new AppError.Argument(AppError.Messages.InvalidPrivateRoom);
+      throw new AppError.Argument(commonMessages.error.privateRoomDeclare);
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -271,7 +270,7 @@ export class RoomsService {
         });
 
         if (privateRoom) {
-          throw new AppError.Argument(AppError.Messages.InvalidPrivateRoom);
+          throw new AppError.Argument(commonMessages.error.privateRoomDeclare);
         }
       }
 

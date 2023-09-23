@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import _ from 'lodash';
@@ -114,7 +115,7 @@ export class UsersService {
       where: { id: { in: dto.roleIds } },
     });
     if (roleCount !== dto.roleIds.length) {
-      throw new AppError.Argument(AppError.Messages.InvalidChangeUserRoles);
+      throw new AppError.Argument(messages.error.changeUserRoles);
     }
 
     return this.prisma.$transaction(async (tx) => {

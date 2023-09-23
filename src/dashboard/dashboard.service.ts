@@ -1,3 +1,4 @@
+import { messages as commonMessages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { RoomMessageType } from '@prisma/client';
 import _ from 'lodash';
@@ -52,7 +53,7 @@ export class DashboardService {
     const toDate = moment(dto.toDate).endOf('date');
 
     if (fromDate.isAfter(toDate)) {
-      throw new AppError.Argument(AppError.Messages.InvalidDateFromTo);
+      throw new AppError.Argument(commonMessages.error.invalidDateFromTo);
     }
 
     const messages = await this.prisma.roomMessage.findMany({

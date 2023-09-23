@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { Prisma, Todo } from '@prisma/client';
 import { IdentityUser } from 'src/auth/decorators';
@@ -64,9 +65,9 @@ export class TodosService {
       async (tx) => {
         const maxSort = await this.maxSort(tx);
         if (dto.sort > maxSort) {
-          throw new AppError.Argument(
-            'Sort is greater than max sort',
-          ).setErrors([`Max sort is ${maxSort}, current sort is ${dto.sort}`]);
+          throw new AppError.Argument(messages.error.changeSort).setErrors([
+            `Max sort is ${maxSort}, current sort is ${dto.sort}`,
+          ]);
         }
 
         const newsort = dto.sort;
@@ -76,9 +77,10 @@ export class TodosService {
         });
 
         if (!todo) {
-          throw new AppError.NotFound(
-            AppError.Messages.NotFoundEntityError('todo', dto.id),
-          );
+          throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+            entity: 'Todo',
+            id: dto.id,
+          });
         }
 
         const oldSort = todo.sort;
@@ -94,7 +96,7 @@ export class TodosService {
             where: { sort: { gte: newsort, lt: oldSort } },
           });
         } else {
-          throw new AppError.Argument('No Change');
+          throw new AppError.Argument(messages.warning.noChange);
         }
 
         return tx.todo.update({

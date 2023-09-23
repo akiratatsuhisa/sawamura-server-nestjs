@@ -1,4 +1,5 @@
 import { GraphService } from '@akiratatsuhisa/sawamura-graph-module';
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -235,7 +236,7 @@ export class AuthService {
     });
 
     if (!user || !user.emailConfirmed) {
-      throw new AppError.Argument(AppError.Messages.InvalidForgotPassword);
+      throw new AppError.Argument(messages.error.forgotPassword);
     }
 
     const { token } = await this.verificationTokensService.generateToken(
@@ -402,7 +403,7 @@ export class AuthService {
         oldRefreshToken.revoked ||
         moment(oldRefreshToken.expires).isSameOrBefore()
       ) {
-        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
+        throw new AppError.Argument(messages.error.refreshToken);
       }
 
       const accessToken = await this.generateAccessToken(user);
@@ -427,14 +428,14 @@ export class AuthService {
       }
 
       if (refreshToken.userId !== userId) {
-        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
+        throw new AppError.Argument(messages.error.refreshToken);
       }
 
       if (
         refreshToken.revoked ||
         moment(refreshToken.expires).isSameOrBefore()
       ) {
-        throw new AppError.Argument(AppError.Messages.InvalidRefreshToken);
+        throw new AppError.Argument(messages.error.refreshToken);
       }
 
       await this.revokeRefreshToken(refreshToken.id, ip);
@@ -519,7 +520,7 @@ export class AuthService {
       (!dto.currentPassword ||
         !(await compare(dto.currentPassword, user.password)))
     ) {
-      throw new AppError.Argument(AppError.Messages.InvalidCurrentPassword);
+      throw new AppError.Argument(messages.error.currentPassword);
     }
 
     await this.prisma.user.update({
@@ -548,7 +549,7 @@ export class AuthService {
     });
 
     if (!user.email || user.emailConfirmed) {
-      throw new AppError.Argument(AppError.Messages.InvalidRequestVeriyEmail);
+      throw new AppError.Argument(messages.warning.requestVeriyEmail);
     }
 
     await this.sendConfirmEmail(user);
@@ -561,7 +562,7 @@ export class AuthService {
     });
 
     if (dto.email === user.email) {
-      throw new AppError.Argument(AppError.Messages.SameEmailAddressProvided);
+      throw new AppError.Argument(messages.error.sameEmailAddressProvided);
     }
 
     await this.prisma.user.update({

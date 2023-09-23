@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AppError } from 'src/common/errors';
@@ -65,7 +66,7 @@ export class RolesService {
       async (tx) => {
         const role = await this.findById({ id: dto.id });
         if (role.default) {
-          throw new AppError.Argument(AppError.Messages.DefaultDataError);
+          throw new AppError.Argument(messages.warning.defaultData);
         }
 
         return tx.role.update({
@@ -85,7 +86,7 @@ export class RolesService {
       async (tx) => {
         const role = await this.findById({ id: dto.id });
         if (role.default) {
-          throw new AppError.Argument(AppError.Messages.DefaultDataError);
+          throw new AppError.Argument(messages.warning.defaultData);
         }
 
         const deleted = await tx.role.delete({
@@ -110,9 +111,9 @@ export class RolesService {
         const maxSort = await this.maxSort(tx);
 
         if (dto.sort > maxSort) {
-          throw new AppError.Argument(
-            'Sort is greater than max sort',
-          ).setErrors([`Max sort is ${maxSort}, current sort is ${dto.sort}`]);
+          throw new AppError.Argument(messages.error.changeSort).setErrors([
+            `Max sort is ${maxSort}, current sort is ${dto.sort}`,
+          ]);
         }
 
         const newsort = dto.sort;
@@ -122,9 +123,10 @@ export class RolesService {
         });
 
         if (!role) {
-          throw new AppError.NotFound(
-            AppError.Messages.NotFoundEntityError('role', dto.id),
-          );
+          throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+            entity: 'Role',
+            id: dto.id,
+          });
         }
 
         const oldSort = role.sort;
@@ -140,7 +142,7 @@ export class RolesService {
             where: { sort: { gte: newsort, lt: oldSort } },
           });
         } else {
-          throw new AppError.Argument('No Change');
+          throw new AppError.Argument(messages.warning.noChange);
         }
 
         return tx.role.update({
