@@ -5,6 +5,7 @@ export const SOCKET_DASHBOARD_EVENTS = {
   READ_COUNT_USERS: 'read:count:users',
   LIST_ROLE: 'list:role',
 
+  CHART_MESSAGES_ROOMS: 'chart:messages:rooms',
   CHART_MESSAGES: 'chart:messages',
 
   CHART_USER_ROLES: 'chart:userRoles',

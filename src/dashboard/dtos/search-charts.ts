@@ -10,6 +10,16 @@ export class SearchChartMessagesDto {
   toDate: string;
 }
 
+export class SearchChartMessagesRoomsDto {
+  @IsDateString()
+  @IsNotEmpty()
+  fromDate: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  toDate: string;
+}
+
 export class SearchChartUserRolesDto {
   @IsEmpty()
   data: string;

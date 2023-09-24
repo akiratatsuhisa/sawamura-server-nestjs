@@ -10,7 +10,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { RoomsService } from 'src/rooms/rooms.service';
 
 import { REDIS_DASHBOARD_KEYS } from './constants';
-import { SearchChartMessagesDto } from './dtos';
+import { SearchChartMessagesDto, SearchChartMessagesRoomsDto } from './dtos';
 
 @Injectable()
 export class DashboardService {
@@ -46,6 +46,68 @@ export class DashboardService {
 
   async countUsers() {
     return { count: await this.prisma.user.count() };
+  }
+
+  async chartMessagesRooms(dto: SearchChartMessagesRoomsDto) {
+    const fromDate = moment(dto.fromDate).startOf('date');
+    const toDate = moment(dto.toDate).endOf('date');
+
+    if (fromDate.isAfter(toDate)) {
+      throw new AppError.Argument(commonMessages.error.invalidDateFromTo);
+    }
+
+    const rooms = await this.prisma.room.findMany({
+      select: {
+        isGroup: true,
+        createdAt: true,
+        _count: {
+          select: { roomMembers: true },
+        },
+      },
+      where: {
+        createdAt: {
+          gte: fromDate.toDate(),
+          lte: toDate.toDate(),
+        },
+      },
+    });
+
+    const roomsGroupByMonth = _.groupBy(rooms, ({ createdAt }) =>
+      moment(createdAt).format('YYYY-MM'),
+    );
+
+    const startDate = fromDate.clone().startOf('month');
+    const stopDate = toDate.clone().startOf('month');
+
+    const months = [startDate];
+
+    while (_.last(months).isBefore(stopDate)) {
+      months.push(startDate.clone().add(months.length, 'months'));
+    }
+
+    return _.map(months, (date) => {
+      const [groupRooms, privateRooms] = _.partition(
+        roomsGroupByMonth[date.format('YYYY-MM')],
+        ({ isGroup }) => isGroup,
+      );
+
+      return {
+        label: date.format('YYYY-MM'),
+        value: date.valueOf(),
+        countGroupRooms: groupRooms.length,
+        countPrivateRooms: privateRooms.length,
+        countGroupRoomMembers: _.reduce(
+          groupRooms,
+          (count, room) => count + room._count.roomMembers,
+          0,
+        ),
+        countPrivateRoomMembers: _.reduce(
+          privateRooms,
+          (count, room) => count + room._count.roomMembers,
+          0,
+        ),
+      };
+    });
   }
 
   async chartMessages(dto: SearchChartMessagesDto) {

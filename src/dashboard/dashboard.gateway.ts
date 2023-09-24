@@ -14,6 +14,7 @@ import { SOCKET_DASHBOARD_EVENTS } from './constants';
 import { DashboardService } from './dashboard.service';
 import {
   SearchChartMessagesDto,
+  SearchChartMessagesRoomsDto,
   SearchChartUserRolesDto,
   SearchCountUsers,
   SearchStorageDropbox,
@@ -57,6 +58,21 @@ export class DashboardGateway extends WsAuthGateway {
       event: SOCKET_DASHBOARD_EVENTS.READ_COUNT_USERS,
       dto,
       data,
+    });
+  }
+
+  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS)
+  async chartMessagesRooms(
+    @ConnectedSocket() client: SocketWithAuth,
+    @MessageBody() dto: SearchChartMessagesRoomsDto,
+  ) {
+    const records = await this.dashboardService.chartMessagesRooms(dto);
+
+    this.sendToCaller({
+      socket: client,
+      event: SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS,
+      dto,
+      data: { records },
     });
   }
 
