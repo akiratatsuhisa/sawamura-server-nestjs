@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import {
   IsNotEmpty,
   IsOptional,
@@ -7,15 +8,13 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { AUTH_REGEX } from '../constants';
-
 export class UpdatePasswordDto {
   @MaxLength(64)
   @IsString()
   @IsOptional()
   currentPassword: string;
 
-  @Matches(AUTH_REGEX.PASSWORD)
+  @Matches(Regex.Validate.PASSWORD)
   @MaxLength(64)
   @MinLength(8)
   @IsString()

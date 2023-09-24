@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import {
   IsNotEmpty,
   IsString,
@@ -6,15 +7,13 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { AUTH_REGEX } from '../constants';
-
 export class ResetPasswordDto {
   @MaxLength(255)
   @IsString()
   @IsNotEmpty()
   token: string;
 
-  @Matches(AUTH_REGEX.PASSWORD)
+  @Matches(Regex.Validate.PASSWORD)
   @MaxLength(64)
   @MinLength(8)
   @IsString()

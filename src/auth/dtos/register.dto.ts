@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import {
   IsEmail,
   IsNotEmpty,
@@ -8,10 +9,8 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { AUTH_REGEX } from '../constants';
-
 export class RegisterDto {
-  @Matches(AUTH_REGEX.USERNAME)
+  @Matches(Regex.Validate.USERNAME)
   @MaxLength(16)
   @MinLength(4)
   @IsString()
@@ -30,7 +29,7 @@ export class RegisterDto {
   @IsOptional()
   email?: string;
 
-  @Matches(AUTH_REGEX.PASSWORD)
+  @Matches(Regex.Validate.PASSWORD)
   @MaxLength(64)
   @MinLength(8)
   @IsString()
