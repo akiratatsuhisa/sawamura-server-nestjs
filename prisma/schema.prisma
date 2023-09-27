@@ -52,8 +52,6 @@ model User {
   notificationSource Notification[] @relation(name: "fk_notification_source")
   notificationTarget Notification[] @relation(name: "fk_notification_target")
 
-  todos Todo[]
-
   @@map("users")
 }
 
@@ -259,6 +257,7 @@ enum WhinnyType {
 
 model Whinny {
   id       String     @id @default(uuid()) @db.Uuid
+  urlId    BigInt     @default(autoincrement()) @map("url_id") @db.BigInt
   type     WhinnyType @default(Owner)
   userId   String     @map("user_id") @db.Uuid
   user     User       @relation(fields: [userId], references: [id])
@@ -371,21 +370,4 @@ model Notification {
 
   @@index([targetUserId, createdAt(sort: Desc)])
   @@map("notifications")
-}
-
-model Todo {
-  id Int @id @default(autoincrement())
-
-  userId String @map("user_id") @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  title       String  @db.VarChar(64)
-  description String? @db.VarChar(450)
-  isCompleted Boolean @default(false) @map("is_completed")
-  sort        Int
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-
-  @@map("todos")
 }

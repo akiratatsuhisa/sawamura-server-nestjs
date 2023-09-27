@@ -22,7 +22,6 @@ import { RedisModule } from './redis/redis.module';
 import { RolesModule } from './roles/roles.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { SendgridModule } from './sendgrid/sendgrid.module';
-import { TodosModule } from './todos/todos.module';
 import { UsersModule } from './users/users.module';
 import { VerificationTokensModule } from './verification-tokens/verification-tokens.module';
 import { WsAuthModule } from './ws-auth/ws-auth.module';
@@ -59,7 +58,6 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     DashboardModule,
     RoomsModule,
     NotificationsModule,
-    TodosModule,
   ],
   controllers: [AppController],
   providers: [...appProviders, AppService, AppGateway],
