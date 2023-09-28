@@ -7,7 +7,7 @@ import _ from 'lodash';
 import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
-import { AUTH_CONTANTS } from 'src/constants';
+import { AuthFile } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -71,7 +71,7 @@ export class ProfileUsersService {
     return this.cacheManager.wrap(
       `user:${dto.username}:${dto.type}`,
       () => this.dropboxService.getTemporaryLink(user[fieldName]),
-      AUTH_CONTANTS.CACHE_TIME,
+      AuthFile.CACHE_TIME,
     );
   }
 

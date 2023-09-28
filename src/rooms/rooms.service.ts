@@ -1,4 +1,7 @@
-import { messages as commonMessages } from '@akiratatsuhisa/sawamura-utils';
+import {
+  messages as commonMessages,
+  Regex,
+} from '@akiratatsuhisa/sawamura-utils';
 import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
@@ -9,7 +12,7 @@ import _ from 'lodash';
 import { IdentityUser } from 'src/auth/decorators';
 import { AppError } from 'src/common/errors';
 import { PaginationService } from 'src/common/services';
-import { MESSAGE_FILE } from 'src/constants';
+import { MessageFile } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileType, IFile } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -350,7 +353,7 @@ export class RoomsService {
     return this.cacheManager.wrap(
       `room:${dto.id}:${dto.type}`,
       () => this.dropboxService.getTemporaryLink(room[fieldName]),
-      MESSAGE_FILE.CACHE_TIME,
+      MessageFile.CACHE_TIME,
     );
   }
 
@@ -808,7 +811,7 @@ export class RoomsService {
     return this.cacheManager.wrap(
       cacheKey,
       () => this.dropboxService.getTemporaryLink(dto.name, dto.roomId),
-      MESSAGE_FILE.CACHE_TIME,
+      MessageFile.CACHE_TIME,
     );
   }
 
@@ -821,13 +824,13 @@ export class RoomsService {
         return {
           name,
           buffer: data,
-          type: (MESSAGE_FILE.IMAGE_MIME_TYPES.test(mime)
+          type: (Regex.MessageFile.IMAGE_MIME_TYPES.test(mime)
             ? RoomMessageType.Images
-            : MESSAGE_FILE.AUDIO_MIME_TYPES.test(mime)
+            : Regex.MessageFile.AUDIO_MIME_TYPES.test(mime)
             ? RoomMessageType.Audios
-            : MESSAGE_FILE.VIDEO_MIME_TYPES.test(mime)
+            : Regex.MessageFile.VIDEO_MIME_TYPES.test(mime)
             ? RoomMessageType.Videos
-            : MESSAGE_FILE.OFFICE_MIME_TYPES.test(mime)
+            : Regex.MessageFile.OFFICE_MIME_TYPES.test(mime)
             ? RoomMessageType.Files
             : RoomMessageType.None) as RoomMessageType,
           extension,

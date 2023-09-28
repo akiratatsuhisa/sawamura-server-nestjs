@@ -11,7 +11,7 @@ import { Cache } from 'cache-manager';
 import _ from 'lodash';
 import moment from 'moment';
 import { AppError } from 'src/common/errors';
-import { AUTH_CONTANTS } from 'src/constants';
+import { AuthFile } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { FileUtilsService } from 'src/file-utils/file-utils.service';
 import { IFile } from 'src/helpers';
@@ -460,7 +460,7 @@ export class AuthService {
     return this.cacheManager.wrap(
       this.getImageCacheKey(user.username, dto.type),
       () => this.dropboxService.getTemporaryLink(result[fieldName]),
-      AUTH_CONTANTS.CACHE_TIME,
+      AuthFile.CACHE_TIME,
     );
   }
 

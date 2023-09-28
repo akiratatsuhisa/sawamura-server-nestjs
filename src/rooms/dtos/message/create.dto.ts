@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -11,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { IsFile, IsFileMime, MaxFileSize } from 'src/common/class-validator';
-import { MESSAGE_FILE } from 'src/constants';
+import { MessageFile } from 'src/constants';
 
 export class CreateFileMessageDto {
   @MaxLength(255)
@@ -24,8 +25,8 @@ export class CreateFileMessageDto {
   @IsNotEmpty()
   type: string;
 
-  @IsFileMime(MESSAGE_FILE.ALL_MIME_TYPES)
-  @MaxFileSize(MESSAGE_FILE.MAX_FILE_SIZE)
+  @IsFileMime(Regex.MessageFile.ALL_MIME_TYPES)
+  @MaxFileSize(MessageFile.MAX_FILE_SIZE)
   @IsFile()
   data: Buffer;
 }

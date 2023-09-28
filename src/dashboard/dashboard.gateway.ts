@@ -47,7 +47,7 @@ export class DashboardGateway extends WsAuthGateway {
   }
 
   @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.READ_COUNT_USERS)
-  async getRooms(
+  async countUsers(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchCountUsers,
   ) {

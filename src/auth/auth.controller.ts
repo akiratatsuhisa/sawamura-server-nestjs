@@ -1,4 +1,4 @@
-import { messages } from '@akiratatsuhisa/sawamura-utils';
+import { messages, Regex } from '@akiratatsuhisa/sawamura-utils';
 import {
   Body,
   Controller,
@@ -22,7 +22,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 import { AppError } from 'src/common/errors';
-import { COMMON_FILE } from 'src/constants';
+import { CommonFile } from 'src/constants';
 import { Multer } from 'src/helpers';
 
 import { AuthService } from './auth.service';
@@ -123,9 +123,9 @@ export class AuthController {
 
     const { unlink } = Multer.validateFiles(file, {
       fileSize: isCover
-        ? COMMON_FILE.IMAGE_MAX_FILE_SIZE * 2
-        : COMMON_FILE.IMAGE_MAX_FILE_SIZE,
-      mimeTypeRegex: COMMON_FILE.IMAGE_MIME_TYPES,
+        ? CommonFile.IMAGE_MAX_FILE_SIZE * 2
+        : CommonFile.IMAGE_MAX_FILE_SIZE,
+      mimeTypeRegex: Regex.CommonFile.IMAGE_MIME_TYPES,
       required: true,
       dimensions: {
         equal: true,

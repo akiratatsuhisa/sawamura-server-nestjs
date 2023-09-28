@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import {
   Body,
   Controller,
@@ -16,7 +17,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { IdentityUser, Public, User } from 'src/auth/decorators';
-import { COMMON_FILE } from 'src/constants';
+import { CommonFile } from 'src/constants';
 import { Multer } from 'src/helpers';
 
 import {
@@ -59,8 +60,8 @@ export class RoomsController {
     const isCover = dto.type === 'cover';
 
     const { unlink } = Multer.validateFiles(file, {
-      fileSize: COMMON_FILE.IMAGE_MAX_FILE_SIZE,
-      mimeTypeRegex: COMMON_FILE.IMAGE_MIME_TYPES,
+      fileSize: CommonFile.IMAGE_MAX_FILE_SIZE,
+      mimeTypeRegex: Regex.CommonFile.IMAGE_MIME_TYPES,
       required: true,
       dimensions: isCover
         ? undefined
