@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import {
   CallHandler,
   ExecutionContext,
@@ -6,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { SOCKET_DASHBOARD_EVENTS } from 'src/dashboard/constants';
 import { DashboardGateway } from 'src/dashboard/dashboard.gateway';
 import { EVENTS } from 'src/ws-auth/constants';
 
@@ -27,7 +27,7 @@ export class RolesInterceptor implements NestInterceptor {
           : await this.rolesService.findAll();
 
         this.dashboardGateway.namespace.emit(
-          `${EVENTS.LISTENER}:${SOCKET_DASHBOARD_EVENTS.LIST_ROLE}`,
+          `${EVENTS.LISTENER}:${SOCKET_EVENTS.DASHBOARD_EVENTS.LIST_ROLE}`,
           {
             roles,
           },

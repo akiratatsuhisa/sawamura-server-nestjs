@@ -1,16 +1,3 @@
-export const SOCKET_DASHBOARD_EVENTS = {
-  READ_STORAGE_DROPBOX: 'read:storage:dropbox',
-  READ_STORAGE_CACHE: 'read:storage:cache',
-
-  READ_COUNT_USERS: 'read:count:users',
-  LIST_ROLE: 'list:role',
-
-  CHART_MESSAGES_ROOMS: 'chart:messages:rooms',
-  CHART_MESSAGES: 'chart:messages',
-
-  CHART_USER_ROLES: 'chart:userRoles',
-};
-
 export const REDIS_DASHBOARD_KEYS = {
   STORAGE_DROPBOX: 'dashboard:storage:dropbox',
   STORAGE_DROPBOX_CACHE_SECONDS: 300, // 5 minutes

@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -15,7 +16,6 @@ import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
-import { SOCKET_ROOM_EVENTS } from './constants';
 import {
   CreateMemberDto,
   CreateMessageDto,
@@ -48,7 +48,7 @@ export class RoomsGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.JOIN_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.JOIN_ROOM)
   joinRoom(
     @MessageBody() dto: SearchRoomDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -56,7 +56,7 @@ export class RoomsGateway extends WsAuthGateway {
     client.join(dto.id);
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.LEAVE_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.LEAVE_ROOM)
   leaveRoom(
     @MessageBody() dto: SearchRoomDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -64,7 +64,7 @@ export class RoomsGateway extends WsAuthGateway {
     client.leave(dto.id);
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.TYPING_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.TYPING_ROOM)
   typingRoom(@MessageBody() dto: TypingRoomDto) {
     this.namespace.to(dto.roomId).emit(`typing:room:${dto.roomId}`, {
       userId: dto.userId,
@@ -78,7 +78,7 @@ export class RoomsGateway extends WsAuthGateway {
       .value();
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.LIST_ROOM)
   async getRooms(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchRoomsDto,
@@ -87,13 +87,13 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.LIST_ROOM,
+      event: SOCKET_EVENTS.ROOM_EVENTS.LIST_ROOM,
       dto,
       data: { rooms },
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.READ_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.READ_ROOM)
   async getRoom(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchRoomDto,
@@ -105,13 +105,13 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.READ_ROOM,
+      event: SOCKET_EVENTS.ROOM_EVENTS.READ_ROOM,
       dto,
       data: room,
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.READ_ROOM_PRIVATE)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.READ_ROOM_PRIVATE)
   async getRoomPrivate(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchRoomPrivateDto,
@@ -120,13 +120,13 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.READ_ROOM_PRIVATE,
+      event: SOCKET_EVENTS.ROOM_EVENTS.READ_ROOM_PRIVATE,
       dto,
       data: room,
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.LIST_MESSAGE)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.LIST_MESSAGE)
   async getMessages(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchMessagesDto,
@@ -138,13 +138,13 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.LIST_MESSAGE,
+      event: SOCKET_EVENTS.ROOM_EVENTS.LIST_MESSAGE,
       dto,
       data: { messages },
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.CREATE_ROOM)
   async createRoom(
     @MessageBody() dto: CreateRoomDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -153,14 +153,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.CREATE_ROOM,
+      event: SOCKET_EVENTS.ROOM_EVENTS.CREATE_ROOM,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM)
   async updateRoom(
     @MessageBody() dto: UpdateRoomDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -169,14 +169,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.UPDATE_ROOM,
+      event: SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_ROOM)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.DELETE_ROOM)
   async deleteRoom(
     @MessageBody() dto: DeleteRoomDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -185,14 +185,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.DELETE_ROOM,
+      event: SOCKET_EVENTS.ROOM_EVENTS.DELETE_ROOM,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_MEMBER)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.CREATE_MEMBER)
   async createMember(
     @MessageBody() dto: CreateMemberDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -201,14 +201,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.CREATE_MEMBER,
+      event: SOCKET_EVENTS.ROOM_EVENTS.CREATE_MEMBER,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MEMBER)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.UPDATE_MEMBER)
   async updateMember(
     @MessageBody() dto: UpdateMemberDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -217,14 +217,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.UPDATE_MEMBER,
+      event: SOCKET_EVENTS.ROOM_EVENTS.UPDATE_MEMBER,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_MEMBER)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.DELETE_MEMBER)
   async deleteMember(
     @MessageBody() dto: DeleteMemberDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -233,14 +233,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.DELETE_MEMBER,
+      event: SOCKET_EVENTS.ROOM_EVENTS.DELETE_MEMBER,
       dto,
       data: room,
       userIds: this.mapSendToRoomMembers(room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.CREATE_MESSAGE)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.CREATE_MESSAGE)
   async createMessage(
     @MessageBody() dto: CreateMessageDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -253,7 +253,7 @@ export class RoomsGateway extends WsAuthGateway {
 
       const socketUsers = this.sendToUsers({
         socket: client,
-        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        event: SOCKET_EVENTS.ROOM_EVENTS.CREATE_MESSAGE,
         dto,
         data: message,
         userIds: this.mapSendToRoomMembers(message.room),
@@ -317,7 +317,7 @@ export class RoomsGateway extends WsAuthGateway {
 
       const socketUsers = this.sendToUsers({
         socket: client,
-        event: SOCKET_ROOM_EVENTS.CREATE_MESSAGE,
+        event: SOCKET_EVENTS.ROOM_EVENTS.CREATE_MESSAGE,
         dto,
         data: message,
         userIds: this.mapSendToRoomMembers(message.room),
@@ -333,7 +333,7 @@ export class RoomsGateway extends WsAuthGateway {
     }, Promise.resolve());
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.UPDATE_MESSAGE)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.UPDATE_MESSAGE)
   async updateMessage(
     @MessageBody() dto: UpdateMessageDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -342,14 +342,14 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.UPDATE_MESSAGE,
+      event: SOCKET_EVENTS.ROOM_EVENTS.UPDATE_MESSAGE,
       dto,
       data: message,
       userIds: this.mapSendToRoomMembers(message.room),
     });
   }
 
-  @SubscribeMessage(SOCKET_ROOM_EVENTS.DELETE_MESSAGE)
+  @SubscribeMessage(SOCKET_EVENTS.ROOM_EVENTS.DELETE_MESSAGE)
   async deleteMessage(
     @MessageBody() dto: DeleteMessageDto,
     @ConnectedSocket() client: SocketWithAuth,
@@ -358,7 +358,7 @@ export class RoomsGateway extends WsAuthGateway {
 
     this.sendToUsers({
       socket: client,
-      event: SOCKET_ROOM_EVENTS.DELETE_MESSAGE,
+      event: SOCKET_EVENTS.ROOM_EVENTS.DELETE_MESSAGE,
       dto,
       data: message,
       userIds: this.mapSendToRoomMembers(message.room),

@@ -1,6 +1,11 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { NotificationEntityName, NotificationStatus } from '@prisma/client';
+import {
+  NotificationEntityName,
+  NotificationStatus,
+  Prisma,
+} from '@prisma/client';
 import { Queue } from 'bull';
 import _ from 'lodash';
 import { IdentityUser } from 'src/auth/decorators';
@@ -9,7 +14,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { RoomsService } from 'src/rooms/rooms.service';
 import { ISocketUser } from 'src/ws-auth/interfaces';
 
-import { NAME, SOCKET_NOTIFICATION_EVENTS } from './constants';
+import { NAME } from './constants';
 import {
   CreateNotificationDto,
   DeleteNotificationDto,
@@ -34,7 +39,7 @@ export class NotificationsService {
     const reference =
       notifcation.entity === NotificationEntityName.None
         ? null
-        : await this.prisma[_.camelCase(notifcation.entity)].findFirst({
+        : await this.prisma[_.camelCase(notifcation.entity)].findUnique({
             where: { id: notifcation.referenceId ?? '_' },
           });
 
@@ -77,7 +82,7 @@ export class NotificationsService {
 
   async createNotification(dto: CreateNotificationDto, user: IdentityUser) {
     return this.notificationsQueue.add(
-      SOCKET_NOTIFICATION_EVENTS.CREATE_NOTIFICATION,
+      SOCKET_EVENTS.NOTIFICATION_EVENTS.CREATE_NOTIFICATION,
       { ...dto, sourceUserId: user.id },
       {
         removeOnComplete: true,
@@ -88,7 +93,7 @@ export class NotificationsService {
 
   async updateNotification(dto: UpdateNotificationDto, user: IdentityUser) {
     return this.notificationsQueue.add(
-      SOCKET_NOTIFICATION_EVENTS.UPDATE_NOTIFICATION,
+      SOCKET_EVENTS.NOTIFICATION_EVENTS.UPDATE_NOTIFICATION,
       { ...dto, targetUserId: user.id },
       {
         removeOnComplete: true,
@@ -99,7 +104,7 @@ export class NotificationsService {
 
   async deleteNotification(dto: DeleteNotificationDto, user: IdentityUser) {
     return this.notificationsQueue.add(
-      SOCKET_NOTIFICATION_EVENTS.DELETE_NOTIFICATION,
+      SOCKET_EVENTS.NOTIFICATION_EVENTS.DELETE_NOTIFICATION,
       { ...dto, targetUserId: user.id },
       {
         removeOnComplete: true,
@@ -115,14 +120,6 @@ export class NotificationsService {
   ) {
     const code = 'notification:message';
 
-    const params = {
-      fromUsername: message.user.username,
-      content: _.truncate(
-        typeof message.content === 'string' ? message.content : 'file',
-        { length: 24 },
-      ),
-    };
-
     return Promise.all(
       socketUsers.map(async (socketUser) => {
         const dto: CreateNotificationDto = {
@@ -130,7 +127,7 @@ export class NotificationsService {
           referenceId: message.id,
           targetUserId: socketUser.userId,
           code,
-          params,
+          params: Prisma.JsonNull,
           status:
             user.id === socketUser.userId
               ? NotificationStatus.Viewed

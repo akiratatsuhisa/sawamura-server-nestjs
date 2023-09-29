@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { ConfigService } from '@nestjs/config';
 import {
   ConnectedSocket,
@@ -10,7 +11,6 @@ import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
-import { SOCKET_DASHBOARD_EVENTS } from './constants';
 import { DashboardService } from './dashboard.service';
 import {
   SearchChartMessagesDto,
@@ -31,7 +31,7 @@ export class DashboardGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
-  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.READ_STORAGE_DROPBOX)
+  @SubscribeMessage(SOCKET_EVENTS.DASHBOARD_EVENTS.READ_STORAGE_DROPBOX)
   async getDropboxSpaceUsage(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchStorageDropbox,
@@ -40,13 +40,13 @@ export class DashboardGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_DASHBOARD_EVENTS.READ_STORAGE_DROPBOX,
+      event: SOCKET_EVENTS.DASHBOARD_EVENTS.READ_STORAGE_DROPBOX,
       dto,
       data,
     });
   }
 
-  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.READ_COUNT_USERS)
+  @SubscribeMessage(SOCKET_EVENTS.DASHBOARD_EVENTS.READ_COUNT_USERS)
   async countUsers(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchCountUsers,
@@ -55,13 +55,13 @@ export class DashboardGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_DASHBOARD_EVENTS.READ_COUNT_USERS,
+      event: SOCKET_EVENTS.DASHBOARD_EVENTS.READ_COUNT_USERS,
       dto,
       data,
     });
   }
 
-  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS)
+  @SubscribeMessage(SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS)
   async chartMessagesRooms(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchChartMessagesRoomsDto,
@@ -70,13 +70,13 @@ export class DashboardGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS,
+      event: SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_MESSAGES_ROOMS,
       dto,
       data: { records },
     });
   }
 
-  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES)
+  @SubscribeMessage(SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_MESSAGES)
   async chartMessages(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchChartMessagesDto,
@@ -85,13 +85,13 @@ export class DashboardGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_DASHBOARD_EVENTS.CHART_MESSAGES,
+      event: SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_MESSAGES,
       dto,
       data: { records },
     });
   }
 
-  @SubscribeMessage(SOCKET_DASHBOARD_EVENTS.CHART_USER_ROLES)
+  @SubscribeMessage(SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_USER_ROLES)
   async chartUserRoles(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchChartUserRolesDto,
@@ -100,7 +100,7 @@ export class DashboardGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_DASHBOARD_EVENTS.CHART_USER_ROLES,
+      event: SOCKET_EVENTS.DASHBOARD_EVENTS.CHART_USER_ROLES,
       dto,
       data: { records },
     });

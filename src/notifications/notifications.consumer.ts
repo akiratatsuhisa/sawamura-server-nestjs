@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import {
   OnQueueActive,
   OnQueueCompleted,
@@ -12,7 +13,7 @@ import _ from 'lodash';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PREFIXES } from 'src/ws-auth/constants';
 
-import { NAME, SOCKET_NOTIFICATION_EVENTS } from './constants';
+import { NAME } from './constants';
 import {
   CreateNotificationDto,
   DeleteNotificationDto,
@@ -32,7 +33,7 @@ export class NotificationsConsumer {
     private notificationsService: NotificationsService,
   ) {}
 
-  @Process(SOCKET_NOTIFICATION_EVENTS.CREATE_NOTIFICATION)
+  @Process(SOCKET_EVENTS.NOTIFICATION_EVENTS.CREATE_NOTIFICATION)
   async createNotification(
     job: Job<CreateNotificationDto & { sourceUserId: string }>,
   ) {
@@ -67,7 +68,7 @@ export class NotificationsConsumer {
     });
   }
 
-  @Process(SOCKET_NOTIFICATION_EVENTS.UPDATE_NOTIFICATION)
+  @Process(SOCKET_EVENTS.NOTIFICATION_EVENTS.UPDATE_NOTIFICATION)
   async updateNotification(
     job: Job<UpdateNotificationDto & { targetUserId: string }>,
   ) {
@@ -118,7 +119,7 @@ export class NotificationsConsumer {
     });
   }
 
-  @Process(SOCKET_NOTIFICATION_EVENTS.DELETE_NOTIFICATION)
+  @Process(SOCKET_EVENTS.NOTIFICATION_EVENTS.DELETE_NOTIFICATION)
   async deleteNotification(
     job: Job<DeleteNotificationDto & { targetUserId: string }>,
   ) {

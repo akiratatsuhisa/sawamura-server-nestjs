@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { ConfigService } from '@nestjs/config';
 import {
   ConnectedSocket,
@@ -9,7 +10,7 @@ import { WsAuthGateway } from 'src/ws-auth/ws-auth.gateway';
 import { WsAuthService } from 'src/ws-auth/ws-auth.service';
 import { SocketWithAuth } from 'src/ws-auth/ws-auth.types';
 
-import { NAME, SOCKET_NOTIFICATION_EVENTS } from './constants';
+import { NAME } from './constants';
 import {
   DeleteNotificationDto,
   SearchNotificationsDto,
@@ -27,7 +28,7 @@ export class NotificationsGateway extends WsAuthGateway {
     super(configService, wsAuthService);
   }
 
-  @SubscribeMessage(SOCKET_NOTIFICATION_EVENTS.LIST_NOTIFICATION)
+  @SubscribeMessage(SOCKET_EVENTS.NOTIFICATION_EVENTS.LIST_NOTIFICATION)
   async getNotifications(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: SearchNotificationsDto,
@@ -39,13 +40,13 @@ export class NotificationsGateway extends WsAuthGateway {
 
     this.sendToCaller({
       socket: client,
-      event: SOCKET_NOTIFICATION_EVENTS.LIST_NOTIFICATION,
+      event: SOCKET_EVENTS.NOTIFICATION_EVENTS.LIST_NOTIFICATION,
       dto,
       data: { notifications },
     });
   }
 
-  @SubscribeMessage(SOCKET_NOTIFICATION_EVENTS.UPDATE_NOTIFICATION)
+  @SubscribeMessage(SOCKET_EVENTS.NOTIFICATION_EVENTS.UPDATE_NOTIFICATION)
   async updateNotification(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: UpdateNotificationDto,
@@ -53,7 +54,7 @@ export class NotificationsGateway extends WsAuthGateway {
     this.notificationsService.updateNotification(dto, client.user);
   }
 
-  @SubscribeMessage(SOCKET_NOTIFICATION_EVENTS.DELETE_NOTIFICATION)
+  @SubscribeMessage(SOCKET_EVENTS.NOTIFICATION_EVENTS.DELETE_NOTIFICATION)
   async deleteNotification(
     @ConnectedSocket() client: SocketWithAuth,
     @MessageBody() dto: DeleteNotificationDto,

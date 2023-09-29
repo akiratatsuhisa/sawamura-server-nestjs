@@ -1,3 +1,4 @@
+import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import {
   OnQueueCompleted,
   OnQueueFailed,
@@ -15,7 +16,7 @@ import { IFile } from 'src/helpers';
 import { MaterialDesignService } from 'src/material-design/material-design.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-import { NAME, QUEUE_ROOM_EVENTS, SOCKET_ROOM_EVENTS } from './constants';
+import { NAME, QUEUE_ROOM_EVENTS } from './constants';
 import {
   DeleteRoomImageDto,
   UpdateRoomImageDto,
@@ -131,10 +132,10 @@ export class RoomsConsumer {
     this.roomsGateway.sendToUsers({
       event:
         job.name === QUEUE_ROOM_EVENTS.UPDATE_ROOM_THEME
-          ? SOCKET_ROOM_EVENTS.UPDATE_ROOM
+          ? SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM
           : job.data.fieldName === 'coverUrl'
-          ? SOCKET_ROOM_EVENTS.UPDATE_ROOM_COVER
-          : SOCKET_ROOM_EVENTS.UPDATE_ROOM_PHOTO,
+          ? SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_COVER
+          : SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_PHOTO,
       dto: job.data.dto,
       data: room,
       userIds: this.roomsGateway.mapSendToRoomMembers(room),

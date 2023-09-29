@@ -257,7 +257,7 @@ enum WhinnyType {
 
 model Whinny {
   id       String     @id @default(uuid()) @db.Uuid
-  urlId    BigInt     @default(autoincrement()) @map("url_id") @db.BigInt
+  urlId    BigInt     @unique() @default(autoincrement()) @map("url_id") @db.BigInt
   type     WhinnyType @default(Owner)
   userId   String     @map("user_id") @db.Uuid
   user     User       @relation(fields: [userId], references: [id])
