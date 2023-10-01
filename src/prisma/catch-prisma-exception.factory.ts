@@ -1,5 +1,10 @@
+import { Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AppError } from 'src/common/errors';
+
+import { PrismaService } from './prisma.service';
+
+const logger = new Logger(PrismaService.name);
 
 export function catchPrismaException(exception: unknown) {
   if (
@@ -9,6 +14,7 @@ export function catchPrismaException(exception: unknown) {
     exception instanceof Prisma.PrismaClientUnknownRequestError ||
     exception instanceof Prisma.PrismaClientKnownRequestError
   ) {
+    logger.error(exception.message);
     return new AppError.Prisma().setEvent(exception['_subscribeMessage']);
   }
 

@@ -24,6 +24,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { SendgridModule } from './sendgrid/sendgrid.module';
 import { UsersModule } from './users/users.module';
 import { VerificationTokensModule } from './verification-tokens/verification-tokens.module';
+import { WhinniesModule } from './whinnies/whinnies.module';
 import { WsAuthModule } from './ws-auth/ws-auth.module';
 
 @Module({
@@ -42,6 +43,11 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     RedisModule,
     GraphModule.register({
       isGlobal: true,
+      protocol: process.env.NEO4J_PROTOCOL,
+      host: process.env.NEO4J_HOST,
+      port: process.env.NEO4J_PORT,
+      username: process.env.NEO4J_USERNAME,
+      password: process.env.NEO4J_PASSWORD,
     }),
     AuthModule,
     OauthModule,
@@ -57,6 +63,7 @@ import { WsAuthModule } from './ws-auth/ws-auth.module';
     VerificationTokensModule,
     DashboardModule,
     RoomsModule,
+    WhinniesModule,
     NotificationsModule,
   ],
   controllers: [AppController],

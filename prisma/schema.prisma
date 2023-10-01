@@ -260,9 +260,9 @@ model Whinny {
   urlId    BigInt     @unique() @default(autoincrement()) @map("url_id") @db.BigInt
   type     WhinnyType @default(Owner)
   userId   String     @map("user_id") @db.Uuid
-  user     User       @relation(fields: [userId], references: [id])
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sourceId String?    @map("source_id") @db.Uuid
-  source   Whinny?    @relation("whinnies", fields: [sourceId], references: [id])
+  source   Whinny?    @relation("whinnies", fields: [sourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   whinnies Whinny[]   @relation("whinnies")
 
   content String? @db.VarChar(360)
@@ -291,7 +291,7 @@ model WhinnyMedia {
   id           String          @id @default(uuid()) @db.Uuid
   type         WhinnyMediaType
   whinnyId     String          @map("whinny_id") @db.Uuid
-  whinny       Whinny          @relation(fields: [whinnyId], references: [id])
+  whinny       Whinny          @relation(fields: [whinnyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sort         Int             @db.SmallInt
   mime         String?         @db.VarChar(16)
   url          String          @db.VarChar(360)
@@ -316,9 +316,9 @@ enum WhinnyReactionKind {
 model WhinnyReaction {
   id       String             @id @default(uuid()) @db.Uuid
   whinnyId String             @map("whinny_id") @db.Uuid
-  whinny   Whinny             @relation(fields: [whinnyId], references: [id])
+  whinny   Whinny             @relation(fields: [whinnyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId   String             @map("user_id") @db.Uuid
-  user     User               @relation(fields: [userId], references: [id])
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   kind     WhinnyReactionKind @default(Favorite)
   icon     String?            @db.VarChar(16)
 

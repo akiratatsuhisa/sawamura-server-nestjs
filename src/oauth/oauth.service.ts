@@ -1,5 +1,5 @@
 import { messages } from '@akiratatsuhisa/sawamura-utils';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
 import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
@@ -15,6 +15,8 @@ import { IGithubProfile, IGoogleProfile } from './interfaces';
 
 @Injectable()
 export class OauthService {
+  private logger = new Logger(OauthService.name);
+
   constructor(
     private prisma: PrismaService,
     private usersService: UsersService,
@@ -43,6 +45,7 @@ export class OauthService {
       ipAddress,
     );
 
+    this.logger.log(`[Login]:${user.username}`);
     return `${
       process.env.OAUTH_CLIENT_URL
     }/oauth/callback?${querystring.stringify({
@@ -191,13 +194,19 @@ export class OauthService {
       throw messages.error.providerAlreadyLinked;
     }
 
-    await this.prisma.userLogins.create({
+    const userLogin = await this.prisma.userLogins.create({
+      select: {
+        user: { select: { username: true } },
+      },
       data: {
         providerName: dto.providerName,
         providerKey: dto.providerKey,
         userId: verificationToken.userId,
       },
     });
+    this.logger.log(
+      `[LinkProvider][${dto.providerName}]:${userLogin.user.username}`,
+    );
 
     await this.verificationTokensService.revokeToken(
       dto.token,
@@ -206,7 +215,10 @@ export class OauthService {
   }
 
   async unlinkProvider(dto: UnlinkProviderDto, user: IdentityUser) {
-    await this.prisma.userLogins.delete({
+    const userLogin = await this.prisma.userLogins.delete({
+      select: {
+        user: { select: { username: true } },
+      },
       where: {
         userId_providerName: {
           providerName: dto.provider,
@@ -214,5 +226,8 @@ export class OauthService {
         },
       },
     });
+    this.logger.warn(
+      `[UnlinkProvider][${dto.provider}]:${userLogin.user.username}`,
+    );
   }
 }

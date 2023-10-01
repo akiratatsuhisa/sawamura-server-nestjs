@@ -1,7 +1,7 @@
 import { GraphService } from '@akiratatsuhisa/sawamura-graph-module';
 import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cron } from '@nestjs/schedule';
@@ -39,6 +39,8 @@ import {
 
 @Injectable()
 export class AuthService {
+  private logger = new Logger(AuthService.name);
+
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private prisma: PrismaService,
@@ -186,6 +188,7 @@ export class AuthService {
     if (dto.email) {
       await this.sendConfirmEmail(result);
     }
+    this.logger.log(`[Register]:${result.username}`);
 
     this.graphService.silentCall(() =>
       this.graphService.user.upsert(
@@ -193,7 +196,6 @@ export class AuthService {
         _.pick(result, ['username', 'displayName', 'createdAt', 'updatedAt']),
       ),
     );
-
     return result;
   }
 
@@ -203,6 +205,8 @@ export class AuthService {
     });
 
     await this.prisma.user.delete({ where: { id: user.id } });
+    this.logger.warn(`[DeleteAccount]:${user.username}`);
+
     this.graphService.silentCall(() => this.graphService.user.delete(user.id));
   }
 
@@ -226,6 +230,7 @@ export class AuthService {
       dto.token,
       VerificationTokenType.VerifyEmail,
     );
+    this.logger.log(`[ConfirmEmail]:${user.username}`);
 
     return { username: user.username };
   }
@@ -264,6 +269,7 @@ export class AuthService {
       to: to,
       html,
     });
+    this.logger.log(`[ForgotPassword]:${user.username}`);
 
     return { email: user.email };
   }
@@ -293,6 +299,7 @@ export class AuthService {
         VerificationTokenType.ResetPassword,
       ),
     ]);
+    this.logger.log(`[ResetPassword]:${user.username}`);
 
     return { username: user.username };
   }
@@ -378,6 +385,7 @@ export class AuthService {
     user: Awaited<ReturnType<UsersService['findByUniqueWithDetail']>>,
     ipAddress: string,
   ) {
+    this.logger.log(`[Login]:${user.username}`);
     return {
       accessToken: await this.generateAccessToken(user),
       refreshToken: await this.generateRefreshToken(user.id, ipAddress),
@@ -409,6 +417,7 @@ export class AuthService {
       const accessToken = await this.generateAccessToken(user);
       const newRefreshToken = await this.generateRefreshToken(user.id, ip);
       await this.revokeRefreshToken(oldRefreshToken.id, ip, newRefreshToken);
+      this.logger.log(`[RefreshToken]:${user.username}`);
 
       return {
         accessToken,
@@ -420,6 +429,17 @@ export class AuthService {
   async revoke(token: string, userId: string, ip: string) {
     return this.prisma.$transaction(async (tx) => {
       const refreshToken = await tx.refreshToken.findFirst({
+        select: {
+          id: true,
+          expires: true,
+          revoked: true,
+          user: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+        },
         where: { token },
       });
 
@@ -427,7 +447,7 @@ export class AuthService {
         throw new AppError.NotFound();
       }
 
-      if (refreshToken.userId !== userId) {
+      if (refreshToken.user.id !== userId) {
         throw new AppError.Argument(messages.error.refreshToken);
       }
 
@@ -439,6 +459,7 @@ export class AuthService {
       }
 
       await this.revokeRefreshToken(refreshToken.id, ip);
+      this.logger.log(`[RevokeToken]:${refreshToken.user.username}`);
     });
   }
 
@@ -501,6 +522,7 @@ export class AuthService {
         id: user.id,
       },
     });
+    this.logger.log(`[UpdateTheme]:${user.username}`);
   }
 
   async updatePassword(
@@ -509,7 +531,7 @@ export class AuthService {
     ipAddress: string,
   ) {
     const user = await this.prisma.user.findUnique({
-      select: { password: true, securityStamp: true },
+      select: { username: true, password: true, securityStamp: true },
       where: { id: userId },
     });
 
@@ -530,6 +552,7 @@ export class AuthService {
       },
       where: { id: userId },
     });
+    this.logger.log(`[UpdatePassword]:${user.username}`);
 
     await this.redisService.db.zRem(
       SECURITY_STAMPS_REDIS_KEY,
@@ -553,6 +576,7 @@ export class AuthService {
     }
 
     await this.sendConfirmEmail(user);
+    this.logger.log(`[RequestVerifyEmail]:${user.username}`);
   }
 
   async updateEmail(dto: UpdateEmailDto, userId: string) {
@@ -575,6 +599,7 @@ export class AuthService {
       username: user.username,
       email: dto.email,
     });
+    this.logger.log(`[UpdateEmail]:${user.username}`);
   }
 
   async profilePdf(user: IdentityUser): Promise<Buffer> {

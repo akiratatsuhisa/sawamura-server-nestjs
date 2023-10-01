@@ -1,5 +1,5 @@
 import { messages } from '@akiratatsuhisa/sawamura-utils';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,6 +15,8 @@ import { roleSelect } from './roles.factory';
 
 @Injectable()
 export class RolesService {
+  private logger = new Logger(RolesService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
@@ -49,13 +51,16 @@ export class RolesService {
       async (tx) => {
         const maxSort = await this.maxSort(tx);
 
-        return tx.role.create({
+        const role = await tx.role.create({
           data: {
             name: dto.name,
             sort: maxSort !== null ? maxSort + 1 : 1,
           },
           select: roleSelect,
         });
+
+        this.logger.log(`[Create]:${role.name}`);
+        return role;
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
@@ -64,18 +69,21 @@ export class RolesService {
   async update(dto: UpdateRoleDto) {
     return this.prisma.$transaction(
       async (tx) => {
-        const role = await this.findById({ id: dto.id });
-        if (role.default) {
+        const currentRole = await this.findById({ id: dto.id });
+        if (currentRole.default) {
           throw new AppError.Argument(messages.warning.defaultData);
         }
 
-        return tx.role.update({
+        const role = await tx.role.update({
           where: { id: dto.id },
           data: {
             name: dto.name,
           },
           select: roleSelect,
         });
+
+        this.logger.log(`[Update]:${role.name}`);
+        return role;
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
@@ -84,22 +92,23 @@ export class RolesService {
   async delete(dto: DeleteRoleDto) {
     return this.prisma.$transaction(
       async (tx) => {
-        const role = await this.findById({ id: dto.id });
-        if (role.default) {
+        const currentRole = await this.findById({ id: dto.id });
+        if (currentRole.default) {
           throw new AppError.Argument(messages.warning.defaultData);
         }
 
-        const deleted = await tx.role.delete({
+        const role = await tx.role.delete({
           where: { id: dto.id },
           select: roleSelect,
         });
 
         await tx.role.updateMany({
           data: { sort: { decrement: 1 } },
-          where: { sort: { gt: deleted.sort } },
+          where: { sort: { gt: role.sort } },
         });
 
-        return deleted;
+        this.logger.warn(`[Delete]:${role.name}`);
+        return role;
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
@@ -117,19 +126,19 @@ export class RolesService {
         }
 
         const newsort = dto.sort;
-        const role = await tx.role.findUnique({
+        const currentRole = await tx.role.findUnique({
           where: { id: dto.id },
           select: { sort: true },
         });
 
-        if (!role) {
+        if (!currentRole) {
           throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
             entity: 'Role',
             id: dto.id,
           });
         }
 
-        const oldSort = role.sort;
+        const oldSort = currentRole.sort;
 
         if (oldSort < newsort) {
           await tx.role.updateMany({
@@ -145,13 +154,16 @@ export class RolesService {
           throw new AppError.Argument(messages.warning.noChange);
         }
 
-        return tx.role.update({
+        const role = await tx.role.update({
           where: { id: dto.id },
           data: {
             sort: dto.sort,
           },
           select: roleSelect,
         });
+
+        this.logger.warn(`[Sort]:${role.name}`);
+        return role;
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
