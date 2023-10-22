@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@akiratatsuhisa/sawamura-utils": "1.0.6",
-    "@akiratatsuhisa/sawamura-graph-module": "1.0.5",
+    "@akiratatsuhisa/sawamura-graph-module": "1.0.6",
     "@nestjs/bull": "^10.0.1",
     "@nestjs/cache-manager": "^2.1.0",
     "@nestjs/common": "^10.2.5",
