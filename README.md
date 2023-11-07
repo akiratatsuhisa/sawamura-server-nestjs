@@ -94,11 +94,10 @@ OAuth2 variables:
 | -------------------- | ------------------------------------------------------------------ | ---------------------------------- |
 | GOOGLE_CLIENT_ID     | Client ID provided by Google for OAuth2 authentication.            |                                    |
 | GOOGLE_CLIENT_SECRET | Client secret provided by Google for OAuth2 authentication.        |                                    |
-| GOOGLE_CALLBACK_URL  | The callback URL registered with Google for OAuth2 authentication. | http://localhost:4000/oauth/google |
+| GOOGLE_CALLBACK_URL  | The callback URL registered with Google for OAuth2 authentication. | http://localhost:3000/oauth/google |
 | GITHUB_CLIENT_ID     | Client ID provided by GitHub for OAuth2 authentication.            |                                    |
 | GITHUB_CLIENT_SECRET | Client secret provided by GitHub for OAuth2 authentication.        |                                    |
-| GITHUB_CALLBACK_URL  | The callback URL registered with GitHub for OAuth2 authentication. | http://localhost:4000/oauth/github |
-| OUATH_CLIENT_URL     | The URL of the client application used for OAuth2 authentication.  | http://localhost:3000              |
+| GITHUB_CALLBACK_URL  | The callback URL registered with GitHub for OAuth2 authentication. | http://localhost:3000/oauth/github |
 
 ## Running the app
 

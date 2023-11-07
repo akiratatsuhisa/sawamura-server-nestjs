@@ -1,7 +1,6 @@
 import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable, Logger } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
-import querystring from 'querystring';
 import { AuthService } from 'src/auth/auth.service';
 import { IdentityUser } from 'src/auth/identity.class';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -38,7 +37,6 @@ export class OauthService {
   async login(
     user: Awaited<ReturnType<UsersService['findByUniqueWithDetail']>>,
     ipAddress: string,
-    redirectUrl?: string,
   ) {
     const { accessToken, refreshToken } = await this.authService.login(
       user,
@@ -46,13 +44,10 @@ export class OauthService {
     );
 
     this.logger.log(`[Login]:${user.username}`);
-    return `${
-      process.env.OAUTH_CLIENT_URL
-    }/oauth/callback?${querystring.stringify({
+    return {
       accessToken,
       refreshToken,
-      redirectUrl,
-    })}`;
+    };
   }
 
   private generateUsername() {

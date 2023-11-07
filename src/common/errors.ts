@@ -93,15 +93,6 @@ export namespace AppError {
     }
   }
 
-  export class OauthError extends BasicError {
-    constructor(
-      message: string = messages.error.unauthenticated,
-      title: string = messages.error.unauthenticated,
-    ) {
-      super(HttpStatus.UNAUTHORIZED, message, title);
-    }
-  }
-
   export class NotFound extends BasicError {
     constructor(
       message: string = messages.error.notFound,

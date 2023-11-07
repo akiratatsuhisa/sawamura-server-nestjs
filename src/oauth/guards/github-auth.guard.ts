@@ -9,7 +9,7 @@ export class GithubAuthGuard extends AuthGuard('github') {
       const result = await (super.canActivate(context) as Promise<boolean>);
       return result;
     } catch (error) {
-      throw new AppError.OauthError();
+      throw new AppError.Unauthenticated();
     }
   }
 }

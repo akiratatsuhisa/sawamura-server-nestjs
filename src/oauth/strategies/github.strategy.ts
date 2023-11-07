@@ -33,7 +33,6 @@ export class GithubStrategy extends PassportStrategy(Strategy) {
   ): Promise<any> {
     try {
       const state = Oauth.parseState(req.query.state);
-      req.query.redirectUrl = state.redirectUrl;
 
       const user = await this.oauthService.validateGithubProvider(
         profile,
@@ -46,7 +45,7 @@ export class GithubStrategy extends PassportStrategy(Strategy) {
 
       return user;
     } catch (error: unknown) {
-      throw new AppError.OauthError(
+      throw new AppError.Unauthenticated(
         typeof error === 'string' ? error : undefined,
       );
     }
