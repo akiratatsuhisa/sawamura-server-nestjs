@@ -1,4 +1,4 @@
-# Nestjs App
+# Sawamura Server Nestjs
 
 ![license](https://img.shields.io/badge/License-MIT-green.svg)
 ![version](https://img.shields.io/badge/version-0.0.1%20alpha-brightgreen.svg)
@@ -20,9 +20,13 @@
 
 This repository is intended for learning and practicing coding. However, please note that this application may contain bugs, and I advise against using it for commercial or personal purposes, as it has not been secured and tested.
 
-The project utilizes a web UI from [vuetify-app](https://github.com/akiratatsuhisa/vuetify-app).
+The project utilizes a web UI from [sawamura-client-vuetify](https://github.com/akiratatsuhisa/sawamura-client-vuetify).
+<br/>
+And, it use the web service material design 3 from [sawamura-md3-service-express](https://github.com/akiratatsuhisa/sawamura-md3-service-express)
 
-This back-end app is modeled after Facebook's messenger and offers a variety of features to facilitate communication between users. It supports both one-on-one and group chats, and users can customize their chat rooms by changing the chat room's image and chat name. Group chat's member have additional control over the chat, including the ability to invite or remove members, update member roles, and change nicknames. Furthermore, the app enables users to share files by allowing uploads and downloads within chat conversations. With these features, users can easily communicate and share information with friends.
+This back-end app is modeled after Facebook's messenger and offers a variety of features to facilitate communication between users. It supports both one-on-one and group chats, and users can customize their chat rooms by changing the chat room's image and chat name. Group chat's member have additional control over the chat, including the ability to invite or remove members, update member roles, and change nicknames. Furthermore, the app enables users to share files by allowing uploads and downloads within chat conversations. With these features, users can easily communicate and share information with friends. Also, the back-end app modeled Twitter. It support compose the Whinny (a name like Twitter), User can post the compose and react repost, quote, comment and share to others.
+
+Here is the link to the app [sawamura-server-nestjs](https://api.sawamura.site/).
 
 ## Development
 
@@ -35,7 +39,7 @@ For installation instructions, please use the following ways.
 
 ### Prerequisites
 
-**Node.js (v18 or higher)**
+**Node.js (v20 or higher)**
 
 See the [official Node.js installation documentation](https://nodejs.org/).
 
