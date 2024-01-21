@@ -132,8 +132,8 @@ export class NotificationsService {
             user.id === socketUser.userId
               ? NotificationStatus.Viewed
               : socketUser.type === 'unconnected'
-              ? NotificationStatus.Queued
-              : NotificationStatus.Sent,
+                ? NotificationStatus.Queued
+                : NotificationStatus.Sent,
         };
 
         return this.createNotification(dto, user);

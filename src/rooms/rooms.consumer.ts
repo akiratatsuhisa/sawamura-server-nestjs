@@ -134,8 +134,8 @@ export class RoomsConsumer {
         job.name === QUEUE_ROOM_EVENTS.UPDATE_ROOM_THEME
           ? SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM
           : job.data.fieldName === 'coverUrl'
-          ? SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_COVER
-          : SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_PHOTO,
+            ? SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_COVER
+            : SOCKET_EVENTS.ROOM_EVENTS.UPDATE_ROOM_PHOTO,
       dto: job.data.dto,
       data: room,
       userIds: this.roomsGateway.mapSendToRoomMembers(room),

@@ -118,8 +118,8 @@ export class ProfileUsersService {
         user.id === identityUser.id
           ? 'none'
           : _.some(followingUserIds, (id) => id === user.id)
-          ? 'following'
-          : 'noFollow',
+            ? 'following'
+            : 'noFollow',
     }));
   }
 
@@ -133,21 +133,21 @@ export class ProfileUsersService {
             follower: { username: dto.username },
           }
         : dto.type === SearchUserRelationshipType.Followers
-        ? {
-            followee: { username: dto.username },
-          }
-        : {
-            follower: {
-              followees: {
-                some: {
-                  followerId: user.id,
+          ? {
+              followee: { username: dto.username },
+            }
+          : {
+              follower: {
+                followees: {
+                  some: {
+                    followerId: user.id,
+                  },
                 },
               },
-            },
-            followee: {
-              username: dto.username,
-            },
-          };
+              followee: {
+                username: dto.username,
+              },
+            };
 
     const relationships = await this.prisma.relationship.findMany({
       select: profileUserRelationSelect,

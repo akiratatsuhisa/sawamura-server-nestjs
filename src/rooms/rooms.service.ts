@@ -827,12 +827,12 @@ export class RoomsService {
           type: (Regex.MessageFile.IMAGE_MIME_TYPES.test(mime)
             ? RoomMessageType.Images
             : Regex.MessageFile.AUDIO_MIME_TYPES.test(mime)
-            ? RoomMessageType.Audios
-            : Regex.MessageFile.VIDEO_MIME_TYPES.test(mime)
-            ? RoomMessageType.Videos
-            : Regex.MessageFile.OFFICE_MIME_TYPES.test(mime)
-            ? RoomMessageType.Files
-            : RoomMessageType.None) as RoomMessageType,
+              ? RoomMessageType.Audios
+              : Regex.MessageFile.VIDEO_MIME_TYPES.test(mime)
+                ? RoomMessageType.Videos
+                : Regex.MessageFile.OFFICE_MIME_TYPES.test(mime)
+                  ? RoomMessageType.Files
+                  : RoomMessageType.None) as RoomMessageType,
           extension,
           mime,
         } as IFile;

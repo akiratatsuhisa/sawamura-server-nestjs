@@ -183,15 +183,15 @@ export class WsAuthGateway
         )
           ? 'connected'
           : rooms.has(connectedSilent)
-          ? 'connectedSilent'
-          : 'unconnected';
+            ? 'connectedSilent'
+            : 'unconnected';
 
         group[type].push(
           type === 'connected'
             ? connected
             : type === 'connectedSilent'
-            ? connectedSilent
-            : userId,
+              ? connectedSilent
+              : userId,
         );
         group.result.push({
           userId,
