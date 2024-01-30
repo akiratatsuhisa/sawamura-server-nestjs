@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import {
   Body,
   Controller,
@@ -40,9 +41,14 @@ export class ProfileUsersController {
     const result = await this.profileUsersService.searchProfileUnique({
       username,
     });
+
     if (!result) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'User',
+        id: username,
+      });
     }
+
     const isFollowing = await this.profileUsersService.isFollowingUser(
       { username },
       user,

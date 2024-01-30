@@ -33,7 +33,10 @@ export class RolesService {
     });
 
     if (!role) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Role',
+        id: dto.id,
+      });
     }
 
     return role;
@@ -70,6 +73,7 @@ export class RolesService {
     return this.prisma.$transaction(
       async (tx) => {
         const currentRole = await this.findById({ id: dto.id });
+
         if (currentRole.default) {
           throw new AppError.Argument(messages.warning.defaultData);
         }
@@ -93,6 +97,7 @@ export class RolesService {
     return this.prisma.$transaction(
       async (tx) => {
         const currentRole = await this.findById({ id: dto.id });
+
         if (currentRole.default) {
           throw new AppError.Argument(messages.warning.defaultData);
         }

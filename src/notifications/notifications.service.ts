@@ -1,4 +1,4 @@
-import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
+import { messages, SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import {
@@ -53,7 +53,10 @@ export class NotificationsService {
     });
 
     if (notifcation.targetUser.id !== user.id) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Notifcation',
+        id: query.id,
+      });
     }
 
     await this.linkReference(notifcation);

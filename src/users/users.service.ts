@@ -107,13 +107,18 @@ export class UsersService {
       },
       where: { id: dto.id },
     });
+
     if (!user) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'User',
+        id: dto.id,
+      });
     }
 
     const roleCount = await this.prisma.role.count({
       where: { id: { in: dto.roleIds } },
     });
+
     if (roleCount !== dto.roleIds.length) {
       throw new AppError.Argument(messages.error.changeUserRoles);
     }
@@ -122,6 +127,7 @@ export class UsersService {
       await tx.userRole.deleteMany({
         where: { userId: user.id, roleId: { notIn: dto.roleIds } },
       });
+
       await tx.userRole.createMany({
         data: _(dto.roleIds)
           .difference(_.map(user.userRoles, 'roleId'))
@@ -133,6 +139,7 @@ export class UsersService {
         SECURITY_STAMPS_REDIS_KEY,
         user.securityStamp,
       );
+
       await this.prisma.user.update({
         where: {
           id: user.id,

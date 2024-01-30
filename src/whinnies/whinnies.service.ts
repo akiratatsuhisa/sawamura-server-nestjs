@@ -105,6 +105,14 @@ export class WhinniesService {
         urlId: BigInt(dto.urlId),
       },
     });
+
+    if (!whinny) {
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Whinny',
+        id: dto.urlId,
+      });
+    }
+
     return this.mapWhinnyWithCounts(
       whinny.type === WhinnyType.Repost ? whinny.source.id : whinny.id,
       whinny,
@@ -224,7 +232,10 @@ export class WhinniesService {
     });
 
     if (!whinny) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Whinny',
+        id: dto.urlId,
+      });
     }
 
     if (whinny.userId !== user.id) {
@@ -246,7 +257,10 @@ export class WhinniesService {
     });
 
     if (!whinny) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Whinny',
+        id: dto.urlId,
+      });
     }
 
     if (whinny.type === WhinnyType.Repost) {
@@ -271,7 +285,10 @@ export class WhinniesService {
     });
 
     if (!whinny) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Whinny',
+        id: dto.urlId,
+      });
     }
 
     if (whinny.type === WhinnyType.Repost) {
@@ -298,6 +315,7 @@ export class WhinniesService {
         kind: dto.kind,
       },
     });
+
     this.graphService.silentCall(() =>
       this.graphService.whinny.upsertReaction({
         whinnyId: whinny.id,

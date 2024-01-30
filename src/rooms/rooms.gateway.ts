@@ -1,4 +1,4 @@
-import { SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
+import { messages, SOCKET_EVENTS } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -99,8 +99,12 @@ export class RoomsGateway extends WsAuthGateway {
     @MessageBody() dto: SearchRoomDto,
   ) {
     const room = await this.roomsService.getRoomById(dto, client.user);
+
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.id,
+      });
     }
 
     this.sendToCaller({

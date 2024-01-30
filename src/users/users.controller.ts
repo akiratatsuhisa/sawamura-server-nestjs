@@ -1,3 +1,4 @@
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import {
   Body,
   Controller,
@@ -28,9 +29,14 @@ export class UsersController {
   @Get(':id')
   async getById(@Param() dto: FindOneParams.Uuid) {
     const result = await this.usersService.findByUnique({ id: dto.id });
+
     if (!result) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'User',
+        id: dto.id,
+      });
     }
+
     return result;
   }
 

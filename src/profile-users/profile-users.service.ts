@@ -1,4 +1,5 @@
 import { GraphService } from '@akiratatsuhisa/sawamura-graph-module';
+import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -65,7 +66,10 @@ export class ProfileUsersService {
     });
 
     if (!user) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'User',
+        id: dto.username,
+      });
     }
 
     return this.cacheManager.wrap(
@@ -176,6 +180,7 @@ export class ProfileUsersService {
       select: { id: true },
       where: { username: dto.username },
     });
+
     if (!followee) {
       throw new AppError.BadDto();
     }

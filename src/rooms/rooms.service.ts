@@ -1,5 +1,6 @@
 import {
   messages as commonMessages,
+  messages,
   Regex,
 } from '@akiratatsuhisa/sawamura-utils';
 import { InjectQueue } from '@nestjs/bull';
@@ -164,9 +165,11 @@ export class RoomsService {
         ],
       },
     });
+
     if (room) {
       return room;
     }
+
     return this.prisma.room.create({
       data: {
         name: uuidv4(),
@@ -293,8 +296,12 @@ export class RoomsService {
   async updateRoom(dto: UpdateRoomDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
       const room = await this.getRoomById({ id: dto.id });
+
       if (!room) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'Room',
+          id: dto.id,
+        });
       }
 
       if (
@@ -321,8 +328,12 @@ export class RoomsService {
   async deleteRoom(dto: DeleteRoomDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
       const room = await this.getRoomById({ id: dto.id });
+
       if (!room || !room.isGroup) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'Room',
+          id: dto.id,
+        });
       }
 
       if (
@@ -346,8 +357,12 @@ export class RoomsService {
     const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
 
     const room = await this.getRoomById({ id: dto.id });
+
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.id,
+      });
     }
 
     return this.cacheManager.wrap(
@@ -361,8 +376,12 @@ export class RoomsService {
     const fieldName = dto.type === 'photo' ? 'photoUrl' : 'coverUrl';
 
     const room = await this.getRoomById({ id: dto.id });
+
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.id,
+      });
     }
 
     if (
@@ -392,7 +411,10 @@ export class RoomsService {
 
     const room = await this.getRoomById({ id: dto.id });
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.id,
+      });
     }
 
     if (
@@ -419,8 +441,12 @@ export class RoomsService {
 
   async updateTheme(dto: UpdateRoomThemeDto, user: IdentityUser) {
     const room = await this.getRoomById({ id: dto.id });
+
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.id,
+      });
     }
 
     if (
@@ -449,7 +475,10 @@ export class RoomsService {
       const room = await this.getRoomById({ id: dto.roomId });
 
       if (!room) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'Room',
+          id: dto.roomId,
+        });
       }
 
       if (
@@ -494,7 +523,10 @@ export class RoomsService {
       const room = await this.getRoomById({ id: dto.roomId });
 
       if (!room) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'Room',
+          id: dto.roomId,
+        });
       }
 
       if (
@@ -503,6 +535,7 @@ export class RoomsService {
       ) {
         throw new AppError.AccessDenied();
       }
+
       if (dto.role) {
         if (
           !room.isGroup ||
@@ -552,7 +585,10 @@ export class RoomsService {
       const room = await this.getRoomById({ id: dto.roomId });
 
       if (!room) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'Room',
+          id: dto.roomId,
+        });
       }
 
       if (
@@ -562,6 +598,7 @@ export class RoomsService {
       ) {
         throw new AppError.AccessDenied();
       }
+
       if (
         this.isRoomMember(
           room.roomMembers,
@@ -577,6 +614,7 @@ export class RoomsService {
       ) {
         throw new AppError.AccessDenied();
       }
+
       if (
         this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.Member) &&
         user.id !== dto.memberId &&
@@ -665,8 +703,15 @@ export class RoomsService {
   async updateMessage(dto: UpdateMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
       const message = await this.getMessageById({ id: dto.id });
+
+      if (!message || message.type === RoomMessageType.None) {
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'RoomMessage',
+          id: dto.id,
+        });
+      }
+
       if (
-        !message ||
         !this.isRoomMember(
           await this.getMembersByRoomId({ roomId: message.room.id }),
           user.id,
@@ -688,9 +733,14 @@ export class RoomsService {
   async deleteMessage(dto: DeleteMessageDto, user: IdentityUser) {
     return this.prisma.$transaction(async (tx) => {
       const message = await this.getMessageById({ id: dto.id });
+
       if (!message || message.type === RoomMessageType.None) {
-        throw new AppError.NotFound();
+        throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+          entity: 'RoomMessage',
+          id: dto.id,
+        });
       }
+
       if (!message.room.isGroup && message.user.id !== user.id) {
         throw new AppError.AccessDenied();
       }
@@ -698,6 +748,7 @@ export class RoomsService {
       const members = await this.getMembersByRoomId({
         roomId: message.room.id,
       });
+
       if (
         (message.room.isGroup &&
           !(
@@ -781,7 +832,10 @@ export class RoomsService {
     const room = await this.getRoomById({ id: dto.roomId });
 
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.roomId,
+      });
     }
 
     if (this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)) {
@@ -800,7 +854,10 @@ export class RoomsService {
     const room = await this.getRoomById({ id: dto.roomId });
 
     if (!room) {
-      throw new AppError.NotFound();
+      throw new AppError.NotFound(messages.error.notFoundEntity).setParams({
+        entity: 'Room',
+        id: dto.roomId,
+      });
     }
 
     if (this.isRoomMember(room.roomMembers, user.id, RoomMemberRole.None)) {
