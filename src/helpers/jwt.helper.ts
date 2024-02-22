@@ -1,3 +1,4 @@
+import { Regex } from '@akiratatsuhisa/sawamura-utils';
 import _ from 'lodash';
 
 type ParseType = 'string' | 'number' | 'boolean' | 'object';
@@ -15,10 +16,10 @@ export namespace Jwt {
         if (data instanceof Boolean) {
           return data;
         }
-        if (/y|Y|yes|Yes|YES|true|True|TRUE|on|On|ON/g.test(data)) {
+        if (Regex.CommonType.BOOLEAN_POSITIVE.test(data)) {
           return true;
         }
-        if (/n|N|no|No|NO|false|False|FALSE|off|Off|OFF/g.test(data)) {
+        if (Regex.CommonType.BOOLEAN_NEGATIVE.test(data)) {
           return false;
         }
         return null;
@@ -27,7 +28,7 @@ export namespace Jwt {
         if (data instanceof Number) {
           return data;
         }
-        if (/^-?\d+\.?\d*$/g.test(data)) {
+        if (Regex.CommonType.DOUBLE.test(data)) {
           return Number(data);
         }
         return null;

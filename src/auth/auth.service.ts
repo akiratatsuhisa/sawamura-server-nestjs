@@ -8,8 +8,10 @@ import { Cron } from '@nestjs/schedule';
 import { VerificationTokenType } from '@prisma/client';
 import { compare, genSalt, hash } from 'bcrypt';
 import { Cache } from 'cache-manager';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import utc from 'dayjs/plugin/utc';
 import _ from 'lodash';
-import moment from 'moment';
 import { AppError } from 'src/common/errors';
 import { AuthFile } from 'src/constants';
 import { DropboxService } from 'src/dropbox/dropbox.service';
@@ -36,6 +38,9 @@ import {
   UpdatePasswordDto,
   UpdateThemeDto,
 } from './dtos';
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(utc);
 
 @Injectable()
 export class AuthService {
@@ -95,7 +100,7 @@ export class AuthService {
     if (count) {
       await this.redisService.db.zAdd(SECURITY_STAMPS_REDIS_KEY, {
         value: securityStamp,
-        score: moment().add(15, 'minutes').unix(),
+        score: dayjs().add(15, 'minutes').unix(),
       });
     }
 
@@ -104,7 +109,7 @@ export class AuthService {
 
   @Cron('0 */30 * * * *')
   async taskSecurityStamp() {
-    const score = moment().unix();
+    const score = dayjs().unix();
 
     await this.redisService.db.zRemRangeByScore(
       SECURITY_STAMPS_REDIS_KEY,
@@ -118,7 +123,7 @@ export class AuthService {
     username: string;
     email: string;
   }) {
-    const expires = moment().add(7, 'days');
+    const expires = dayjs().add(7, 'days');
 
     const { token } = await this.verificationTokensService.generateToken(
       user.id,
@@ -335,7 +340,7 @@ export class AuthService {
   ): Promise<string> {
     const { token } = await this.prisma.refreshToken.create({
       data: {
-        expires: moment()
+        expires: dayjs()
           .add(
             this.configService.get<number>('REFRESH_TOKEN_EXPIRES', 2592000),
             'seconds',
@@ -359,7 +364,7 @@ export class AuthService {
   ): Promise<Date> {
     const { revoked } = await this.prisma.refreshToken.update({
       data: {
-        revoked: moment().toDate(),
+        revoked: dayjs().toDate(),
         revokedByIp: ipAddress,
         replaceByToken: replaceToken,
       },
@@ -409,7 +414,7 @@ export class AuthService {
 
       if (
         oldRefreshToken.revoked ||
-        moment(oldRefreshToken.expires).isSameOrBefore()
+        dayjs(oldRefreshToken.expires).isSameOrBefore()
       ) {
         throw new AppError.Argument(messages.error.refreshToken);
       }
@@ -453,7 +458,7 @@ export class AuthService {
 
       if (
         refreshToken.revoked ||
-        moment(refreshToken.expires).isSameOrBefore()
+        dayjs(refreshToken.expires).isSameOrBefore()
       ) {
         throw new AppError.Argument(messages.error.refreshToken);
       }
@@ -644,25 +649,21 @@ export class AuthService {
     //   : `${prefix}${coverResult.buffer.toString('base64')}`;
 
     const html = await this.fileUtilsService.renderPdf('profile', {
-      exportDate: `${moment().utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      exportDate: `${dayjs().utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
       id,
       username,
       email,
       emailConfirmed,
       userRoles,
       photoSrc,
-      createdAt: `${moment(createdAt)
-        .utc()
-        .format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
-      updatedAt: `${moment(updatedAt)
-        .utc()
-        .format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      createdAt: `${dayjs(createdAt).utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
+      updatedAt: `${dayjs(updatedAt).utc().format('YYYY-MM-DD HH:mm:ss')} (UTC)`,
       coverSrc,
       firstName,
       lastName,
       birthDate: _.isNull(birthDate)
         ? null
-        : `${moment(birthDate).utc().format('YYYY-MM-DD')}`,
+        : `${dayjs(birthDate).utc().format('YYYY-MM-DD')}`,
       salary: _.isNull(salary) ? null : salary.toFixed(),
       supportUrl: this.configService.get<string>('SUPPORT_URL'),
       supportEmail: this.configService.get<string>('SENDGRID_SENDER'),

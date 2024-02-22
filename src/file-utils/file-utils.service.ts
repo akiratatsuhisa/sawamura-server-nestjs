@@ -9,7 +9,7 @@ import { IProfileContext } from './interfaces';
 @Injectable()
 export class FileUtilsService {
   async exportPdf(html: string): Promise<Buffer> {
-    const browser = await launch({ headless: 'new' });
+    const browser = await launch({ headless: 'shell' });
     const page = await browser.newPage();
 
     await page.setContent(html, { waitUntil: 'networkidle0' });

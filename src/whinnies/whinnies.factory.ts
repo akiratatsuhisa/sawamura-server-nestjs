@@ -14,6 +14,9 @@ const whinnyCompactSelect = Prisma.validator<Prisma.WhinnySelect>()({
       username: true,
       displayName: true,
       photoUrl: true,
+      coverUrl: true,
+      themeSource: true,
+      themeStyle: true,
     },
   },
 });
@@ -40,6 +43,9 @@ export const whinnyReactionSelect =
         username: true,
         displayName: true,
         photoUrl: true,
+        coverUrl: true,
+        themeSource: true,
+        themeStyle: true,
       },
     },
   });

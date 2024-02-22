@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import dayjs from 'dayjs';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import _ from 'lodash';
-import moment from 'moment';
 import { IdentityPrincipal, IdentityUser } from 'src/auth/decorators';
 import { RedisService } from 'src/redis/redis.service';
 
@@ -29,7 +29,7 @@ export class WsAuthService {
         return true;
       }
 
-      return moment(socket.expires)
+      return dayjs(socket.expires)
         .subtract(milliseconds, 'milliseconds')
         .isBefore();
     };
@@ -73,7 +73,7 @@ export class WsAuthService {
   async zAddAuth(socket: SocketWithAuth, milliseconds?: number): Promise<void> {
     await this.redisService.db.zAdd(`auth:${socket.nsp.name}`, {
       value: socket.id,
-      score: moment(socket.expires)
+      score: dayjs(socket.expires)
         .subtract(milliseconds, 'milliseconds')
         .valueOf(),
     });
@@ -84,7 +84,7 @@ export class WsAuthService {
   }
 
   async zGetAndRemByExpires(namespaceName: string, milliseconds?: number) {
-    const score = moment().subtract(milliseconds, 'milliseconds').valueOf();
+    const score = dayjs().subtract(milliseconds, 'milliseconds').valueOf();
 
     const data = await this.redisService.db.zRangeByScore(
       `auth:${namespaceName}`,

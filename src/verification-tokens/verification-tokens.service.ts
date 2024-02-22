@@ -1,7 +1,7 @@
 import { messages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { VerificationTokenType } from '@prisma/client';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { AppError } from 'src/common/errors';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -18,7 +18,7 @@ export class VerificationTokensService {
       data: {
         userId,
         type,
-        expires: expires ?? moment().add(5, 'minutes').toDate(),
+        expires: expires ?? dayjs().add(5, 'minutes').toDate(),
       },
     });
   }
@@ -31,13 +31,13 @@ export class VerificationTokensService {
     if (
       !verificationToken ||
       verificationToken.revoked ||
-      moment(verificationToken.expires).isSameOrBefore()
+      dayjs(verificationToken.expires).isSameOrBefore()
     ) {
       throw new AppError.Argument(messages.error.verificationToken);
     }
 
     return this.prisma.verificationToken.update({
-      data: { revoked: moment().toDate() },
+      data: { revoked: dayjs().toDate() },
       where: {
         id: verificationToken.id,
       },
@@ -52,7 +52,7 @@ export class VerificationTokensService {
     if (
       !verificationToken ||
       verificationToken.revoked ||
-      moment(verificationToken.expires).isSameOrBefore()
+      dayjs(verificationToken.expires).isSameOrBefore()
     ) {
       throw new AppError.Argument(messages.error.verificationToken);
     }

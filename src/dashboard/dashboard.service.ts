@@ -1,8 +1,8 @@
 import { messages as commonMessages } from '@akiratatsuhisa/sawamura-utils';
 import { Injectable } from '@nestjs/common';
 import { RoomMessageType } from '@prisma/client';
+import dayjs from 'dayjs';
 import _ from 'lodash';
-import moment from 'moment';
 import { AppError } from 'src/common/errors';
 import { DropboxService } from 'src/dropbox/dropbox.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -49,8 +49,8 @@ export class DashboardService {
   }
 
   async chartMessagesRooms(dto: SearchChartMessagesRoomsDto) {
-    const fromDate = moment(dto.fromDate).startOf('date');
-    const toDate = moment(dto.toDate).endOf('date');
+    const fromDate = dayjs(dto.fromDate).startOf('date');
+    const toDate = dayjs(dto.toDate).endOf('date');
 
     if (fromDate.isAfter(toDate)) {
       throw new AppError.Argument(commonMessages.error.invalidDateFromTo);
@@ -73,7 +73,7 @@ export class DashboardService {
     });
 
     const roomsGroupByMonth = _.groupBy(rooms, ({ createdAt }) =>
-      moment(createdAt).format('YYYY-MM'),
+      dayjs(createdAt).format('YYYY-MM'),
     );
 
     const startDate = fromDate.clone().startOf('month');
@@ -111,8 +111,8 @@ export class DashboardService {
   }
 
   async chartMessages(dto: SearchChartMessagesDto) {
-    const fromDate = moment(dto.fromDate).startOf('date');
-    const toDate = moment(dto.toDate).endOf('date');
+    const fromDate = dayjs(dto.fromDate).startOf('date');
+    const toDate = dayjs(dto.toDate).endOf('date');
 
     if (fromDate.isAfter(toDate)) {
       throw new AppError.Argument(commonMessages.error.invalidDateFromTo);
@@ -134,7 +134,7 @@ export class DashboardService {
     });
 
     const messagesGroupByMonth = _.groupBy(messages, ({ createdAt }) =>
-      moment(createdAt).format('YYYY-MM'),
+      dayjs(createdAt).format('YYYY-MM'),
     );
 
     const startDate = fromDate.clone().startOf('month');
